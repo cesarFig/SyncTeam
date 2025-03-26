@@ -21,9 +21,9 @@
               </v-col>
             </v-row>
 
+            <!-- Título -->
             <v-card-title class="text-h5 font-weight-bold">Ajustes</v-card-title>
-
-            <!-- Pestañas -->
+            
             <v-tabs v-model="tab">
               <v-tab>Mi información</v-tab>
               <v-tab>Notificaciones</v-tab>
