@@ -21,7 +21,6 @@
               </v-col>
             </v-row>
 
-            <!-- Título -->
             <v-card-title class="text-h5 font-weight-bold">Ajustes</v-card-title>
 
             <!-- Pestañas -->
