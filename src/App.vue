@@ -1,5 +1,6 @@
 <template>          
-  <MasInfo/>  
+  <MasInfo/>
+<!--Si hay conflictos MUEVAN SUS ETIQUETAS A OTRA LINEA-->    
 </template>
 
 <script>
