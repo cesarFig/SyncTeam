@@ -1,8 +1,5 @@
-<template>
-  
-        
-  <MasInfo/>
-  
+<template>          
+  <MasInfo/>  
 </template>
 
 <script>
