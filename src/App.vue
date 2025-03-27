@@ -1,4 +1,10 @@
-
+<template>
+  <v-app>
+    <SidebarWrapper />
+    <v-main :style="mainStyles">
+      <MasInfo/>
+    </v-main>
+  </v-app>
 </template>
 
 <script>
