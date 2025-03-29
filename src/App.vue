@@ -9,10 +9,10 @@
 
 <script>
 /* eslint-disable */
-import MasInfo from './components/MasInfo.vue';
 import SidebarWrapper from './components/sidebar/SidebarWrapper.vue';
 import { useLayoutStore } from '@/stores/layout'
 
+import MasInfo from './components/FormPauta.vue';
 export default {
   name: 'App',
 
