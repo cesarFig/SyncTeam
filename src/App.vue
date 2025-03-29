@@ -6,8 +6,8 @@
 </template>
 
 <script>
-import MasInfo from './components/MasInfo.vue';
 
+import MasInfo from './components/FormPauta.vue';
 export default {
   name: 'App',
 
