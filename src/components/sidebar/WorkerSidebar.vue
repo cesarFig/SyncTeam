@@ -38,6 +38,7 @@
       </v-avatar>
     </v-list-item>
 
+    <!-- Sidebar Menu Items -->
     <v-list density="compact" nav>
       <v-list-item
         v-for="item in menuItems"
@@ -45,7 +46,7 @@
         :prepend-icon="item.icon"
         :value="item.title"
         :active="activeItem === item.title"
-        @click="activeItem = item.title"
+        @click="navigateTo(item.route)"
         class="mx-2 my-1 rounded-17"
         :class="{ 'bg-morado2': activeItem === item.title }"
         :height="store.isMobile ? '48px' : '55px'"
@@ -101,18 +102,25 @@
 <script setup>
 import { useLayoutStore } from '@/stores/layout'
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const store = useLayoutStore()
 const activeItem = ref("Home")
+const router = useRouter()
 
 const menuItems = ref([
-  { title: "Home", icon: "mdi-home" },
-  { title: "Tickets", icon: "mdi-ticket" },
-  { title: "Calendario", icon: "mdi-calendar" },
-  { title: "Notificaciones", icon: "mdi-bell" },
-  { title: "Estadísticas", icon: "mdi-chart-bar" },
-  { title: "Ajustes", icon: "mdi-cog" },
+  { title: "Home", icon: "mdi-home", route: "/dashboard-creativo" },
+  { title: "Tickets", icon: "mdi-ticket", route: "/tickets-creativo" },
+  { title: "Calendario", icon: "mdi-calendar", route: "/calendario-creativo" },
+  { title: "Notificaciones", icon: "mdi-bell", route: "/notificaciones" },
+  { title: "Estadísticas", icon: "mdi-chart-bar", route: "/estadisticas-creativo" },
+  { title: "Ajustes", icon: "mdi-cog", route: "/ajustes" },
 ])
+
+const navigateTo = (route) => {
+  activeItem.value = route
+  router.push(route)
+}
 
 const logout = () => {
   console.log("Cerrando sesión...")

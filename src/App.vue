@@ -2,14 +2,13 @@
   <v-app>
     <SidebarWrapper />
     <v-main :style="mainStyles">
-      <MasInfo/>
+      <router-view></router-view>
     </v-main>
   </v-app>
 </template>
 
 <script>
 /* eslint-disable */
-import MasInfo from './components/MasInfo.vue';
 import SidebarWrapper from './components/sidebar/SidebarWrapper.vue';
 import { useLayoutStore } from '@/stores/layout'
 
@@ -17,12 +16,11 @@ export default {
   name: 'App',
 
   components: {
-    MasInfo,
     SidebarWrapper
   },
 
   setup() {
-    const store = useLayoutStore ()
+    const store = useLayoutStore()
     
     const mainStyles = {
       marginLeft: `${store.sidebarWidth}px -30px`,
