@@ -1,4 +1,5 @@
-<template>  <div>    <h1>Ajustes</h1>
+<template>
+  <div>
     <MasInfo />
   </div>
 </template>
