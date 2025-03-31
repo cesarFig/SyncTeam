@@ -109,7 +109,7 @@ const activeItem = ref("Home")
 const router = useRouter()
 
 const menuItems = ref([
-  { title: "Home", icon: "mdi-home", route: "/dashboard-creativo" },
+  { title: "Home ", icon: "mdi-home", route: "/dashboard-creativo" },
   { title: "Tickets", icon: "mdi-ticket", route: "/tickets-creativo" },
   { title: "Calendario", icon: "mdi-calendar", route: "/calendario-creativo" },
   { title: "Notificaciones", icon: "mdi-bell", route: "/notificaciones" },
