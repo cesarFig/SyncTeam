@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <SidebarWrapper />
+    <SidebarWrapper v-if="!$route.meta.hideSidebar" />
     <v-main :style="mainStyles">
       <router-view></router-view>
     </v-main>

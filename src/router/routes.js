@@ -1,5 +1,17 @@
 const routes = [
   {
+    path: '/',
+    name: 'LoginView',
+    component: () => import('../views/LoginView.vue'),
+    meta: { hideSidebar: true },
+  },
+  {
+    path: '/registro',
+    name: 'RegistroView',
+    component: () => import('../views/RegistroView.vue'),
+    meta: { hideSidebar: true },
+  },
+  {
     path: '/dashboard-admin',
     name: 'DashboardAdminView',
     component: () => import('../views/DashboardAdminView.vue')
