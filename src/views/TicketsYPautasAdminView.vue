@@ -65,6 +65,7 @@
         showForm: false,
         tasks: [
           {
+            prioridad: 'blue',
             image: imagenAdidas,
             title: 'Promo Adidas Junio 2025',
             tickets: 3,
@@ -76,6 +77,7 @@
             ]
           },
           {
+            prioridad: 'red',
             image: imagenAdidas,
             title: 'Publicación MeraliCakes',
             tickets: 2,
@@ -87,6 +89,7 @@
             ]
           },
           {
+            prioridad: 'orange',
             image: imagenAdidas,
             title: 'Banner Web Page',
             tickets: 1,
@@ -97,6 +100,7 @@
             ]
           },
           {
+            prioridad: 'blue',
             image: imagenAdidas,
             title: 'Campaña Epson',
             tickets: 2,
