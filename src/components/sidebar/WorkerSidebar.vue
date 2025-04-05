@@ -10,7 +10,7 @@
       <v-list-item 
         @click="store.toggleSidebar" 
         class="mx-2 my-1 rounded-17" 
-        :height="store.isMobile ? '48px' : '55px'"
+        :height="store.isMobile ? '20px' : '55px'"
       >
         <template v-slot:prepend>
           <v-icon color="grey-darken-1">
