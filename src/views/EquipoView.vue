@@ -20,6 +20,12 @@
           <UserCard :usuario="foto" />
         </v-col>
       </v-row>
+
+        <v-btn @click="irADestino" variant="outlined" class="btnAddPauta">Nuevo miembro</v-btn>
+   
+
+
+      
     </v-container>
   </template>
   
@@ -29,7 +35,11 @@
   export default {
     components: {
       UserCard
-    },
+    },methods: {
+    irADestino() {
+      this.$router.push('/registro');
+    }
+  },
     data() {
       return {
         creativos: [
@@ -109,4 +119,13 @@
       font-size: 1.3rem;
     }
   }
+  .btnAddPauta{
+       position: fixed;
+       bottom: 80px;
+       right: 40px;
+       z-index: 999;
+       background-color: #B5179E;
+       color: white;
+       border-radius: 15px;
+     }
   </style>
