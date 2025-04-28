@@ -4,7 +4,7 @@
     permanent
     app
     :width="store.sidebarWidth"
-    color="grey-lighten-4"
+    color="white"
   >
     <v-list density="compact" nav class="pt-0 pd-1">
       <v-list-item 
