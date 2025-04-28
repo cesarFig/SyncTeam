@@ -29,7 +29,7 @@
         <h2 class="text-h5 font-weight-medium mb-3">{{ selectedPauta.titulo }}</h2>
         <v-img v-if="selectedPauta.imagen" :src="selectedPauta.imagen" height="180px" cover class="mb-4 rounded elevation-1"></v-img>
         <div class="mb-5"> <span class="text-subtitle-2 text-grey-darken-1">Cliente:</span> <span class="text-body-1 ml-2">{{ selectedPauta.cliente }}</span> </div>
-        <div class="mb-5"> <h4 class="text-subtitle-1 font-weight-medium mb-2">Descripción</h4> <div class="description-block pa-3 rounded"> <p class="description-text">{{ selectedPauta.descripcion }}</p> </div> </div>
+        <div class="mb-5"> <h4 class="text-subtitle-1 font-weight-medium mb-2">Descripción</h4> <div class="description-block pa-3 rounded"> <p class="description-text">{{ selectedPauta.propuesta }}</p> </div> </div>
         <div class="mb-5"> <h4 class="text-subtitle-1 font-weight-medium mb-2">Colaboradores</h4> <v-list density="compact" class="pa-0"> <v-list-item v-for="(colab, i) in selectedPauta.colaboradores" :key="i" class="px-1"> <template v-slot:prepend> <v-avatar color="grey-lighten-1" size="32" class="mr-3"> <v-icon color="white">mdi-account</v-icon> </v-avatar> </template> <v-list-item-title class="text-body-2">{{ colab }}</v-list-item-title> </v-list-item> </v-list> <p class="text-caption text-grey-darken-1 mt-2 ml-1"> <v-icon start size="small">mdi-calendar-blank-outline</v-icon> 8 Abril 2025 </p> </div>
         <div class="mb-5"> <h4 class="text-subtitle-1 font-weight-medium mb-2">Progreso </h4> <v-progress-linear :model-value="selectedPauta.progreso" color="blue-darken-2" height="8" rounded class="mb-1"></v-progress-linear> <p class="text-caption text-grey-darken-1 text-right">{{ selectedPauta.progreso }}%</p> </div>
         <div class="mb-2 pb-2"> <p class="text-body-2 d-flex align-center"> <v-icon start color="grey-darken-1">mdi-clock-time-three-outline</v-icon> <span class="text-grey-darken-1">{{ selectedPauta.diasRestantes }} Día(s) restante(s)</span> </p> </div>
@@ -100,33 +100,17 @@
 /* eslint-disable */
 import FormPauta from '../components/forms/FormPauta.vue';
 import TicketCard from '../components/CardTicket.vue'; // Asegúrate que la ruta es correcta
-import imagenAdidas from '@/assets/imagenAdidas.png';
+import axios from 'axios';
 
 export default {
   name: 'PautasView',
   components: { TicketCard, FormPauta },
   data() {
-     return {
+    return {
       showForm: false,
       selectedPauta: null,
-      // Datos de Pautas
-      pautas: [
-        { id: 1, titulo: 'Campaña Redes Sociales', subtitulo: 'Q2 - MeraliCakes', cliente: 'Pastelería MeraliCakes', descripcion: 'Planificar y ejecutar la campaña de redes sociales para el segundo trimestre, enfocada en nuevos lanzamientos y promociones de temporada. Incluye creación de contenido visual y escrito, programación de posts, interacción con seguidores y análisis de métricas.', colaboradores: ['Cesar Figueroa', 'Meral Rodríguez'], fecha: 'Aug 20, 2025', imagen: 'https://cdn.vuetifyjs.com/images/cards/cooking.png', progreso: 75, diasRestantes: 3 },
-        { id: 2, titulo: 'Publicación Semanal', subtitulo: 'Lunes - Instagram/Facebook', cliente: 'Pastelería MeraliCakes', descripcion: 'Diseñar y programar una publicación atractiva para Facebook e Instagram cada lunes, destacando un producto diferente de MeraliCakes. La publicación debe incluir una fotografía de alta calidad del pastel o postre, una descripción creativa y apetitosa, el precio y un llamado a la acción claro (ej: Haz tu pedido ahora!, Conoce el sabor de la semana!). Este texto es más largo para probar el límite de altura y el scroll en la descripción. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.', colaboradores: ['Ana López', 'Juan Pérez'], fecha: 'Aug 18, 2025', imagen: 'https://cdn.vuetifyjs.com/images/cards/cake.jpg', progreso: 25, diasRestantes: 1 },
-        { id: 3, titulo: 'Edición Fotos Catálogo', subtitulo: 'Productos Temporada', cliente: 'Pastelería MeraliCakes', descripcion: 'Edición profesional de las fotografías tomadas para el nuevo catálogo de temporada. Asegurar la correcta iluminación, colorimetría y retoque de imperfecciones menores manteniendo la naturalidad del producto.', colaboradores: ['Meral Rodríguez', 'Carlos Sánchez'], fecha: 'Aug 20, 2021', imagen: 'https://cdn.vuetifyjs.com/images/cards/camera.jpg', progreso: 50, diasRestantes: 10 }
-      ],
-      // Datos de Tickets con STATUS y props para CardTicket
-      tasks: [
-         { id: 't1', status: 'todo', image: 'https://cdn.pixabay.com/photo/2020/01/26/20/14/computer-4795762_1280.jpg', title: 'Diseñar Mockups App', description: 'Crear wireframes y mockups alta fidelidad', ticketNum: 1, progress: 0, remainingDays: 5, tag: 'Diseño UX/UI', tagColor: 'pink', users: ['https://randomuser.me/api/portraits/women/1.jpg'] },
-        { id: 't2', status: 'todo', image: 'https://cdn.pixabay.com/photo/2020/01/26/20/14/computer-4795762_1280.jpg', title: 'Plan Contenido Blog Q3', description: 'Definir temas y calendario editorial', ticketNum: 2, progress: 0, remainingDays: 8, tag: 'Marketing', tagColor: 'orange', users: ['https://randomuser.me/api/portraits/men/2.jpg', 'https://randomuser.me/api/portraits/women/2.jpg'] },
-        { id: 't6', status: 'todo', image: null, title: 'Configurar Servidor Staging', description: 'Instalar dependencias y configurar entorno', ticketNum: 6, progress: 0, remainingDays: 3, tag: 'DevOps', tagColor: 'indigo', users: ['https://randomuser.me/api/portraits/men/3.jpg'] },
-        { id: 't9', status: 'todo', image: null, title: 'Investigar Librería Gráficos', description: 'Evaluar opciones para dashboard', ticketNum: 9, progress: 0, remainingDays: 10, tag: 'Investigación', tagColor: 'green', users: ['https://randomuser.me/api/portraits/women/6.jpg'] },
-        { id: 't3', status: 'inProgress', image: 'https://cdn.pixabay.com/photo/2020/01/26/20/14/computer-4795762_1280.jpg', title: 'Desarrollar Landing Page', description: 'Codificar HTML, CSS y JS según diseño', ticketNum: 3, progress: 60, remainingDays: 2, tag: 'Frontend', tagColor: 'teal', users: ['https://randomuser.me/api/portraits/men/5.jpg'] },
-        { id: 't7', status: 'inProgress', image: 'https://cdn.pixabay.com/photo/2020/01/26/20/14/computer-4795762_1280.jpg', title: 'Preparar Presentación Cliente', description: 'Recopilar datos y crear diapositivas', ticketNum: 7, progress: 30, remainingDays: 1, tag: 'Gestión', tagColor: 'indigo', users: ['https://randomuser.me/api/portraits/women/4.jpg'] },
-        { id: 't4', status: 'review', image: 'https://cdn.pixabay.com/photo/2020/01/26/20/14/computer-4795762_1280.jpg', title: 'Revisar Textos Web', description: 'Corregir gramática y estilo', ticketNum: 4, progress: 90, remainingDays: 1, tag: 'Copywriting', tagColor: 'cyan', users: ['https://randomuser.me/api/portraits/women/3.jpg'] },
-        { id: 't8', status: 'review', image: null, title: 'Code Review API Auth', description: 'Validar lógica y seguridad del código', ticketNum: 8, progress: 95, remainingDays: 0, tag: 'Backend', tagColor: 'red', users: ['https://randomuser.me/api/portraits/men/6.jpg','https://randomuser.me/api/portraits/women/5.jpg'] },
-        { id: 't5', status: 'done', image: 'https://cdn.pixabay.com/photo/2020/01/26/20/14/computer-4795762_1280.jpg', title: 'Sesión Fotos Producto X', description: 'Realizada el viernes pasado', ticketNum: 5, progress: 100, remainingDays: 0, tag: 'Fotografía', tagColor: 'pink', users: ['https://randomuser.me/api/portraits/men/4.jpg'] }
-      ]
+      pautas: [],
+      tasks: []
     };
   },
   computed: {
@@ -137,14 +121,55 @@ export default {
      doneTasks() { return this.tasks.filter(task => task.status === 'done'); }
   },
   methods: {
+    async fetchPautas() {
+      try {
+        const response = await axios.get('/api/pautas');
+        this.pautas = response.data;
+        if (this.pautas.length > 0 && !this.selectedPauta) {
+          this.selectPauta(this.pautas[0]);
+        }
+      } catch (error) {
+        console.error('Error fetching pautas:', error);
+      }
+    },
+    async fetchTickets(pautaId) {
+      try {
+        const response = await axios.get(`/api/pautas/${pautaId}/tickets`);
+        this.tasks = response.data;
+      } catch (error) {
+        console.error('Error fetching tickets:', error);
+      }
+    },
     toggleForm() { this.showForm = !this.showForm; },
-    selectPauta(pauta) { this.selectedPauta = pauta; },
-    handleSavePauta(newPautaData) { const newPauta = { id: Date.now(), titulo: newPautaData.titulo || 'Nueva Pauta', subtitulo: newPautaData.subtitulo || 'Detalles pendientes', cliente: newPautaData.cliente || 'Cliente Desconocido', descripcion: newPautaData.descripcion || 'Sin descripción.', colaboradores: newPautaData.colaboradores || [], fecha: new Date().toISOString().split('T')[0], imagen: newPautaData.imagen || 'https://cdn.vuetifyjs.com/images/cards/docks.jpg', progreso: newPautaData.progreso || 0, diasRestantes: newPautaData.diasRestantes || 0, }; this.pautas.push(newPauta); this.selectedPauta = newPauta; this.showForm = false; }
+    // Updated the `selectPauta` method to display `dias_restantes` and `cliente` correctly
+    selectPauta(pauta) {
+      this.selectedPauta = {
+        ...pauta,
+        diasRestantes: pauta.dias_restantes,
+        cliente: pauta.cliente
+      };
+      this.fetchTickets(pauta.id);
+    },
+    handleSavePauta(newPautaData) {
+      const newPauta = {
+        id: Date.now(),
+        titulo: newPautaData.titulo || 'Nueva Pauta',
+        subtitulo: newPautaData.subtitulo || 'Detalles pendientes',
+        cliente: newPautaData.cliente || 'Cliente Desconocido',
+        descripcion: newPautaData.descripcion || 'Sin descripción.',
+        colaboradores: newPautaData.colaboradores || [],
+        fecha: new Date().toISOString().split('T')[0],
+        imagen: newPautaData.imagen || 'https://cdn.vuetifyjs.com/images/cards/docks.jpg',
+        progreso: newPautaData.progreso || 0,
+        diasRestantes: newPautaData.diasRestantes || 0,
+      };
+      this.pautas.push(newPauta);
+      this.selectedPauta = newPauta;
+      this.showForm = false;
+    }
   },
   mounted() {
-    if (this.pautas.length > 0 && !this.selectedPauta) {
-      this.selectedPauta = this.pautas[0];
-    }
+    this.fetchPautas();
   }
 };
 </script>
