@@ -3,7 +3,6 @@ const { logAction } = require('../db/queries');
 
 const router = express.Router();
 
-// Route to log an action
 router.post('/', async (req, res) => {
   const { action } = req.body;
   try {

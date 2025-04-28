@@ -1,6 +1,5 @@
 const pool = require('./connection');
 
-// Example query to log an action
 const logAction = async (action) => {
   try {
     const result = await pool.query(
@@ -14,7 +13,6 @@ const logAction = async (action) => {
   }
 };
 
-// Updated query to fetch all pautas with client name and remaining days
 const getPautas = async () => {
   try {
     const result = await pool.query(`
@@ -36,7 +34,6 @@ const getPautas = async () => {
   }
 };
 
-// Query to fetch tickets by pauta ID
 const getTicketsByPauta = async (pautaId) => {
   try {
     const result = await pool.query('SELECT * FROM ticket WHERE pauta = $1', [pautaId]);

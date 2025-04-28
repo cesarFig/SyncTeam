@@ -3,7 +3,6 @@ const { getPautas, getTicketsByPauta } = require('../db/queries');
 
 const router = express.Router();
 
-// Route to fetch all pautas
 router.get('/', async (req, res) => {
   try {
     const pautas = await getPautas();
@@ -13,7 +12,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Route to fetch tickets by pauta ID
 router.get('/:pautaId/tickets', async (req, res) => {
   const { pautaId } = req.params;
   try {
