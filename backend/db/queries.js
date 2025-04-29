@@ -36,12 +36,19 @@ const getPautas = async () => {
 
 const getTicketsByPauta = async (pautaId) => {
   try {
-    const result = await pool.query('SELECT * FROM ticket WHERE pauta = $1', [pautaId]);
+    const result = await pool.query(
+      `SELECT t.*, c.nombre_categoria, c.color_rgb 
+       FROM ticket t
+       JOIN categoria c ON t.categoria = c.id_categoria
+       WHERE t.pauta = $1`,
+      [pautaId]
+    );
     return result.rows;
   } catch (err) {
     console.error('Error fetching tickets for pauta:', err);
     throw err;
   }
 };
+
 
 module.exports = { logAction, getPautas, getTicketsByPauta };

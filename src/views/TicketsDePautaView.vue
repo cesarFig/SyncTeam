@@ -64,28 +64,28 @@
         <div class="ticket-column">
           <div class="column-header pa-2"> <span class="column-title">Por hacer</span> <v-spacer></v-spacer> <v-btn icon variant="text" size="x-small" color="grey"> <v-icon>mdi-dots-horizontal</v-icon> </v-btn> </div>
           <div class="ticket-list">
-            <TicketCard v-for="task in todoTasks" :key="task.id" v-bind="task" class="mb-2" />
+            <TicketCard v-for="task in todoTicket" :key="task.id" v-bind="task" class="mb-2" />
           </div>
         </div>
 
         <div class="ticket-column">
           <div class="column-header pa-2"> <span class="column-title">En progreso</span> <v-spacer></v-spacer> <v-btn icon variant="text" size="x-small" color="grey"> <v-icon>mdi-dots-horizontal</v-icon> </v-btn> </div>
           <div class="ticket-list">
-            <TicketCard v-for="task in inProgressTasks" :key="task.id" v-bind="task" class="mb-2" />
+            <TicketCard v-for="task in inProgressTicket" :key="task.id" v-bind="task" class="mb-2" />
           </div>
         </div>
 
         <div class="ticket-column">
           <div class="column-header pa-2"> <span class="column-title">Revisión</span> <v-spacer></v-spacer> <v-btn icon variant="text" size="x-small" color="grey"> <v-icon>mdi-dots-horizontal</v-icon> </v-btn> </div>
           <div class="ticket-list">
-            <TicketCard v-for="task in reviewTasks" :key="task.id" v-bind="task" class="mb-2" />
+            <TicketCard v-for="task in reviewTicket" :key="task.id" v-bind="task" class="mb-2" />
           </div>
         </div>
 
         <div class="ticket-column">
           <div class="column-header pa-2"> <span class="column-title">Terminado</span> <v-spacer></v-spacer> <v-btn icon variant="text" size="x-small" color="grey"> <v-icon>mdi-dots-horizontal</v-icon> </v-btn> </div>
           <div class="ticket-list">
-            <TicketCard v-for="task in doneTasks" :key="task.id" v-bind="task" class="mb-2" />
+            <TicketCard v-for="task in doneTicket" :key="task.id" v-bind="task" class="mb-2" />
           </div>
         </div>
 
@@ -110,15 +110,15 @@ export default {
       showForm: false,
       selectedPauta: null,
       pautas: [],
-      tasks: []
+      tickets: []
     };
   },
   computed: {
-     filteredPautas() { return this.pautas; },
-     todoTasks() { return this.tasks.filter(task => task.status === 'todo'); },
-     inProgressTasks() { return this.tasks.filter(task => task.status === 'inProgress'); },
-     reviewTasks() { return this.tasks.filter(task => task.status === 'review'); },
-     doneTasks() { return this.tasks.filter(task => task.status === 'done'); }
+    filteredPautas() { return this.pautas; },
+    todoTicket() { return this.tickets.filter(task => task.estado === 1); },
+    inProgressTicket() { return this.tickets.filter(task => task.estado === 2); },
+    reviewTicket() { return this.tickets.filter(task => task.estado === 3); },
+    doneTicket() { return this.tickets.filter(task => task.estado === 4); }
   },
   methods: {
     async fetchPautas() {
@@ -135,7 +135,7 @@ export default {
     async fetchTickets(pautaId) {
       try {
         const response = await axios.get(`/api/pautas/${pautaId}/tickets`);
-        this.tasks = response.data;
+        this.tickets = response.data;
       } catch (error) {
         console.error('Error fetching tickets:', error);
       }
