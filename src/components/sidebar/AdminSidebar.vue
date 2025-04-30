@@ -124,7 +124,8 @@ const navigateTo = (route) => {
 }
 
 const logout = () => {
-  console.log("Cerrando sesión... ")
+  console.log("Cerrando sesión... ");
+  router.push('/');
 }
 </script>
 
