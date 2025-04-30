@@ -1,5 +1,5 @@
 const express = require('express');
-const { getPautas, getTicketsByPauta, getColaboradores } = require('../db/queries');
+const { getPautas, getTicketsByPauta, getColaboradores, updateTicketEstado } = require('../db/queries');
 
 const router = express.Router();
 
@@ -29,6 +29,22 @@ router.get('/:pautaId/colaboradores', async (req, res) => {
     res.status(200).json(colaboradores);
   } catch (err) {
     res.status(500).send('Error fetching colaboradores de pauta');
+  }
+});
+
+router.put('/tickets/:ticketId', async (req, res) => {
+  const { ticketId } = req.params;
+  const { estado } = req.body;
+
+  if (!estado || estado < 1 || estado > 4) {
+    return res.status(400).send('Invalid estado value');
+  }
+
+  try {
+    const updatedTicket = await updateTicketEstado(ticketId, estado);
+    res.status(200).json(updatedTicket);
+  } catch (err) {
+    res.status(500).send('Error updating ticket estado');
   }
 });
 

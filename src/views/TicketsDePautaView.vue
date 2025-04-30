@@ -64,36 +64,33 @@
       </div>
 
       <div class="ticket-columns-container pa-4 pt-2 justify-space-between align-center">
-
-        <div class="ticket-column">
-          <div class="column-header pa-2"> <span class="column-title">Por hacer</span> <v-spacer></v-spacer> <v-btn icon variant="text" size="x-small" color="grey"> <v-icon>mdi-dots-horizontal</v-icon> </v-btn> </div>
+        <div
+          class="ticket-column"
+          v-for="(column, index) in ticketColumns"
+          :key="index"
+          @dragover.prevent
+          @drop="onDrop(index)"
+        >
+          <div class="column-header pa-2">
+            <span class="column-title">{{ column.title }}</span>
+            <v-spacer></v-spacer>
+            <v-btn icon variant="text" size="x-small" color="grey">
+              <v-icon>mdi-dots-horizontal</v-icon>
+            </v-btn>
+          </div>
           <div class="ticket-list">
-            <TicketCard v-for="task in todoTicket" :key="task.id" v-bind="task" class="mb-2" @click="openTicketFull(task)" />
+            <TicketCard
+              v-for="task in column.tickets"
+              :key="task.id"
+              v-bind="task"
+              class="mb-2"
+              draggable="true"
+              @dragstart="onDragStart(task)"
+            />
           </div>
         </div>
-
-        <div class="ticket-column">
-          <div class="column-header pa-2"> <span class="column-title">En progreso</span> <v-spacer></v-spacer> <v-btn icon variant="text" size="x-small" color="grey"> <v-icon>mdi-dots-horizontal</v-icon> </v-btn> </div>
-          <div class="ticket-list">
-            <TicketCard v-for="task in inProgressTicket" :key="task.id" v-bind="task" class="mb-2" @click="openTicketFull(task)" />
-          </div>
-        </div>
-
-        <div class="ticket-column">
-          <div class="column-header pa-2"> <span class="column-title">Revisión</span> <v-spacer></v-spacer> <v-btn icon variant="text" size="x-small" color="grey"> <v-icon>mdi-dots-horizontal</v-icon> </v-btn> </div>
-          <div class="ticket-list">
-            <TicketCard v-for="task in reviewTicket" :key="task.id" v-bind="task" class="mb-2" @click="openTicketFull(task)" />
-          </div>
-        </div>
-
-        <div class="ticket-column">
-          <div class="column-header pa-2"> <span class="column-title">Terminado</span> <v-spacer></v-spacer> <v-btn icon variant="text" size="x-small" color="grey"> <v-icon>mdi-dots-horizontal</v-icon> </v-btn> </div>
-          <div class="ticket-list">
-            <TicketCard v-for="task in doneTicket" :key="task.id" v-bind="task" class="mb-2" @click="openTicketFull(task)" />
-          </div>
-        </div>
-
-      </div> </v-card>
+      </div>
+    </v-card>
 
     <v-btn @click="toggleForm" variant="outlined" class="btnAddPauta">Nueva pauta</v-btn>
 
@@ -119,6 +116,13 @@ export default {
       colaboradores: [],
       showTicketFull: false,
       selectedTicket: null,
+      draggedTicket: null,
+      ticketColumns: [
+        { title: 'Por hacer', state: 1, tickets: [] },
+        { title: 'En progreso', state: 2, tickets: [] },
+        { title: 'Revisión', state: 3, tickets: [] },
+        { title: 'Terminado', state: 4, tickets: [] },
+      ],
     };
   },
   computed: {
@@ -144,6 +148,13 @@ export default {
       try {
         const response = await axios.get(`/api/pautas/${pautaId}/tickets`);
         this.tickets = response.data;
+
+        // Distribute tickets into columns based on their state
+        this.ticketColumns.forEach((column) => {
+          column.tickets = this.tickets.filter(
+            (ticket) => ticket.estado === column.state
+          );
+        });
       } catch (error) {
         console.error('Error fetching tickets:', error);
       }
@@ -192,6 +203,41 @@ export default {
     closeTicketFull() {
       this.showTicketFull = false;
       this.selectedTicket = null;
+    },
+    onDragStart(ticket) {
+      this.draggedTicket = ticket;
+    },
+    onDrop(targetColumnIndex) {
+      if (!this.draggedTicket) return;
+
+      const targetColumn = this.ticketColumns[targetColumnIndex];
+      if (this.draggedTicket.estado !== targetColumn.state) {
+        this.draggedTicket.estado = targetColumn.state;
+        this.updateTicketState(this.draggedTicket);
+
+        // Remove ticket from its current column
+        this.ticketColumns.forEach((column) => {
+          column.tickets = column.tickets.filter(
+            (t) => t.id !== this.draggedTicket.id
+          );
+        });
+
+        // Add ticket to the target column
+        targetColumn.tickets.push(this.draggedTicket);
+      }
+
+      this.draggedTicket = null;
+    },
+    updateTicketState(ticket) {
+      // Call API to update the ticket state in the backend
+      axios
+        .put(`/api/pautas/tickets/${ticket.id}`, { estado: ticket.estado })
+        .then(() => {
+          console.log('Ticket state updated successfully');
+        })
+        .catch((error) => {
+          console.error('Error updating ticket state:', error);
+        });
     },
   },
   mounted() {
@@ -292,3 +338,4 @@ export default {
 @media (max-width: 1280px) { .card-grid { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); } }
 
 </style>
+``` 

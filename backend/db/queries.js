@@ -92,7 +92,6 @@ const getColaboradores = async (pautaId) => {
         WHERE t.pauta_id = $1`,
       [pautaId]
     );
-    console.error(result.rows)
     return result.rows;   
   } catch (err) {
     console.error('Error fetching colaboradores for pauta:', err);
@@ -100,5 +99,17 @@ const getColaboradores = async (pautaId) => {
   }
 };
 
+const updateTicketEstado = async (ticketId, estado) => {
+  try {
+    const result = await pool.query(
+      'UPDATE ticket SET estado = $1 WHERE id = $2 RETURNING *',
+      [estado, ticketId]
+    );
+    return result.rows[0];
+  } catch (err) {
+    console.error('Error updating ticket estado:', err);
+    throw err;
+  }
+};
 
-module.exports = { logAction, getPautas, getTicketsByPauta, getColaboradores };
+module.exports = { logAction, getPautas, getTicketsByPauta, getColaboradores, updateTicketEstado };
