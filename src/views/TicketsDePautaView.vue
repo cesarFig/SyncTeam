@@ -5,6 +5,10 @@
       <FormPauta @close="toggleForm" @save="handleSavePauta" />
     </v-dialog>
 
+    <v-dialog v-model="showTicketFull" max-width="800">
+      <TicketFull v-if="selectedTicket" :ticket="selectedTicket" @close="closeTicketFull" />
+    </v-dialog>
+
     <v-card class="d-flex flex-column list-panel" style="width: 13%;">
       <div class="pa-4 flex-grow-0">
         <h2 class="text-h6 mb-4">Pautas</h2>
@@ -29,8 +33,8 @@
         <h2 class="text-h5 font-weight-medium mb-3">{{ selectedPauta.titulo }}</h2>
         <v-img v-if="selectedPauta.imagen" :src="selectedPauta.imagen" height="180px" cover class="mb-4 rounded elevation-1"></v-img>
         <div class="mb-5"> <span class="text-subtitle-2 text-grey-darken-1">Cliente:</span> <span class="text-body-1 ml-2">{{ selectedPauta.cliente }}</span> </div>
-        <div class="mb-5"> <h4 class="text-subtitle-1 font-weight-medium mb-2">Descripción</h4> <div class="description-block pa-3 rounded"> <p class="description-text">{{ selectedPauta.propuesta }}</p> </div> </div>
-        <div class="mb-5"> <h4 class="text-subtitle-1 font-weight-medium mb-2">Colaboradores</h4> <v-list density="compact" class="pa-0"> <v-list-item v-for="(colab, i) in selectedPauta.colaboradores" :key="i" class="px-1"> <template v-slot:prepend> <v-avatar color="grey-lighten-1" size="32" class="mr-3"> <v-icon color="white">mdi-account</v-icon> </v-avatar> </template> <v-list-item-title class="text-body-2">{{ colab }}</v-list-item-title> </v-list-item> </v-list> <p class="text-caption text-grey-darken-1 mt-2 ml-1"> <v-icon start size="small">mdi-calendar-blank-outline</v-icon> 8 Abril 2025 </p> </div>
+        <div class="mb-5"> <h4 class="text-subtitle-1 font-weight-medium mb-2">Descripción</h4> <div class="description-block pa-3 rounded"> <p class="description-text">{{ selectedPauta.descripcion }}</p> </div> </div>
+        <div class="mb-5"> <h4 class="text-subtitle-1 font-weight-medium mb-2">Colaboradores</h4> <v-list density="compact" class="pa-0"> <v-list-item v-for="(colab, i) in colaboradores" :key="i" class="px-1"> <template v-slot:prepend> <v-avatar color="grey-lighten-1" size="32" class="mr-3"> <v-icon color="white">mdi-account</v-icon> </v-avatar> </template> <v-list-item-title class="text-body-2">{{ colab }}</v-list-item-title> </v-list-item> </v-list> <p class="text-caption text-grey-darken-1 mt-2 ml-1"> <v-icon start size="small">mdi-calendar-blank-outline</v-icon> 8 Abril 2025 </p> </div>
         <div class="mb-5"> <h4 class="text-subtitle-1 font-weight-medium mb-2">Progreso </h4> <v-progress-linear :model-value="selectedPauta.progreso" color="blue-darken-2" height="8" rounded class="mb-1"></v-progress-linear> <p class="text-caption text-grey-darken-1 text-right">{{ selectedPauta.progreso }}%</p> </div>
         <div class="mb-2 pb-2"> <p class="text-body-2 d-flex align-center"> <v-icon start color="grey-darken-1">mdi-clock-time-three-outline</v-icon> <span class="text-grey-darken-1">{{ selectedPauta.diasRestantes }} Día(s) restante(s)</span> </p> </div>
       </div>
@@ -64,28 +68,28 @@
         <div class="ticket-column">
           <div class="column-header pa-2"> <span class="column-title">Por hacer</span> <v-spacer></v-spacer> <v-btn icon variant="text" size="x-small" color="grey"> <v-icon>mdi-dots-horizontal</v-icon> </v-btn> </div>
           <div class="ticket-list">
-            <TicketCard v-for="task in todoTicket" :key="task.id" v-bind="task" class="mb-2" />
+            <TicketCard v-for="task in todoTicket" :key="task.id" v-bind="task" class="mb-2" @click="openTicketFull(task)" />
           </div>
         </div>
 
         <div class="ticket-column">
           <div class="column-header pa-2"> <span class="column-title">En progreso</span> <v-spacer></v-spacer> <v-btn icon variant="text" size="x-small" color="grey"> <v-icon>mdi-dots-horizontal</v-icon> </v-btn> </div>
           <div class="ticket-list">
-            <TicketCard v-for="task in inProgressTicket" :key="task.id" v-bind="task" class="mb-2" />
+            <TicketCard v-for="task in inProgressTicket" :key="task.id" v-bind="task" class="mb-2" @click="openTicketFull(task)" />
           </div>
         </div>
 
         <div class="ticket-column">
           <div class="column-header pa-2"> <span class="column-title">Revisión</span> <v-spacer></v-spacer> <v-btn icon variant="text" size="x-small" color="grey"> <v-icon>mdi-dots-horizontal</v-icon> </v-btn> </div>
           <div class="ticket-list">
-            <TicketCard v-for="task in reviewTicket" :key="task.id" v-bind="task" class="mb-2" />
+            <TicketCard v-for="task in reviewTicket" :key="task.id" v-bind="task" class="mb-2" @click="openTicketFull(task)" />
           </div>
         </div>
 
         <div class="ticket-column">
           <div class="column-header pa-2"> <span class="column-title">Terminado</span> <v-spacer></v-spacer> <v-btn icon variant="text" size="x-small" color="grey"> <v-icon>mdi-dots-horizontal</v-icon> </v-btn> </div>
           <div class="ticket-list">
-            <TicketCard v-for="task in doneTicket" :key="task.id" v-bind="task" class="mb-2" />
+            <TicketCard v-for="task in doneTicket" :key="task.id" v-bind="task" class="mb-2" @click="openTicketFull(task)" />
           </div>
         </div>
 
@@ -100,17 +104,21 @@
 /* eslint-disable */
 import FormPauta from '../components/forms/FormPauta.vue';
 import TicketCard from '../components/CardTicket.vue'; // Asegúrate que la ruta es correcta
+import TicketFull from '../components/TicketFull.vue';
 import axios from 'axios';
 
 export default {
   name: 'PautasView',
-  components: { TicketCard, FormPauta },
+  components: { TicketCard, FormPauta, TicketFull },
   data() {
     return {
       showForm: false,
       selectedPauta: null,
       pautas: [],
-      tickets: []
+      tickets: [],
+      colaboradores: [],
+      showTicketFull: false,
+      selectedTicket: null,
     };
   },
   computed: {
@@ -140,15 +148,25 @@ export default {
         console.error('Error fetching tickets:', error);
       }
     },
+    async fetchColaboradores(pautaId) {
+      try {
+        const response = await axios.get(`/api/pautas/${pautaId}/colaboradores`);
+        return response.data.map(c => `${c.nombre} ${c.apellidos}`);
+      } catch (error) {
+        console.error('Error fetching colaboradores:', error);
+        return [];
+      }
+    },
     toggleForm() { this.showForm = !this.showForm; },
-    // Updated the `selectPauta` method to display `dias_restantes` and `cliente` correctly
-    selectPauta(pauta) {
+    async selectPauta(pauta) {
       this.selectedPauta = {
         ...pauta,
         diasRestantes: pauta.dias_restantes,
         cliente: pauta.cliente
       };
-      this.fetchTickets(pauta.id);
+      await this.fetchTickets(pauta.id);
+      const colaboradores = await this.fetchColaboradores(pauta.id);
+      this.colaboradores = colaboradores;
     },
     handleSavePauta(newPautaData) {
       const newPauta = {
@@ -166,7 +184,15 @@ export default {
       this.pautas.push(newPauta);
       this.selectedPauta = newPauta;
       this.showForm = false;
-    }
+    },
+    openTicketFull(ticket) {
+      this.selectedTicket = ticket;
+      this.showTicketFull = true;
+    },
+    closeTicketFull() {
+      this.showTicketFull = false;
+      this.selectedTicket = null;
+    },
   },
   mounted() {
     this.fetchPautas();

@@ -40,7 +40,7 @@
 /* eslint-disable */
 export default {
   props: {
-    id_ticket: Number,
+    id: Number,
     titulo: String,
     descripcion: String,
     imagen: String,
@@ -100,6 +100,7 @@ export default {
   font-family: 'Poppins', sans-serif; /* Asegúrate que Poppins esté cargada */
   border: 1px solid #eee; /* Borde muy ligero */
   transition: box-shadow 0.2s ease-in-out;
+  cursor: pointer;
 }
 .card:hover {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
