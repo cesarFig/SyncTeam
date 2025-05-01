@@ -147,6 +147,7 @@
 </template>
 
 <script>
+import axios from 'axios';
 export default {
   data() {
     return {
@@ -156,7 +157,7 @@ export default {
         name: '',
         pauta: '',
         creativo: '',
-        fechaEntrega: new Date(), // Asegúrate de que sea un objeto Date
+        fechaEntrega: new Date(), 
         horaInicial: '',
         horaFinal: '',
         prioridad: '',
@@ -164,10 +165,10 @@ export default {
         descripcion: '',
         archivos: []
       },
-      pautas: ['Pauta 1', 'Pauta 2'],
-      creativos: ['Creativo 1', 'Creativo 2'],
+      pautas: ['Armando Casanova Lemus', 'Kelly Merali Rodriguez Reyna', 'Cesar Figueroa Merino', 'Eduardo Osvaldo Rodriguez Guiterrez'],
+      creativos: ['Publicacion', 'Enviar al cliente'],
       prioridades: ['Alta', 'Media', 'Baja'],
-      categorias: ['Categoría 1', 'Categoría 2']
+      categorias: ['Podcast', 'Tiktok','Video']
     }
   },
   computed: {
@@ -180,18 +181,35 @@ export default {
     }
   },
   methods: {
-    saveTicket() {
-      console.log('Ticket guardado:', this.ticket);
-      this.dialog = false;
-    },
-    openFileUpload() {
-      this.$refs.fileInput.click();
-    },
-    handleFileUpload(event) {
-      const files = event.target.files;
-      this.ticket.archivos = Array.from(files);
-      console.log('Archivos seleccionados:', this.ticket.archivos);
-    }
+    async saveTicket() {
+      try {
+    const now = new Date(); // fecha y hora actual
+
+    const response = await axios.post('http://localhost:3000/api/ticketsPrueba', {
+      titulo: this.ticket.name,
+      descripcion: this.ticket.descripcion,
+      fecha_inicio: now.toISOString(), // hoy
+      fecha_vencimiento: this.ticket.fechaEntrega,
+      hora_inicial: this.ticket.horaInicial,
+      hora_final: this.ticket.horaFinal,
+      cliente: this.ticket.pauta,
+      archivos: this.ticket.archivos.map(file => file.name)
+    });
+
+    console.log('Ticket guardado:', response.data);
+    this.dialog = false;
+  } catch (error) {
+    console.error('Error al guardar el ticket:', error);
+  }
+  },
+  openFileUpload() {
+    this.$refs.fileInput.click();
+  },
+  handleFileUpload(event) {
+    const files = event.target.files;
+    this.ticket.archivos = Array.from(files);
+    console.log('Archivos seleccionados:', this.ticket.archivos);
+  }
   }
 }
 </script>

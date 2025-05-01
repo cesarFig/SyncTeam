@@ -49,6 +49,49 @@ const getTicketsByPauta = async (pautaId) => {
     throw err;
   }
 };
+const insertPrueba = async (nombre, correo) => {
+  try {
+    const result = await pool.query(
+      'INSERT INTO prueba (nombre, correo) VALUES ($1, $2) RETURNING *',
+      [nombre, correo]
+    );
+    return result.rows[0];
+  } catch (error) {
+    console.error('Error al insertar en prueba:', error);
+    throw error;
+  }
+};
 
+const insertPauta = async (data) => {
+  const {
+    titulo,
+    descripcion,
+    fecha_inicio,
+    fecha_vencimiento,
+    hora_inicial,
+    hora_final,
+    cliente
+  } = data;
 
-module.exports = { logAction, getPautas, getTicketsByPauta };
+  const result = await pool.query(
+    `INSERT INTO pautas 
+      (titulo, descripcion, fecha_inicio, fecha_vencimiento, hora_inicial, hora_final, cliente)
+     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+    [titulo, descripcion, fecha_inicio, fecha_vencimiento, hora_inicial, hora_final, cliente]
+  );
+
+  return result.rows[0];
+};
+const insertUsuario = async ({ nombre, apellido, rol, correo, password }) => {
+  const result = await pool.query(
+    `INSERT INTO usuarios (nombre, apellido, rol, correo, password)
+     VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+    [nombre, apellido, rol, correo, password]
+  );
+  return result.rows[0];
+};
+async function getUsuarioPorCorreo(correo) {
+  const result = await pool.query('SELECT * FROM usuarios WHERE correo = $1', [correo]);
+  return result.rows[0];
+}
+module.exports = { logAction, getPautas, getTicketsByPauta, insertPrueba, insertPauta, insertUsuario,  getUsuarioPorCorreo};

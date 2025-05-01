@@ -35,6 +35,8 @@
   </template>
   
   <script>
+  import axios from 'axios';
+
   export default {
     data() {
       return {
@@ -50,18 +52,33 @@
     },
     methods: {
       togglePassword() {
-        this.showPassword = !this.showPassword;
-      },
-      toggleConfirmPassword() {
-        this.showConfirmPassword = !this.showConfirmPassword;
-      },
-      registrarUsuario() {
-        if (this.password !== this.confirmPassword) {
-          alert("Las contraseñas no coinciden");
-          return;
-        }
-        alert(`Registro exitoso para: ${this.nombre} ${this.apellido}`);
-      },
+      this.showPassword = !this.showPassword;
+    },
+    toggleConfirmPassword() {
+      this.showConfirmPassword = !this.showConfirmPassword;
+    },
+    async registrarUsuario() {
+      if (this.password !== this.confirmPassword) {
+        alert("Las contraseñas no coinciden");
+        return;
+      }
+
+      try {
+        const usuario = {
+          nombre: this.nombre,
+          apellido: this.apellido,
+          rol: this.rol,
+          correo: this.correo,
+          password: this.password
+        };
+
+        await axios.post('http://localhost:3000/api/usuarios', usuario);
+        alert('Usuario registrado correctamente');
+      } catch (error) {
+        console.error('Error al registrar usuario:', error);
+        alert('Error al registrar usuario. Intenta nuevamente.');
+      }
+    },
       cerrar() {
         alert("Cerrando formulario...");
       },

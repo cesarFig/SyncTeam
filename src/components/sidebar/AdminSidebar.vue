@@ -124,7 +124,8 @@ const navigateTo = (route) => {
 }
 
 const logout = () => {
-  console.log("Cerrando sesión... ")
+  localStorage.removeItem('usuario'); // Limpia almacenamiento si lo usaste
+  router.push('/'); // Redirige al login
 }
 </script>
 

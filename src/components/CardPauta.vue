@@ -7,7 +7,7 @@
       
     <div class="content">
       <h2 class="title">{{ title }}</h2>
-      <p class="info">Tickets asignados: {{ tickets }}</p>
+      <!--<p class="info">Tickets asignados: {{ tickets }}</p>-->
 
       <div class="progress-container">
         <div class="progress-header">

@@ -45,8 +45,7 @@
            v-for="(task, index) in tasks"
            :key="index"
            :image="task.image"
-           :title="task.title"
-           :tickets="task.tickets"
+           :title="task.title"           
            :progress="task.progress"
            :remainingDays="task.remainingDays"
            :users="task.users"
@@ -66,8 +65,7 @@
            tasks: [
              {
                image: imagenAdidas,
-               title: 'Promo Adidas Junio 2025',
-               tickets: 3,
+               title: 'Promo Adidas Junio 2025',               
                progress: 75,
                remainingDays: 3,
                users: [
