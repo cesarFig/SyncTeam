@@ -128,5 +128,27 @@ const insertUsuario = async ({ nombre, apellido, rol, correo, password }) => {
   );
   return result.rows[0];
 };
+const insertPauta = async (data) => {
+  const {
+    cliente,
+    titulo,    
+    descripcion,
+    imagen,
+    fecha_inicio,
+    fecha_vencimiento,
+    hora_inicial,
+    hora_final,   
+    creado_por 
+  } = data;
 
-module.exports = { logAction, getPautas, getTicketsByPauta, getColaboradores, updateTicketEstado, getUsuarioPorCorreo, getRoles, insertUsuario };
+  const result = await pool.query(
+    `INSERT INTO pauta
+      (cliente, titulo, descripcion, imagen, fecha_inicio, fecha_vencimiento, hora_inicial, hora_final, estado, creado_por)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 1, $9) RETURNING *`,
+    [cliente, titulo, descripcion, imagen, fecha_inicio, fecha_vencimiento, hora_inicial, hora_final, creado_por]
+  );
+
+  return result.rows[0];
+};
+
+module.exports = { logAction, getPautas, getTicketsByPauta, getColaboradores, updateTicketEstado, getUsuarioPorCorreo, getRoles, insertUsuario, insertPauta};

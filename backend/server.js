@@ -5,6 +5,7 @@ const pautasRoutes = require('./routes/pautas');
 const loginRoute = require('./routes/login');
 const rolesRoute = require('./routes/roles');
 const usuariosRoute = require('./routes/usuarios');
+const addPautaRoute = require('./routes/addPauta');
 const cors = require('cors');
 
 dotenv.config();
@@ -23,6 +24,7 @@ app.use('/api/pautas', pautasRoutes);
 app.use('/api/login', loginRoute);
 app.use('/api/roles', rolesRoute);
 app.use('/api/usuarios', usuariosRoute);
+app.use('/api/addPauta', addPautaRoute);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

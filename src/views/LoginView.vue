@@ -66,8 +66,13 @@
         });
 
         alert('Login exitoso');
-        const usuario = response.data.usuario; 
-         localStorage.setItem('usuario', JSON.stringify(response.data.usuario));
+        const usuario = {
+          id: response.data.usuario.id,
+          nombre: response.data.usuario.nombre,
+          apellido: response.data.usuario.apellido,
+          rol: response.data.usuario.rol
+        };        
+        localStorage.setItem('usuario', JSON.stringify(usuario));            
          switch (usuario.rol) {            
             case 'Administrador':
               this.$router.push('/dashboard-admin');
