@@ -92,21 +92,21 @@
       </div>
     </v-card>
 
-    <v-btn @click="toggleForm" variant="outlined" class="btnAddPauta">Nueva pauta</v-btn>
+    <v-btn @click="toggleForm" variant="outlined" class="btnAddPauta">Nuevo ticket</v-btn>
 
   </div>
 </template>
 
 <script>
 /* eslint-disable */
-import FormPauta from '../components/forms/FormPauta.vue';
+import FormTicket from '../components/forms/FormTicket.vue';
 import TicketCard from '../components/CardTicket.vue'; // Asegúrate que la ruta es correcta
 import TicketFull from '../components/TicketFull.vue';
 import axios from 'axios';
 
 export default {
   name: 'PautasView',
-  components: { TicketCard, FormPauta, TicketFull },
+  components: { TicketCard, FormTicket, TicketFull },
   data() {
     return {
       showForm: false,

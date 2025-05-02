@@ -92,7 +92,7 @@ const getColaboradores = async (pautaId) => {
         WHERE t.pauta_id = $1`,
       [pautaId]
     );
-    return result.rows;   
+    return result.rows;
   } catch (err) {
     console.error('Error fetching colaboradores for pauta:', err);
     throw err;
@@ -131,14 +131,14 @@ const insertUsuario = async ({ nombre, apellido, rol, correo, password }) => {
 const insertPauta = async (data) => {
   const {
     cliente,
-    titulo,    
+    titulo,
     descripcion,
     imagen,
     fecha_inicio,
     fecha_vencimiento,
     hora_inicial,
-    hora_final,   
-    creado_por 
+    hora_final,
+    creado_por
   } = data;
 
   const result = await pool.query(
@@ -150,5 +150,50 @@ const insertPauta = async (data) => {
 
   return result.rows[0];
 };
+const getCategorias = async () => {
+  const result = await pool.query('SELECT * FROM categoria');
+  return result.rows;
+};
+const getPrioridades = async () => {
+  const result = await pool.query('SELECT * FROM prioridad');
+  return result.rows;
+};
 
-module.exports = { logAction, getPautas, getTicketsByPauta, getColaboradores, updateTicketEstado, getUsuarioPorCorreo, getRoles, insertUsuario, insertPauta};
+const insertTicket = async (data) => {
+  const {
+    titulo,
+    descripcion,
+    imagen,
+    fecha_creacion,
+    fecha_vencimiento,
+    hora_inicio,
+    hora_final,
+    prioridad_id,
+    categoria_id,
+    pauta_id,
+    creado_por
+  } = data;
+
+  const result = await pool.query(
+    `INSERT INTO ticket (titulo, descripcion, imagen, estado, prioridad_id, categoria_id, pauta_id, fecha_vencimiento, hora_inicio, hora_final, creado_por, fecha_creacion) VALUES
+    ($1, $2, $3, 1 ,$4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
+    [titulo,
+      descripcion,
+      imagen,
+      prioridad_id,
+      categoria_id,
+      pauta_id,
+      fecha_vencimiento,
+      hora_inicio,
+      hora_final,                                        
+      creado_por,
+      fecha_creacion  ]
+  );
+
+  return result.rows[0];
+};
+
+module.exports = {
+  logAction, getPautas, getTicketsByPauta, getColaboradores, updateTicketEstado, getUsuarioPorCorreo, getRoles,
+  insertUsuario, insertPauta, getCategorias, getPrioridades, insertTicket
+};

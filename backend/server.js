@@ -6,6 +6,9 @@ const loginRoute = require('./routes/login');
 const rolesRoute = require('./routes/roles');
 const usuariosRoute = require('./routes/usuarios');
 const addPautaRoute = require('./routes/addPauta');
+const categoriaRoute = require('./routes/categorias');
+const prioridadesRoute = require('./routes/prioridades');
+const addTicketRoute = require('./routes/addTicket');
 const cors = require('cors');
 
 dotenv.config();
@@ -25,6 +28,11 @@ app.use('/api/login', loginRoute);
 app.use('/api/roles', rolesRoute);
 app.use('/api/usuarios', usuariosRoute);
 app.use('/api/addPauta', addPautaRoute);
+app.use('/api/categoria', categoriaRoute);
+app.use('/api/prioridades', prioridadesRoute);
+app.use('/api/addTicket', addTicketRoute);
+
+
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
