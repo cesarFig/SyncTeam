@@ -45,6 +45,7 @@
   </template>
   
   <script>
+  import axios from 'axios';
   export default {
     data() {
       return {
@@ -57,9 +58,28 @@
       togglePassword() {
         this.showPassword = !this.showPassword;
       },
-      login() {
-        alert(`Intentando iniciar sesión con: ${this.email}`);
-      },
+      async login() {
+      try {
+        const response = await axios.post('http://localhost:3000/api/login', {
+          correo: this.email,
+          password: this.password
+        });
+
+        alert('Login exitoso');
+        const usuario = response.data.usuario; 
+         localStorage.setItem('usuario', JSON.stringify(response.data.usuario));
+         switch (usuario.rol) {            
+            case 'Administrador':
+              this.$router.push('/dashboard-admin');
+              break;
+            default:
+              this.$router.push('/dashboard-admin');
+        }
+      } catch (error) {
+        alert(error.response?.data?.error || 'Error al iniciar sesión');
+      }
+    }
+      
     },
   };
   </script>

@@ -111,5 +111,22 @@ const updateTicketEstado = async (ticketId, estado) => {
     throw err;
   }
 };
+async function getUsuarioPorCorreo(correo) {
+  const result = await pool.query('SELECT * FROM usuario WHERE email = $1', [correo]);
+  return result.rows[0];
+}
+const getRoles = async () => {
+  const result = await pool.query('SELECT * FROM rol');
+  return result.rows;
+};
 
-module.exports = { logAction, getPautas, getTicketsByPauta, getColaboradores, updateTicketEstado };
+const insertUsuario = async ({ nombre, apellido, rol, correo, password }) => {
+  const result = await pool.query(
+    `INSERT INTO usuario (nombre, apellidos, rol_id, email, password)
+     VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+    [nombre, apellido, rol, correo, password]
+  );
+  return result.rows[0];
+};
+
+module.exports = { logAction, getPautas, getTicketsByPauta, getColaboradores, updateTicketEstado, getUsuarioPorCorreo, getRoles, insertUsuario };

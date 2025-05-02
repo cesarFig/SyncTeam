@@ -16,7 +16,18 @@
               <v-form @submit.prevent="registrarUsuario">
                 <v-text-field v-model="nombre" label="Nombre" required variant="outlined" class="mb-3"></v-text-field>
                 <v-text-field v-model="apellido" label="Apellido" required variant="outlined" class="mb-3"></v-text-field>
-                <v-select v-model="rol" label="Rol" :items="['Escritor', 'Fotografo','Editor']" required variant="outlined" class="mb-3"></v-select>
+                <v-select
+  v-model="rol"
+  :items="roles"
+  item-title="nombre"
+  item-value="id"
+  label="Rol"
+  required
+  variant="outlined"
+  class="mb-3"
+/>
+
+
                 <v-text-field v-model="correo" label="Correo" type="email" required variant="outlined" class="mb-3"></v-text-field>
                 <v-text-field v-model="password" label="Contraseña" :type="showPassword ? 'text' : 'password'" variant="outlined" required class="mb-3"
                   :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" @click:append-inner="togglePassword">
@@ -35,18 +46,23 @@
   </template>
   
   <script>
+  import axios from 'axios';
   export default {
     data() {
       return {
         nombre: "",
         apellido: "",
-        rol: "",
+        rol: null,
         correo: "",
         password: "",
         confirmPassword: "",
         showPassword: false,
-        showConfirmPassword: false,
+        showConfirmPassword: false,        
+        roles: [] 
       };
+    }, 
+    mounted() {
+      this.obtenerRoles();
     },
     methods: {
       togglePassword() {
@@ -55,16 +71,39 @@
       toggleConfirmPassword() {
         this.showConfirmPassword = !this.showConfirmPassword;
       },
-      registrarUsuario() {
-        if (this.password !== this.confirmPassword) {
-          alert("Las contraseñas no coinciden");
-          return;
-        }
-        alert(`Registro exitoso para: ${this.nombre} ${this.apellido}`);
-      },
+      async registrarUsuario() {
+      if (this.password !== this.confirmPassword) {
+        alert("Las contraseñas no coinciden");
+        return;
+      }
+
+      try {
+        const usuario = {
+          nombre: this.nombre,
+  apellido: this.apellido,
+  rol: this.rol, // esto ya será el ID (ej. 2)
+  correo: this.correo,
+  password: this.password
+        };
+        console.log(usuario);
+        await axios.post('http://localhost:3000/api/usuarios', usuario);
+        alert('Usuario registrado correctamente');
+      } catch (error) {
+        console.error('Error al registrar usuario:', error);
+        alert('Error al registrar usuario. Intenta nuevamente.');
+      }
+    },
       cerrar() {
         alert("Cerrando formulario...");
       },
+      async obtenerRoles() {
+      try {
+        const response = await axios.get('http://localhost:3000/api/roles');
+        this.roles = response.data; // solo nombres
+      } catch (error) {
+        console.error('Error al cargar roles:', error);
+      }
+    }
     },
   };
   </script>
