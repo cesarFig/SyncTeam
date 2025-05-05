@@ -3,50 +3,85 @@
       <v-card class="user-card">
         <!-- Encabezado con imagen y nombre -->
         <v-card-title class="d-flex align-center">
+          <!--
           <v-avatar size="45" class="avatar-creativo">
             <v-img :src="usuario.imagen" alt="Foto de perfil" />
           </v-avatar>
+          -->
           <div class="user-info ml-3">
-            <h3 class="name">{{ usuario.nombre }}</h3>
-            <p class="role">{{ usuario.rol }}</p>
+            <h3 class="name">{{ usuario.nombre +" "+usuario.apellidos}}</h3>
+            <p class="role">{{ rol }}</p>
           </div>
         </v-card-title>
   
         <!-- Correo sin borde -->
         <v-card-text class="email-box">
-          {{ usuario.correo }}
+          {{ usuario.email }}
         </v-card-text>
   
         <!-- Información de tickets -->
         <v-card-actions class="footer">
           <div class="ticket-info">
           
-            <span>{{ usuario.ticketsTotales }} Tickets Totales</span>
+            <span>{{ tickets.ticketsTotales }} Tickets Totales</span>
           </div>
-          <span class="active-tickets"><b>Activos:</b> {{ usuario.ticketsActivos }}</span>
+          <span class="active-tickets"><b>Activos:</b> {{ tickets.ticketsActivos }}</span>
         </v-card-actions>
       </v-card>
     </v-container>
   </template>
   
   <script>
+  import axios from 'axios';
   export default {
-    props: {
-      usuario: {
-        type: Object,
-        required: true,
-        default: () => ({
-          nombre: String,
-          imagen:String,
-          rol: String,
-          correo: String,
-          ticketsTotales: 0,
-          ticketsActivos: 0
-        })
+    data(){
+      return{
+        tickets:[],
+        rol:''
       }
     },
-    data() {
-      return {};
+    props: {
+      usuario: {
+        type: Object,               
+      }
+    },
+    mounted() {
+      this.getTicketsUser();
+    },methods: {
+      async getTicketsUser(){
+
+        try {          
+          const response = await axios.post('http://localhost:3000/api/usuarios/getTicket',{
+            id: this.usuario.id
+        });
+        this.tickets = response.data;   
+        switch(this.usuario.rol_id){
+          case 1:
+          this.rol='Administrador'
+          break;
+          case 2:
+          this.rol='Copywriter'
+          break;
+          case 3:
+          this.rol='Editor'
+          break;
+          case 4:
+          this.rol='Fotógrafo'
+          break;
+          case 5:
+          this.rol='Publicador'
+          break;
+          case 6:
+          this.rol='Diseñador'
+          break;
+          case 7:
+          this.rol='Cliente'
+          break;
+        }     
+      } catch (error) {
+        console.error('Error al cargar tickets:', error);
+      }
+      }
     },
   };
   </script>

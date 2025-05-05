@@ -2,7 +2,7 @@
   <div class="contenedor-horizontal">
 
     <v-dialog v-model="showForm" max-width="500">
-      <FormPauta @close="toggleForm" @save="handleSavePauta" />
+      <FormTicket @close="toggleForm" @save="handleSavePauta" />
     </v-dialog>
 
     <v-dialog v-model="showTicketFull" max-width="800">
@@ -85,7 +85,8 @@
               v-bind="task"
               class="mb-2"
               draggable="true"
-              @dragstart="onDragStart(task)"
+              @dragstart="onDragStart(task)"              
+              @click="openTicketFull(task)"        
             />
           </div>
         </div>
@@ -148,7 +149,7 @@ export default {
       try {
         const response = await axios.get(`/api/pautas/${pautaId}/tickets`);
         this.tickets = response.data;
-
+        console.log(this.tickets);
         // Distribute tickets into columns based on their state
         this.ticketColumns.forEach((column) => {
           column.tickets = this.tickets.filter(

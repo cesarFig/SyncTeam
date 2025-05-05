@@ -185,15 +185,70 @@ const insertTicket = async (data) => {
       pauta_id,
       fecha_vencimiento,
       hora_inicio,
-      hora_final,                                        
+      hora_final,
       creado_por,
-      fecha_creacion  ]
+      fecha_creacion]
   );
 
   return result.rows[0];
 };
+const getUsuarios = async () => {
+  const result = await pool.query('SELECT * FROM usuario');
+  return result.rows;
+};
+const getTicketsUser = async (id) => {
+  const result = await pool.query(
+    `SELECT 
+      COUNT(*) AS "ticketsTotales",
+      COUNT(CASE WHEN t.estado != 4 THEN 1 END) AS "ticketsActivos"
+     FROM asignacion a
+     JOIN ticket t ON a.ticket_id = t.id
+     WHERE a.usuario_id = $1;`,
+    [id]
+  );
+  return result.rows[0];
+};
+const getTickets = async (id) => {
+  try {
+    const result = await pool.query(
+      `SELECT 
+        t.id,
+        t.titulo,
+        t.descripcion,
+        t.imagen,
+        t.estado,
+        t.fecha_creacion,
+        t.fecha_vencimiento,
+        t.hora_inicio,
+        t.hora_final,
+        c.nombre_categoria,
+        c.color_rgb,
+        pr.nombre AS prioridad,
+        pr.nivel_prioridad,
+        u.nombre AS asignado_nombre,
+        u.apellidos AS asignado_apellidos,
+        COUNT(co.id) AS total_comentarios
+      FROM asignacion a
+      JOIN ticket t ON a.ticket_id = t.id
+      JOIN categoria c ON t.categoria_id = c.id
+      JOIN prioridad pr ON t.prioridad_id = pr.id
+      LEFT JOIN usuario u ON a.usuario_id = u.id
+      LEFT JOIN comentario co ON t.id = co.ticket_id
+      WHERE a.usuario_id = $1
+      GROUP BY t.id, c.nombre_categoria, c.color_rgb, pr.nombre, pr.nivel_prioridad, u.nombre, u.apellidos
+      ORDER BY pr.nivel_prioridad DESC, t.fecha_vencimiento`,
+      [id]
+    );
+
+    return result.rows;
+  } catch (err) {
+    console.error('Error fetching tickets for usuario:', err);
+    throw err;
+  }
+};
+
 
 module.exports = {
   logAction, getPautas, getTicketsByPauta, getColaboradores, updateTicketEstado, getUsuarioPorCorreo, getRoles,
-  insertUsuario, insertPauta, getCategorias, getPrioridades, insertTicket
+  insertUsuario, insertPauta, getCategorias, getPrioridades, insertTicket, getUsuarios, getTicketsUser, getTickets
 };

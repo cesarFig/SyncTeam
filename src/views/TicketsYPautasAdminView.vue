@@ -14,8 +14,6 @@
          class="buscador-field"
          label="Buscar pauta"      
        /> 
-   
-   
      </v-col>
     
      <v-col cols="6" sm="6" md="2">

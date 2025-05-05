@@ -1,232 +1,417 @@
 <template>
-  <div class="pauta-form">
-    <v-dialog v-model="dialog" persistent max-width="500px">
-      <v-card>
-        <v-card-title class="d-flex align-center pa-4">
-          <h2 class="form-title">Añadir Ticket</h2>
-          <v-spacer></v-spacer>
-          <div class="date-header">Hoy {{ currentDate }}</div>
-          <v-btn icon @click="dialog = false" class="close-button ml-2">
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
-        </v-card-title>
+  <div class="contenedor-horizontal">
 
-        <v-card-text>
-          <v-row>
-            <v-col cols="12">
-              <v-text-field label="Nombre del ticket" v-model="ticket.name" class="rounded-input"
-                variant="outlined"></v-text-field>
-            </v-col>
-          </v-row>
-          <!--<v-col cols="6">
-              <v-select label="Creativo" v-model="ticket.creativo" :items="creativos" class="rounded-input"
-                variant="outlined"></v-select>
-            </v-col>-->
-          
-          <v-row>
-            <v-col cols="12">
-              <v-select label="Pauta" v-model="pautaSeleccionada" :items="pauta" item-title="titulo" item-value="id"  class="rounded-input"
-                variant="outlined"></v-select>
-            </v-col>
-            
-          </v-row>
-      
-          <v-row>
-            <v-col cols="4">
-              <v-menu v-model="dateMenu" :close-on-content-click="false" transition="scale-transition" offset-y
-                min-width="auto">
-                <template v-slot:activator="{ props }">
-                  <v-text-field :model-value="formattedDate" label="Fecha de Entrega" prepend-inner-icon="mdi-calendar"
-                    readonly v-bind="props" class="rounded-input" variant="outlined"></v-text-field>
-                </template>
-                <v-date-picker v-model="ticket.fechaEntrega" no-title scrollable
-                  :value="ticket.fechaEntrega"></v-date-picker>
-              </v-menu>
-            </v-col>
-            <v-col cols="4">
-              <v-text-field label="Hora Inicial" v-model="ticket.horaInicial" type="time" class="rounded-input"
-                variant="outlined"></v-text-field>
-            </v-col>
-            <v-col cols="4">
-              <v-text-field label="Hora Final" v-model="ticket.horaFinal" type="time" class="rounded-input"
-                variant="outlined"></v-text-field>
-            </v-col>
-          </v-row>
-
-          <v-row>
-            <v-col cols="6">
-              <v-select label="Categoría" v-model="categoriaSeleccionada" :items="categoria"
-                item-title="nombre_categoria" item-value="id" class="rounded-input" variant="outlined" />
-            </v-col>
-
-            <v-col cols="6">
-              <v-select label="Prioridad" v-model="ticket.prioridad" :items="prioridad" item-title="nombre" item-value="id" class="rounded-input"
-                variant="outlined"></v-select>
-            </v-col>
-          </v-row>
-
-          <div class="input-group">
-            <v-textarea label="Descripción" v-model="ticket.descripcion" class="rounded-input"
-              variant="outlined"></v-textarea>
-          </div>
-        </v-card-text>
-
-        <v-card-actions class="pa-4">
-          <div class="file-upload-container d-flex align-center">
-            <span class="file-upload-text">Agregar Archivo</span>
-            <v-icon class="file-upload-icon ml-2 cursor-pointer" @click="openFileUpload">mdi-paperclip</v-icon>
-            <input type="file" ref="fileInput" style="display: none" multiple @change="handleFileUpload">
-          </div>
-          <div class="ml-auto">
-            <v-btn text class="mr-2 cancel-button" @click="dialog = false">Cancelar</v-btn>
-            <v-btn color="purple" class="save-button rounded-lg" @click="addTicket">Guardar</v-btn>
-          </div>
-        </v-card-actions>
-      </v-card>
+    <v-dialog v-model="showForm" max-width="500">
+      <FormTicket @close="toggleForm" @save="handleSavePauta" />
     </v-dialog>
+
+    <v-dialog v-model="showTicketFull" max-width="800">
+      <TicketFull v-if="selectedTicket" :ticket="selectedTicket" @close="closeTicketFull" />
+    </v-dialog>
+    <v-card class="d-flex flex-column tickets-panel" style="flex-grow: 1;">
+      <div class="pa-4 pb-2 d-flex justify-space-between align-center flex-grow-0">
+        <div>
+          <span class="text-caption mr-2">Prioridad:</span>
+          <v-chip size="small" color="blue" text-color="blue-darken-1" class="mr-1">Normal</v-chip>
+          <v-chip size="small" color="orange" text-color="orange-darken-1" class="mr-1">Baja</v-chip>
+          <v-chip size="small" color="red" text-color="red-darken-1">Alta</v-chip>
+        </div>
+
+        <v-row justify="end">
+          <v-col cols="12" sm="6" md="4">
+            <v-text-field v-model="searchTerm" label="Buscar tickets" prepend-inner-icon="mdi-magnify"
+              variant="outlined" density="compact" hide-details clearable @input="handleSearch" />
+          </v-col>
+          <v-col cols="6" sm="5" md="4"> <!-- Más ancho que antes -->
+            <v-select v-model="orden" :items="ordenOptions" item-title="label" item-value="value" label="Ordenar por:"
+              density="compact" variant="outlined" hide-details />
+          </v-col>
+
+        </v-row>
+      </div>
+
+
+
+      <div class="ticket-columns-container pa-4 pt-2 justify-space-between align-center">
+        <div class="ticket-column" v-for="(column, index) in ticketColumns" :key="index" @dragover.prevent
+          @drop="onDrop(index)">
+          <div class="column-header pa-2">
+            <span class="column-title">{{ column.title }}</span>
+            <v-spacer></v-spacer>
+            <v-btn icon variant="text" size="x-small" color="grey">
+              <v-icon>mdi-dots-horizontal</v-icon>
+            </v-btn>
+          </div>
+          <div class="ticket-list">
+            <TicketCard v-for="task in column.tickets" :key="task.id" v-bind="task" class="mb-2" draggable="true"
+              @dragstart="onDragStart(task)" @click="openTicketFull(task)" />
+          </div>
+        </div>
+      </div>
+    </v-card>
+
+    <v-btn @click="toggleForm" variant="outlined" class="btnAddPauta">Nuevo ticket</v-btn>
+
   </div>
 </template>
 
 <script>
+/* eslint-disable */
+import FormTicket from '../components/forms/FormTicket.vue';
+import TicketCard from '../components/CardTicket.vue'; // Asegúrate que la ruta es correcta
+import TicketFull from '../components/TicketFull.vue';
 import axios from 'axios';
+
 export default {
+  name: 'PautasView',
+  components: { TicketCard, FormTicket, TicketFull },
   data() {
     return {
-      dialog: true,
-      dateMenu: false,
-      ticket: {
-        name: '',
-        descripcion: '',
-        imagen: '',
-        pauta: '',
-        horaInicial: '',
-        horaFinal: '',
-        fechaEntrega: new Date(), 
-        prioridad: null,
-      },
-      prioridad: [],      
-      categoria: [], 
-      pauta: [],
-      pautaSeleccionada: null,
-      categoriaSeleccionada: null,
-    }
+      showForm: false,
+      searchTerm: '',
+    allTickets: [],  // Todos los tickets (sin filtrar)
+    tickets: [], 
+      showTicketFull: false,
+      selectedTicket: null,
+      draggedTicket: null,
+      ticketColumns: [
+        { title: 'Por hacer', state: 1, tickets: [] },
+        { title: 'En progreso', state: 2, tickets: [] },
+        { title: 'Revisión', state: 3, tickets: [] },
+        { title: 'Terminado', state: 4, tickets: [] },
+      ], orden: 'mayor', // Valor por defecto
+      ordenOptions: [
+        { label: 'Dias restantes (mayor)', value: 'mayor' },
+        { label: 'Dias restantes (menor)', value: 'menor' },
+        { label: 'Prioridad ', value: 'prioridad' } // Cambiado el texto
+      ],
+    };
   },
+
   computed: {
-    currentDate() {
-      return new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    },
-    formattedDate() {
-      const date = new Date(this.ticket.fechaEntrega);
-      return date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    filteredPautas() { return this.pautas; },
+    todoTicket() { return this.tickets.filter(task => task.estado === 1); },
+    inProgressTicket() { return this.tickets.filter(task => task.estado === 2); },
+    reviewTicket() { return this.tickets.filter(task => task.estado === 3); },
+    doneTicket() { return this.tickets.filter(task => task.estado === 4); }
+  }, watch: {
+    orden() {
+      this.ordenarTickets();
     }
-  }, mounted() {
-    this.obtenerCategoria();
-    this.obtenerPrioridades();
-    this.obtenerPautas();
   },
   methods: {
-    async addTicket() { 
-      try {        
-        const now = new Date(); // fecha y hora actual
-        const usuario = JSON.parse(localStorage.getItem('usuario'));        
-        const response = await axios.post('http://localhost:3000/api/addTicket', {
-          titulo: this.ticket.name,
-          descripcion: this.ticket.descripcion,
-          imagen: 'https://cdn.pixabay.com/photo/2016/11/18/17/20/living-room-1835923_1280.jpg',
-          fecha_creacion: now.toISOString(),                        
-          fecha_vencimiento: this.ticket.fechaEntrega,
-          hora_inicio: this.ticket.horaInicial,
-          hora_final: this.ticket.horaFinal,  
-          prioridad_id: this.ticket.prioridad,  
-          categoria_id: this.categoriaSeleccionada,
-          pauta_id: this.pautaSeleccionada,
-          creado_por: usuario.id                    
+    handleSearch() {
+  const term = this.searchTerm?.toLowerCase() || '';
+  
+  if (!term) {
+    // Si no hay término, mostrar todos los tickets
+    this.tickets = [...this.allTickets];
+  } else {
+    // Filtrar tickets que coincidan con el término
+    this.tickets = this.allTickets.filter(ticket => {
+      return (
+        (ticket.titulo && ticket.titulo.toLowerCase().includes(term)) ||
+        (ticket.descripcion && ticket.descripcion.toLowerCase().includes(term)) ||
+        (ticket.asignado_a && ticket.asignado_a.toLowerCase().includes(term)) ||
+        (ticket.id.toString().includes(term))
+      );
+    });
+  }
+  
+  this.updateTicketColumns();
+  this.ordenarTickets();
+},
+    ordenarTickets() {
+      this.ticketColumns.forEach(column => {
+        column.tickets.sort((a, b) => {
+          if (this.orden === 'prioridad') {
+            // Ordenar por prioridad_id DESCENDENTE (4 primero, luego 3, etc.)
+            return b.prioridad_id - a.prioridad_id; // Cambiado a b - a
+          } else {
+            // Ordenar por fecha (se mantiene igual)
+            const fechaA = new Date(a.fecha_vencimiento);
+            const fechaB = new Date(b.fecha_vencimiento);
+
+            if (this.orden === 'mayor') {
+              return fechaB - fechaA;
+            } else {
+              return fechaA - fechaB;
+            }
+          }
+        });
+      });
+    },
+    updateTicketColumns() {
+  this.ticketColumns.forEach(column => {
+    column.tickets = this.tickets.filter(ticket => ticket.estado === column.state);
+  });
+},
+async fetchTickets() {
+  try {
+    const response = await axios.post('http://localhost:3000/api/usuarios/getTickets', { id: 4 });
+    this.allTickets = response.data;
+    this.tickets = [...this.allTickets]; // Copia inicial
+    this.updateTicketColumns(); // Método nuevo para actualizar columnas
+    this.ordenarTickets();
+  } catch (error) {
+    console.error('Error fetching tickets:', error);
+  }
+},
+    toggleForm() { this.showForm = !this.showForm; },
+
+    openTicketFull(ticket) {
+      this.selectedTicket = ticket;
+      this.showTicketFull = true;
+    },
+    closeTicketFull() {
+      this.showTicketFull = false;
+      this.selectedTicket = null;
+    },
+    onDragStart(ticket) {
+      this.draggedTicket = ticket;
+    },
+    onDrop(targetColumnIndex) {
+      if (!this.draggedTicket) return;
+
+      const targetColumn = this.ticketColumns[targetColumnIndex];
+      if (this.draggedTicket.estado !== targetColumn.state) {
+        this.draggedTicket.estado = targetColumn.state;
+        this.updateTicketState(this.draggedTicket);
+
+        // Remove ticket from its current column
+        this.ticketColumns.forEach((column) => {
+          column.tickets = column.tickets.filter(
+            (t) => t.id !== this.draggedTicket.id
+          );
         });
 
-        console.log('Ticket guardado:', response.data);
-        this.dialog = false;
-      } catch (error) {
-        console.error('Error al guardar el ticket:', error);
+        // Add ticket to the target column
+        targetColumn.tickets.push(this.draggedTicket);
       }
+
+      this.draggedTicket = null;
     },
-    openFileUpload() {
-      this.$refs.fileInput.click();
+    updateTicketState(ticket) {
+      // Call API to update the ticket state in the backend
+      axios
+        .put(`/api/pautas/tickets/${ticket.id}`, { estado: ticket.estado })
+        .then(() => {
+          console.log('Ticket state updated successfully');
+        })
+        .catch((error) => {
+          console.error('Error updating ticket state:', error);
+        });
     },
-    handleFileUpload(event) {
-      const files = event.target.files;
-      this.ticket.archivos = Array.from(files);
-      console.log('Archivos seleccionados:', this.ticket.archivos);
-    },
-    async obtenerCategoria() {
-      try {
-        const response = await axios.get('http://localhost:3000/api/categoria');
-        this.categoria = response.data;
-      } catch (error) {
-        console.error('Error al cargar categorias:', error);
-      }
-    },async obtenerPrioridades() {
-      try {
-        const response = await axios.get('http://localhost:3000/api/prioridades');
-        this.prioridad = response.data;
-      } catch (error) {
-        console.error('Error al cargar prioridades:', error);
-      }
-    },async obtenerPautas() {
-      try {
-        const response = await axios.get('http://localhost:3000/api/pautas');
-        this.pauta = response.data;
-      } catch (error) {
-        console.error('Error al cargar pautas:', error);
-      }
-    }
+  },
+  mounted() {
+    this.fetchTickets();
   }
-}
+};
 </script>
 
 <style scoped>
-.form-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #333;
+/* Importar Poppins */
+/* @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap'); */
+
+.contenedor-horizontal {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  width: 100%;
+  gap: 0;
+  background-color: #f8f8fa;
+  overflow: hidden;
 }
 
-.date-header {
-  color: #666;
-  font-size: 0.875rem;
+.list-panel,
+.detail-panel,
+.tickets-panel {
+  height: 100%;
+  border-right: 1px solid #e0e0e0;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
 }
 
-.close-button {
-  margin-left: 8px;
+.tickets-panel {
+  border-right: none;
+  background-color: #F3F4F8;
 }
 
-.save-button {
-  background-color: #9C27B0 !important;
-  color: white !important;
-  text-transform: none;
-}
+/* Areas de scroll internas */
+.list-scroll-area,
+.detail-scroll-area,
+.ticket-list
 
-.cancel-button {
-  text-transform: none;
-}
-
-.rounded-input .v-input__outline {
-  border-radius: 50px !important;
-}
-
-.file-upload-container {
+/* .ticket-list ahora tiene scroll */
+  {
+  overflow-y: auto;
   flex-grow: 1;
+  flex-basis: 0;
 }
 
-.file-upload-text {
-  color: #333;
+/* Estilo scrollbar */
+.list-scroll-area::-webkit-scrollbar,
+.detail-scroll-area::-webkit-scrollbar,
+.description-block::-webkit-scrollbar,
+.ticket-columns-container::-webkit-scrollbar,
+.ticket-list::-webkit-scrollbar {
+  height: 6px;
+  width: 5px;
+}
+
+.list-scroll-area::-webkit-scrollbar-track,
+.detail-scroll-area::-webkit-scrollbar-track,
+.description-block::-webkit-scrollbar-track,
+.ticket-columns-container::-webkit-scrollbar-track,
+.ticket-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.list-scroll-area::-webkit-scrollbar-thumb,
+.detail-scroll-area::-webkit-scrollbar-thumb,
+.description-block::-webkit-scrollbar-thumb,
+.ticket-columns-container::-webkit-scrollbar-thumb,
+.ticket-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.list-scroll-area::-webkit-scrollbar-thumb:hover,
+.detail-scroll-area::-webkit-scrollbar-thumb:hover,
+.description-block::-webkit-scrollbar-thumb:hover,
+.ticket-columns-container::-webkit-scrollbar-thumb:hover,
+.ticket-list::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+
+/* Estilos lista pautas */
+.pauta-list-item {
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.pauta-list-item:hover {
+  background-color: #f5f5f5;
+}
+
+.list-item-title {
+  font-size: 0.85rem;
+  line-height: 1.3;
+  white-space: normal;
   font-weight: 500;
 }
 
-.file-upload-icon {
-  color: #333;
+.list-item-subtitle {
+  font-size: 0.75rem;
+  line-height: 1.2;
+  white-space: normal;
+  color: #757575;
 }
 
-.file-upload-icon:hover {
-  color: #9C27B0;
+.selected-pauta {
+  background-color: #e3f2fd !important;
+  border-left: 3px solid #1976D2;
+}
+
+.selected-pauta .list-item-title {
+  font-weight: 700;
+  color: #1976D2;
+}
+
+.list-scroll-area .v-list-item:last-child {
+  border-bottom: none;
+}
+
+/* Estilos detalle pauta */
+.description-block {
+  background-color: #f5f5f5;
+  border: 1px solid #eeeeee;
+  max-height: 10rem;
+  overflow-y: auto;
+  position: relative;
+}
+
+.description-text {
+  font-family: 'Poppins', sans-serif;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #333;
+  text-align: justify;
+  hyphens: auto;
+}
+
+.footer-action {
+  border-top: 1px solid #e0e0e0;
+  background-color: #ffffff;
+  position: relative;
+  z-index: 2;
+}
+
+.ticket-columns-container {
+  display: flex;
+  gap: 16px;
+  height: 100%;
+  align-content: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-grow: 1;
+}
+
+.ticket-column {
+  flex: 0 0 220px;
+  height: 100%;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.column-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
+  background-color: #ffffff;
+  border-radius: 8px
+}
+
+.column-title {
+  font-weight: 500;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.ticket-list {
+  padding: 12px 8px;
+}
+
+.btnAddPauta {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 1000;
+  background-color: #B5179E;
+  color: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 1280px) {
+  .card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
 }
 </style>

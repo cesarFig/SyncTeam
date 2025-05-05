@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { insertUsuario } = require('../db/queries');
+const { insertUsuario, getUsuarios, getTicketsUser, getTickets } = require('../db/queries');
 const bcrypt = require('bcrypt');
 
 router.post('/', async (req, res) => {
@@ -19,5 +19,36 @@ router.post('/', async (req, res) => {
     res.status(500).json({ error: 'Error al registrar usuario' });
   }
 });
+router.get('/getUsuarios', async (req, res) => {
+  try {
+    const roles = await getUsuarios();
+    res.json(roles);
+  } catch (error) {
+    console.error('Error al obtener usuarios:', error);
+    res.status(500).json({ error: 'Error al obtener los usuarios' });
+  }
+});
+router.post('/getTicket', async (req, res) => {
+  const { id } = req.body; // ✅ aquí sí puedes usar req.body porque es POST
+  
+  try {
+    const tickets = await getTicketsUser(id);
+    res.json(tickets);
+  } catch (error) {
+    console.error('Error al obtener tickets:', error);
+    res.status(500).json({ error: 'Error al obtener los tickets' });
+  }
+});
+router.post('/getTickets', async (req, res) => {
+  const { id } = req.body; // ✅ aquí sí puedes usar req.body porque es POST
+  try {
+    const tickets = await getTickets(id);
+    res.json(tickets);
+  } catch (error) {
+    console.error('Error al obtener tickets:', error);
+    res.status(500).json({ error: 'Error al obtener los tickets' });
+  }
+});
+
 
 module.exports = router;
