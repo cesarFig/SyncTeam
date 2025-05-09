@@ -104,10 +104,16 @@ import FormTicket from '../components/forms/FormTicket.vue';
 import TicketCard from '../components/CardTicket.vue'; // Asegúrate que la ruta es correcta
 import TicketFull from '../components/TicketFull.vue';
 import axios from 'axios';
+import { useRoute } from 'vue-router';
+import { ref, onMounted } from 'vue';
 
 export default {
   name: 'PautasView',
   components: { TicketCard, FormTicket, TicketFull },
+  setup() {
+    const route = useRoute();
+    return { route };
+  },
   data() {
     return {
       showForm: false,
@@ -242,7 +248,15 @@ export default {
     },
   },
   mounted() {
-    this.fetchPautas();
+    this.fetchPautas().then(() => {
+      const pautaId = this.route.query.id;
+      if (pautaId) {
+        const pauta = this.pautas.find(p => p.id === parseInt(pautaId));
+        if (pauta) {
+          this.selectPauta(pauta);
+        }
+      }
+    });
   }
 };
 </script>

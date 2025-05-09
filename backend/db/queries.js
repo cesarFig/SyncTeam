@@ -19,23 +19,26 @@ const getPautas = async () => {
   try {
     const result = await pool.query(`
       SELECT 
-        p.id,
-        p.titulo,
-        p.descripcion,
-        p.fecha_inicio,
-        p.fecha_vencimiento,
-        p.hora_inicial,
-        p.hora_final,
-        p.cliente,   
-        p.imagen,
-        p.cliente AS nombre_cliente,  -- Usamos directamente el campo cliente de la tabla pauta
-        DATE_PART('day', p.fecha_vencimiento::timestamp - NOW()::timestamp) AS dias_restantes,
-        COUNT(t.id) AS total_tickets,
-        SUM(CASE WHEN t.estado = 4 THEN 1 ELSE 0 END) AS tickets_completados
-      FROM pauta p
-      LEFT JOIN ticket t ON p.id = t.pauta_id
-      GROUP BY p.id
-      ORDER BY p.fecha_vencimiento
+    p.id,
+    p.titulo,
+    p.descripcion,
+    p.fecha_inicio,
+    p.fecha_vencimiento,
+    p.hora_inicial,
+    p.hora_final,
+    p.cliente,   
+    p.imagen,
+    p.cliente AS nombre_cliente,
+    DATE_PART('day', p.fecha_vencimiento::timestamp - NOW()::timestamp) AS dias_restantes,
+    COUNT(t.id) AS total_tickets,
+    SUM(CASE WHEN t.estado = 4 THEN 1 ELSE 0 END) AS tickets_completados,
+    p.prioridad_id,
+    pr.color_hex AS prioridad_color
+    FROM pauta p
+    LEFT JOIN ticket t ON p.id = t.pauta_id
+    LEFT JOIN prioridad pr ON p.prioridad_id = pr.id
+    GROUP BY p.id, p.prioridad_id, pr.color_hex
+    ORDER BY p.fecha_vencimiento
     `);
     return result.rows;
   } catch (err) {

@@ -1,6 +1,6 @@
 <template>
-  <div class="card">      
-    <div class="prioridad"></div>
+  <div class="card">
+    <div class="prioridad" :style="{ backgroundColor: prioridad_color }"></div>
     <div class="image-container">
       <img :src="image" alt="Task Image" class="task-image" />
     </div>
@@ -47,7 +47,9 @@ export default {
     tickets: Number,
     progress: Number,
     remainingDays: [Number, String],
-    users: Array
+    users: Array,
+    prioridad: Number,
+    prioridad_color: String
   }
 };
 </script>
@@ -67,7 +69,8 @@ export default {
 }
 
 .task-image {
-  width: 100%;
+  width: 300px;
+  height: 120px;
   object-fit: cover;
 }
 
@@ -153,7 +156,6 @@ export default {
   margin: 8px;
   width: 25%;
   height: 8px;
-  background: #2575fc;
   border-radius: 15px;
 }
 </style>
