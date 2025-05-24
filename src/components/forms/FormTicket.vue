@@ -18,29 +18,45 @@
                 variant="outlined"></v-text-field>
             </v-col>
           </v-row>
-          <!--<v-col cols="6">
-              <v-select label="Creativo" v-model="ticket.creativo" :items="creativos" class="rounded-input"
-                variant="outlined"></v-select>
-            </v-col>-->
-          
+
+          <!-- Imagen de Portada -->
           <v-row>
             <v-col cols="12">
-              <v-select label="Pauta" v-model="pautaSeleccionada" :items="pauta" item-title="titulo" item-value="id"  class="rounded-input"
+              <span class="file-upload-text">Imagen de Portada</span>
+              <v-icon class="file-upload-icon ml-2 cursor-pointer" @click="openImageUpload">mdi-camera</v-icon>
+              <input type="file" ref="imageInput" accept="image/*" style="display: none" @change="handleImageUpload">
+              <div v-if="ticket.imagen" class="mt-2">{{ ticket.imagen }}</div>
+            </v-col>
+          </v-row>
+          <v-row>
+  <v-col cols="12">
+    <v-select
+      label="Asignar a"
+      v-model="usuarioAsignado"
+      :items="usuarios"
+      item-title="nombre_completo"
+      item-value="id"
+      class="rounded-input"
+      variant="outlined"
+    />
+  </v-col>
+</v-row>
+
+          <v-row>
+            <v-col cols="12">
+              <v-select label="Pauta" v-model="pautaSeleccionada" :items="pauta" item-title="titulo" item-value="id" class="rounded-input"
                 variant="outlined"></v-select>
             </v-col>
-            
           </v-row>
       
           <v-row>
             <v-col cols="4">
-              <v-menu v-model="dateMenu" :close-on-content-click="false" transition="scale-transition" offset-y
-                min-width="auto">
+              <v-menu v-model="dateMenu" :close-on-content-click="false" transition="scale-transition" offset-y min-width="auto">
                 <template v-slot:activator="{ props }">
                   <v-text-field :model-value="formattedDate" label="Fecha de Entrega" prepend-inner-icon="mdi-calendar"
                     readonly v-bind="props" class="rounded-input" variant="outlined"></v-text-field>
                 </template>
-                <v-date-picker v-model="ticket.fechaEntrega" no-title scrollable
-                  :value="ticket.fechaEntrega"></v-date-picker>
+                <v-date-picker v-model="ticket.fechaEntrega" no-title scrollable></v-date-picker>
               </v-menu>
             </v-col>
             <v-col cols="4">
@@ -58,10 +74,9 @@
               <v-select label="Categoría" v-model="categoriaSeleccionada" :items="categoria"
                 item-title="nombre_categoria" item-value="id" class="rounded-input" variant="outlined" />
             </v-col>
-
             <v-col cols="6">
-              <v-select label="Prioridad" v-model="ticket.prioridad" :items="prioridad" item-title="nombre" item-value="id" class="rounded-input"
-                variant="outlined"></v-select>
+              <v-select label="Prioridad" v-model="ticket.prioridad" :items="prioridad" item-title="nombre" item-value="id"
+                class="rounded-input" variant="outlined"></v-select>
             </v-col>
           </v-row>
 
@@ -89,6 +104,7 @@
 
 <script>
 import axios from 'axios';
+
 export default {
   data() {
     return {
@@ -97,54 +113,91 @@ export default {
       ticket: {
         name: '',
         descripcion: '',
-        imagen: '',
+        imagen: '', // ← Se guarda el nombre de la imagen aquí
         pauta: '',
         horaInicial: '',
         horaFinal: '',
-        fechaEntrega: new Date(), 
+        fechaEntrega: new Date(),
         prioridad: null,
+        archivos: [],
       },
-      prioridad: [],      
-      categoria: [], 
+      prioridad: [],
+      categoria: [],
       pauta: [],
       pautaSeleccionada: null,
       categoriaSeleccionada: null,
-    }
+      usuarioAsignado: null,
+usuarios: []
+    };
   },
   computed: {
     currentDate() {
-      return new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      return new Date().toLocaleDateString('es-ES', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
     },
     formattedDate() {
       const date = new Date(this.ticket.fechaEntrega);
-      return date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    }
-  }, mounted() {
+      return date.toLocaleDateString('es-ES', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+    },
+  },
+  mounted() {
     this.obtenerCategoria();
     this.obtenerPrioridades();
     this.obtenerPautas();
+    this.obtenerUsuarios();
   },
   methods: {
-    async addTicket() { 
-      try {        
-        const now = new Date(); // fecha y hora actual
-        const usuario = JSON.parse(localStorage.getItem('usuario'));        
+    async obtenerUsuarios() {
+  try {
+    const response = await axios.get('http://localhost:3000/api/usuarios/getUsuarios');
+    // Asumimos que el backend devuelve usuarios con campos "id", "nombre", "apellidos"
+    this.usuarios = response.data.map(u => ({
+      ...u,
+      nombre_completo: `${u.nombre} ${u.apellidos}`
+    }));
+  } catch (error) {
+    console.error('Error al cargar usuarios:', error);
+  }
+},
+    async addTicket() {
+      try {
+        const now = new Date();
+        const usuario = JSON.parse(localStorage.getItem('usuario'));
         const response = await axios.post('http://localhost:3000/api/addTicket', {
           titulo: this.ticket.name,
           descripcion: this.ticket.descripcion,
-          imagen: 'https://cdn.pixabay.com/photo/2016/11/18/17/20/living-room-1835923_1280.jpg',
-          fecha_creacion: now.toISOString(),                        
+          imagen: this.ticket.imagen || 'https://cdn.pixabay.com/photo/2016/11/18/17/20/living-room-1835923_1280.jpg',
+          fecha_creacion: now.toISOString(),
           fecha_vencimiento: this.ticket.fechaEntrega,
           hora_inicio: this.ticket.horaInicial,
-          hora_final: this.ticket.horaFinal,  
-          prioridad_id: this.ticket.prioridad,  
+          hora_final: this.ticket.horaFinal,
+          prioridad_id: this.ticket.prioridad,
           categoria_id: this.categoriaSeleccionada,
           pauta_id: this.pautaSeleccionada,
-          creado_por: usuario.id                    
+          creado_por: usuario.id,
         });
+        const ticketId = response.data.ticketId; // ← Asegúrate que tu backend regrese esto
 
-        console.log('Ticket guardado:', response.data);
-        this.dialog = false;
+    // Crear asignación
+    await axios.post('http://localhost:3000/api/asignacion', {
+      ticket_id: ticketId,
+      usuario_id: this.usuarioAsignado,
+      fecha_asignacion: now.toISOString(),
+      asignado_por: usuario.id
+    });
+
+    console.log('Ticket y asignación guardados');
+    this.dialog = false;
+
       } catch (error) {
         console.error('Error al guardar el ticket:', error);
       }
@@ -157,6 +210,16 @@ export default {
       this.ticket.archivos = Array.from(files);
       console.log('Archivos seleccionados:', this.ticket.archivos);
     },
+    openImageUpload() {
+      this.$refs.imageInput.click();
+    },
+    handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        this.ticket.imagen = file.name;
+        console.log('Imagen seleccionada:', file.name);
+      }
+    },
     async obtenerCategoria() {
       try {
         const response = await axios.get('http://localhost:3000/api/categoria');
@@ -164,23 +227,25 @@ export default {
       } catch (error) {
         console.error('Error al cargar categorias:', error);
       }
-    },async obtenerPrioridades() {
+    },
+    async obtenerPrioridades() {
       try {
         const response = await axios.get('http://localhost:3000/api/prioridades');
         this.prioridad = response.data;
       } catch (error) {
         console.error('Error al cargar prioridades:', error);
       }
-    },async obtenerPautas() {
+    },
+    async obtenerPautas() {
       try {
         const response = await axios.get('http://localhost:3000/api/pautas');
         this.pauta = response.data;
       } catch (error) {
         console.error('Error al cargar pautas:', error);
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <style scoped>

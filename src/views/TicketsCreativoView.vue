@@ -148,7 +148,10 @@
   },
   async fetchTickets() {
     try {
-      const response = await axios.post('http://localhost:3000/api/usuarios/getTickets', { id: 4 });
+      const usuario = JSON.parse(localStorage.getItem('usuario'));
+const response = await axios.post('http://localhost:3000/api/usuarios/getTickets', {
+  id: usuario.id
+});
       this.allTickets = response.data;
       console.log(this.allTickets);
       this.tickets = [...this.allTickets]; // Copia inicial

@@ -1,7 +1,7 @@
 <template>
-  <v-container fluid>
-    <v-row justify="center">
- <v-col cols="12" md="8" lg="6">
+  <v-container fluid>    
+ <v-col cols="15" md="17" lg="10">
+
         <v-card class="pa-6 rounded-xl" elevation="2">
           <!-- Título -->
           <h3 class="text-h6 font-weight-bold mb-6">Tickets próximos</h3>
@@ -33,8 +33,7 @@
             </v-col>
           </v-row>
         </v-card>
-      </v-col>
-    </v-row>
+      </v-col>    
   </v-container>
 </template>
 

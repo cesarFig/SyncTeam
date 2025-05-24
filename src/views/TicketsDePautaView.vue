@@ -154,8 +154,7 @@ export default {
     async fetchTickets(pautaId) {
       try {
         const response = await axios.get(`/api/pautas/${pautaId}/tickets`);
-        this.tickets = response.data;
-        console.log(this.tickets);
+        this.tickets = response.data;        
         // Distribute tickets into columns based on their state
         this.ticketColumns.forEach((column) => {
           column.tickets = this.tickets.filter(
@@ -203,10 +202,40 @@ export default {
       this.selectedPauta = newPauta;
       this.showForm = false;
     },
-    openTicketFull(ticket) {
-      this.selectedTicket = ticket;
-      this.showTicketFull = true;
+    openTicketFull(rawTicket) {
+  const transformedTicket = {
+    id: rawTicket.id,
+    title: rawTicket.titulo,
+    description: rawTicket.descripcion,
+    taskType: {
+      name: rawTicket.nombre_categoria || 'Sin categoría',
+      color: rawTicket.color_rgb || '#757575'
     },
+    priority: {
+      name: rawTicket.prioridad || 'Normal',
+      color: this.getPriorityColor(rawTicket.nivel_prioridad)
+    },
+    image: rawTicket.imagen,
+    date: rawTicket.fecha_creacion,
+    assignee: `${rawTicket.asignado_nombre || ''} ${rawTicket.asignado_apellidos || ''}`.trim(),
+    attachments: [],
+    activityLog: [],
+    currentUser: { name: "Tú", avatar: "" }
+  };
+
+  this.selectedTicket = transformedTicket;
+  this.showTicketFull = true;
+}
+,getPriorityColor(nivel) {
+  switch (nivel) {
+    case 1: return '#42A5F5'; // Normal
+    case 2: return '#FFA726'; // Baja
+    case 3: return '#EF5350'; // Alta
+    case 4: return '#D32F2F'; // Crítica
+    default: return '#BDBDBD';
+  }
+}
+,
     closeTicketFull() {
       this.showTicketFull = false;
       this.selectedTicket = null;

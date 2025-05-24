@@ -249,9 +249,141 @@ const getTickets = async (id) => {
     throw err;
   }
 };
+async function getTicket(id) {
+  const result = await pool.query('SELECT * FROM usuario WHERE id= $1', [id]);
+  return result.rows[0];
+}
+async function getComentariosByTicketId(ticketId) {
+  const result = await pool.query(`
+    SELECT c.*, u.nombre, u.apellidos
+    FROM comentario c
+    JOIN usuario u ON u.id = c.usuario_id
+    WHERE c.ticket_id = $1
+    ORDER BY c.fecha_creacion ASC
+  `, [ticketId]);
+  return result.rows;
+}
+
+async function crearComentario(ticketId, usuarioId, contenido) {
+  const result = await pool.query(`
+    INSERT INTO comentario (ticket_id, usuario_id, contenido, fecha_creacion, editado)
+    VALUES ($1, $2, $3, NOW(), FALSE)
+    RETURNING *
+  `, [ticketId, usuarioId, contenido]);
+  return result.rows[0];
+}
+async function obtenerUsuario(id) {  
+  console.log("entre");
+  const result = await pool.query('SELECT * FROM usuario WHERE id= $1', [id]);
+  return result.rows[0];
+}
+async function asignacion({ ticket_id, usuario_id, fecha_asignacion, asignado_por }) {
+  const query = `
+    INSERT INTO asignacion (ticket_id, usuario_id, fecha_asignacion, asignado_por)
+    VALUES ($1, $2, $3, $4)
+    RETURNING id
+  `;
+  const result = await pool.query(query, [ticket_id, usuario_id, fecha_asignacion, asignado_por]);
+  return result.rows[0].id;
+}
+const crearNotificacionesComentario = async (ticketId, usuarioId) => {
+  const autor = await obtenerUsuario(usuarioId);
+
+  if (autor.rol_id !== 1) {
+    // Si es editor: notificar a admins
+    const admins = await pool.query('SELECT id FROM usuario WHERE rol_id = 1');
+    for (const admin of admins.rows) {
+      await crearNotificacion({
+        usuario_id: admin.id,
+        tipo_notificacion: 'Nuevo comentario',
+        mensaje: `Nuevo comentario en el ticket #${ticketId}`,
+        emisor_id: usuarioId,
+        ticket_id: ticketId
+      });
+    }
+  } else {
+    // Si es admin: notificar al asignado
+    const asignado = await pool.query('SELECT usuario_id FROM asignacion WHERE ticket_id = $1 LIMIT 1', [ticketId]);
+    const destino = asignado.rows[0]?.usuario_id;
+    if (destino) {
+      await crearNotificacion({
+        usuario_id: destino,
+        tipo_notificacion: 'Comentario',
+        mensaje: `Nuevo comentario en tu ticket #${ticketId}`,
+        emisor_id: usuarioId,
+        ticket_id: ticketId
+      });
+    }
+  }
+};
+const crearNotificacion = async ({ usuario_id, tipo_notificacion, mensaje, emisor_id, ticket_id }) => {
+  try {
+    const result = await pool.query(
+      `INSERT INTO notificacion (
+        usuario_id,
+        tipo_notificacion,
+        mensaje,
+        is_read,
+        fecha_creacion,
+        emisor_id,
+        ticket_id
+      ) VALUES ($1, $2, $3, false, NOW(), $4, $5) RETURNING *`,
+      [usuario_id, tipo_notificacion, mensaje, emisor_id, ticket_id]
+    );
+    return result.rows[0];
+  } catch (err) {
+    console.error('Error creando notificación:', err);
+    throw err;
+  }
+};
+const getNotificacionesPorUsuario = async (usuario_id) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        n.id,
+        n.usuario_id,
+        n.tipo_notificacion,
+        n.mensaje,
+        n.is_read,
+        n.fecha_creacion,
+        u.nombre AS sender_nombre,
+        u.apellidos AS sender_apellidos
+      FROM notificacion n
+      JOIN usuario u ON n.emisor_id = u.id
+      WHERE n.usuario_id = $1
+      ORDER BY n.fecha_creacion DESC
+    `, [usuario_id]);
+
+    return result.rows;
+  } catch (err) {
+    console.error('Error al obtener notificaciones:', err);
+    throw err;
+  }
+};
+
+const marcarNotificacionLeida = async (id) => {
+  const result = await pool.query(`
+    UPDATE notificacion
+    SET is_read = true
+    WHERE id = $1
+    RETURNING *;
+  `, [id]);
+  return result.rows[0];
+};
+const eliminarNotificacion = async (id) => {
+  const result = await pool.query(`
+    DELETE FROM notificacion
+    WHERE id = $1
+    RETURNING *;
+  `, [id]);
+  return result.rows[0];
+};
+
+
 
 
 module.exports = {
   logAction, getPautas, getTicketsByPauta, getColaboradores, updateTicketEstado, getUsuarioPorCorreo, getRoles,
-  insertUsuario, insertPauta, getCategorias, getPrioridades, insertTicket, getUsuarios, getTicketsUser, getTickets
+  insertUsuario, insertPauta, getCategorias, getPrioridades, insertTicket, getUsuarios, getTicketsUser, getTickets, getTicket, getComentariosByTicketId, crearComentario
+  ,obtenerUsuario, asignacion,  crearNotificacionesComentario, getNotificacionesPorUsuario , marcarNotificacionLeida, eliminarNotificacion
 };

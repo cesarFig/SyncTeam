@@ -8,7 +8,6 @@
 </template>
 
 <script>
-/* eslint-disable */
 import SidebarWrapper from './components/sidebar/SidebarWrapper.vue';
 import { useLayoutStore } from '@/stores/layout'
 

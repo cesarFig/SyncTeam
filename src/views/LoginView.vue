@@ -64,8 +64,7 @@
           correo: this.email,
           password: this.password
         });
-
-        alert('Login exitoso');
+        
         const usuario = {
           id: response.data.usuario.id,
           nombre: response.data.usuario.nombre,

@@ -9,6 +9,11 @@ const addPautaRoute = require('./routes/addPauta');
 const categoriaRoute = require('./routes/categorias');
 const prioridadesRoute = require('./routes/prioridades');
 const addTicketRoute = require('./routes/addTicket');
+const addComentario = require('./routes/comentarios');
+const ajustesRoutes = require('./routes/ajustes');
+const asignacionRoutes = require('./routes/asignacion');
+const notificacionesRoutes = require('./routes/notificaciones');
+
 const cors = require('cors');
 
 dotenv.config();
@@ -31,6 +36,11 @@ app.use('/api/addPauta', addPautaRoute);
 app.use('/api/categoria', categoriaRoute);
 app.use('/api/prioridades', prioridadesRoute);
 app.use('/api/addTicket', addTicketRoute);
+app.use('/api/comentarios', addComentario);
+app.use('/api/ajustes', ajustesRoutes); 
+app.use('/api', asignacionRoutes);
+app.use('/api/notificaciones', notificacionesRoutes);
+
 
 
 
