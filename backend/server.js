@@ -13,9 +13,9 @@ const addComentario = require('./routes/comentarios');
 const ajustesRoutes = require('./routes/ajustes');
 const asignacionRoutes = require('./routes/asignacion');
 const notificacionesRoutes = require('./routes/notificaciones');
-
+const uploadRoute = require('./routes/upload');
 const cors = require('cors');
-
+const path = require('path'); // <--- importante
 dotenv.config();
 
 const app = express();
@@ -40,7 +40,8 @@ app.use('/api/comentarios', addComentario);
 app.use('/api/ajustes', ajustesRoutes); 
 app.use('/api', asignacionRoutes);
 app.use('/api/notificaciones', notificacionesRoutes);
-
+app.use('/api/upload', uploadRoute);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
 

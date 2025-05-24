@@ -1,6 +1,6 @@
 <template>
   <div class="pauta-form">
-    <v-dialog v-model="dialog" persistent max-width="500px">
+    <v-dialog v-if="dialog" v-model="dialog" max-width="500px">
       <v-card>
         <v-card-title class="d-flex align-center pa-4">
           <h2 class="form-title">Añadir Ticket</h2>
@@ -213,12 +213,23 @@ usuarios: []
     openImageUpload() {
       this.$refs.imageInput.click();
     },
-    handleImageUpload(event) {
-      const file = event.target.files[0];
-      if (file) {
-        this.ticket.imagen = file.name;
-        console.log('Imagen seleccionada:', file.name);
-      }
+    async handleImageUpload(event) {
+       const file = event.target.files[0];
+  if (file) {
+    try {
+      const formData = new FormData();
+      formData.append('imagen', file);
+
+      const res = await axios.post('http://localhost:3000/api/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      this.ticket.imagen = res.data.filename; // ← guardamos el nombre que devuelve el backend
+      console.log('Imagen guardada como:', this.ticket.imagen);
+    } catch (err) {
+      console.error('Error al subir imagen:', err);
+    }
+  }
     },
     async obtenerCategoria() {
       try {
@@ -294,4 +305,4 @@ usuarios: []
 .file-upload-icon:hover {
   color: #9C27B0;
 }
-</style>
+</style> 
