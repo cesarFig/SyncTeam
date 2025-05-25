@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { asignacion} = require('../db/queries');
+const { asignacion, actualizarAsignacion} = require('../db/queries');
 router.post('/asignacion', async (req, res) => {
   try {
     const { ticket_id, usuario_id, fecha_asignacion, asignado_por } = req.body;
@@ -9,6 +9,17 @@ router.post('/asignacion', async (req, res) => {
   } catch (error) {
     console.error('Error al insertar asignación:', error);
     res.status(500).json({ error: 'No se pudo crear la asignación' });
+  }
+});
+router.put('/:ticket_id', async (req, res) => {
+  try {
+    const { ticket_id } = req.params;
+    const { usuario_id, asignado_por } = req.body;
+    const result = await actualizarAsignacion(ticket_id, usuario_id, asignado_por);
+    res.json({ mensaje: 'Asignación actualizada correctamente' });
+  } catch (error) {
+    console.error('Error al actualizar asignación:', error);
+    res.status(500).json({ error: 'Error interno al actualizar la asignación' });
   }
 });
 

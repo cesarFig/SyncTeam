@@ -1,12 +1,23 @@
 <template>
   <div class="contenedor-horizontal">
 
+    <!-- Formulario para crear ticket -->
     <v-dialog v-model="showForm" max-width="500">
       <FormTicket @close="toggleForm" @save="handleSavePauta" />
     </v-dialog>
 
+    <!-- Formulario para editar ticket -->
+    <v-dialog v-model="showFormEditar" max-width="700px">
+      <FormEditarTicket
+        v-if="ticketParaEditar"
+        :ticket-edit="ticketParaEditar"
+        @close="cerrarFormularioEditar"
+      />
+    </v-dialog>
+
+    <!-- Detalle del ticket -->
     <v-dialog v-model="showTicketFull" max-width="800">
-   <TicketFull
+      <TicketFull
   v-if="selectedTicket"
   :ticket="selectedTicket"
   @close-modal="selectedTicket = null"
@@ -15,6 +26,7 @@
 />
     </v-dialog>
 
+    <!-- Lista de pautas -->
     <v-card class="d-flex flex-column list-panel" style="width: 13%;">
       <div class="pa-4 flex-grow-0">
         <h2 class="text-h6 mb-4">Pautas</h2>
@@ -26,7 +38,6 @@
           @click="selectPauta(pauta)"
           :class="{ 'selected-pauta': selectedPauta?.id === pauta.id }"
           class="pauta-list-item rounded-lg mx-1 my-1"
-          :value="pauta.id"
         >
           <v-list-item-title class="list-item-title">{{ pauta.titulo }}</v-list-item-title>
           <v-list-item-subtitle class="list-item-subtitle">{{ pauta.subtitulo }}</v-list-item-subtitle>
@@ -34,18 +45,54 @@
       </v-list>
     </v-card>
 
+    <!-- Detalles de pauta -->
     <v-card class="d-flex flex-column detail-panel" width="20%" v-if="selectedPauta">
       <div class="detail-scroll-area pa-4">
         <h2 class="text-h5 font-weight-medium mb-3">{{ selectedPauta.titulo }}</h2>
         <v-img v-if="selectedPauta.imagen" :src="selectedPauta.imagen" height="180px" cover class="mb-4 rounded elevation-1"></v-img>
-        <div class="mb-5"> <span class="text-subtitle-2 text-grey-darken-1">Cliente:</span> <span class="text-body-1 ml-2">{{ selectedPauta.cliente }}</span> </div>
-        <div class="mb-5"> <h4 class="text-subtitle-1 font-weight-medium mb-2">Descripción</h4> <div class="description-block pa-3 rounded"> <p class="description-text">{{ selectedPauta.descripcion }}</p> </div> </div>
-        <div class="mb-5"> <h4 class="text-subtitle-1 font-weight-medium mb-2">Colaboradores</h4> <v-list density="compact" class="pa-0"> <v-list-item v-for="(colab, i) in colaboradores" :key="i" class="px-1"> <template v-slot:prepend> <v-avatar color="grey-lighten-1" size="32" class="mr-3"> <v-icon color="white">mdi-account</v-icon> </v-avatar> </template> <v-list-item-title class="text-body-2">{{ colab }}</v-list-item-title> </v-list-item> </v-list> <p class="text-caption text-grey-darken-1 mt-2 ml-1"> <v-icon start size="small">mdi-calendar-blank-outline</v-icon> 8 Abril 2025 </p> </div>
-        <div class="mb-5"> <h4 class="text-subtitle-1 font-weight-medium mb-2">Progreso </h4> <v-progress-linear :model-value="selectedPauta.progreso" color="blue-darken-2" height="8" rounded class="mb-1"></v-progress-linear> <p class="text-caption text-grey-darken-1 text-right">{{ selectedPauta.progreso }}%</p> </div>
-        <div class="mb-2 pb-2"> <p class="text-body-2 d-flex align-center"> <v-icon start color="grey-darken-1">mdi-clock-time-three-outline</v-icon> <span class="text-grey-darken-1">{{ selectedPauta.diasRestantes }} Día(s) restante(s)</span> </p> </div>
+        <div class="mb-5">
+          <span class="text-subtitle-2 text-grey-darken-1">Cliente:</span>
+          <span class="text-body-1 ml-2">{{ selectedPauta.cliente }}</span>
+        </div>
+        <div class="mb-5">
+          <h4 class="text-subtitle-1 font-weight-medium mb-2">Descripción</h4>
+          <div class="description-block pa-3 rounded">
+            <p class="description-text">{{ selectedPauta.descripcion }}</p>
+          </div>
+        </div>
+        <div class="mb-5">
+          <h4 class="text-subtitle-1 font-weight-medium mb-2">Colaboradores</h4>
+          <v-list density="compact" class="pa-0">
+            <v-list-item v-for="(colab, i) in colaboradores" :key="i" class="px-1">
+              <template v-slot:prepend>
+                <v-avatar color="grey-lighten-1" size="32" class="mr-3">
+                  <v-icon color="white">mdi-account</v-icon>
+                </v-avatar>
+              </template>
+              <v-list-item-title class="text-body-2">{{ colab }}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+          <p class="text-caption text-grey-darken-1 mt-2 ml-1">
+            <v-icon start size="small">mdi-calendar-blank-outline</v-icon>
+            8 Abril 2025
+          </p>
+        </div>
+        <div class="mb-5">
+          <h4 class="text-subtitle-1 font-weight-medium mb-2">Progreso</h4>
+          <v-progress-linear :model-value="selectedPauta.progreso" color="blue-darken-2" height="8" rounded class="mb-1"></v-progress-linear>
+          <p class="text-caption text-grey-darken-1 text-right">{{ selectedPauta.progreso }}%</p>
+        </div>
+        <div class="mb-2 pb-2">
+          <p class="text-body-2 d-flex align-center">
+            <v-icon start color="grey-darken-1">mdi-clock-time-three-outline</v-icon>
+            <span class="text-grey-darken-1">{{ selectedPauta.diasRestantes }} Día(s) restante(s)</span>
+          </p>
+        </div>
       </div>
       <div class="mt-auto pa-4 pt-2 flex-grow-0 footer-action">
-        <v-btn block variant="text" color="grey-darken-1"> <v-icon start>mdi-pencil-outline</v-icon> Editar </v-btn>
+        <v-btn block variant="text" color="grey-darken-1">
+          <v-icon start>mdi-pencil-outline</v-icon> Editar
+        </v-btn>
       </div>
     </v-card>
 
@@ -53,6 +100,7 @@
       <p class="text-grey">Seleccione una pauta para ver los detalles</p>
     </v-card>
 
+    <!-- Panel de tickets -->
     <v-card class="d-flex flex-column tickets-panel" style="flex-grow: 1;">
       <div class="pa-4 pb-2 d-flex justify-space-between align-center flex-grow-0">
         <h1 class="text-h5">
@@ -91,31 +139,31 @@
               v-bind="task"
               class="mb-2"
               draggable="true"
-              @dragstart="onDragStart(task)"              
-              @click="openTicketFull(task)"                   
+              @dragstart="onDragStart(task)"
+              @click="openTicketFull(task)"
             />
           </div>
         </div>
       </div>
     </v-card>
 
+    <!-- Botón flotante para crear -->
     <v-btn @click="toggleForm" variant="outlined" class="btnAddPauta">Nuevo ticket</v-btn>
 
   </div>
 </template>
 
 <script>
-/* eslint-disable */
 import FormTicket from '../components/forms/FormTicket.vue';
-import TicketCard from '../components/CardTicket.vue'; // Asegúrate que la ruta es correcta
+import FormEditarTicket from '../components/forms/FormEditarTicket.vue';
+import TicketCard from '../components/CardTicket.vue';
 import TicketFull from '../components/TicketFull.vue';
 import axios from 'axios';
 import { useRoute } from 'vue-router';
-import { ref, onMounted } from 'vue';
 
 export default {
   name: 'PautasView',
-  components: { TicketCard, FormTicket, TicketFull },
+  components: { TicketCard, FormTicket, TicketFull, FormEditarTicket },
   setup() {
     const route = useRoute();
     return { route };
@@ -123,6 +171,8 @@ export default {
   data() {
     return {
       showForm: false,
+      showFormEditar: false,
+      ticketParaEditar: null,
       selectedPauta: null,
       pautas: [],
       tickets: [],
@@ -140,12 +190,26 @@ export default {
   },
   computed: {
     filteredPautas() { return this.pautas; },
-    todoTicket() { return this.tickets.filter(task => task.estado === 1); },
-    inProgressTicket() { return this.tickets.filter(task => task.estado === 2); },
-    reviewTicket() { return this.tickets.filter(task => task.estado === 3); },
-    doneTicket() { return this.tickets.filter(task => task.estado === 4); }
   },
   methods: {
+    async confirmarEliminacion(ticketId) {
+  try {
+    if (!confirm('¿Seguro que deseas eliminar este ticket?')) return;
+
+    await axios.delete(`api/addTicket/ticketsEliminar/${ticketId}`);
+
+    // Elimina localmente
+    this.ticketColumns.forEach(column => {
+      column.tickets = column.tickets.filter(t => t.id !== ticketId);
+    });
+
+    this.selectedTicket = null;
+    this.showTicketFull = false;
+  } catch (error) {
+    console.error('Error al eliminar el ticket:', error);
+  }
+}
+,
     async fetchPautas() {
       try {
         const response = await axios.get('/api/pautas');
@@ -160,12 +224,9 @@ export default {
     async fetchTickets(pautaId) {
       try {
         const response = await axios.get(`/api/pautas/${pautaId}/tickets`);
-        this.tickets = response.data;        
-        // Distribute tickets into columns based on their state
+        this.tickets = response.data;
         this.ticketColumns.forEach((column) => {
-          column.tickets = this.tickets.filter(
-            (ticket) => ticket.estado === column.state
-          );
+          column.tickets = this.tickets.filter(ticket => ticket.estado === column.state);
         });
       } catch (error) {
         console.error('Error fetching tickets:', error);
@@ -181,6 +242,15 @@ export default {
       }
     },
     toggleForm() { this.showForm = !this.showForm; },
+    abrirFormularioEditar(ticket) {
+      this.ticketParaEditar = ticket;
+      this.showFormEditar = true;
+      this.showTicketFull = false;
+    },
+    cerrarFormularioEditar() {
+      this.ticketParaEditar = null;
+      this.showFormEditar = false;
+    },
     async selectPauta(pauta) {
       this.selectedPauta = {
         ...pauta,
@@ -188,8 +258,7 @@ export default {
         cliente: pauta.cliente
       };
       await this.fetchTickets(pauta.id);
-      const colaboradores = await this.fetchColaboradores(pauta.id);
-      this.colaboradores = colaboradores;
+      this.colaboradores = await this.fetchColaboradores(pauta.id);
     },
     handleSavePauta(newPautaData) {
       const newPauta = {
@@ -209,7 +278,7 @@ export default {
       this.showForm = false;
     },
     openTicketFull(rawTicket) {
-  const transformedTicket = {
+        const transformedTicket = {
     id: rawTicket.id,
     title: rawTicket.titulo,
     description: rawTicket.descripcion,
@@ -224,27 +293,34 @@ export default {
     image: rawTicket.imagen,
     date: rawTicket.fecha_creacion,
     assignee: `${rawTicket.asignado_nombre || ''} ${rawTicket.asignado_apellidos || ''}`.trim(),
-    attachments: [],
+    attachments: [], // puedes rellenar esto después si necesitas
     activityLog: [],
-    currentUser: { name: "Tú", avatar: "" }
+    currentUser: { name: "Tú", avatar: "" },
+
+    // Campos crudos necesarios para editar luego
+    titulo: rawTicket.titulo,
+    descripcion: rawTicket.descripcion,
+    imagen: rawTicket.imagen,
+    prioridad_id: rawTicket.prioridad_id,
+    categoria_id: rawTicket.categoria_id,
+    pauta_id: rawTicket.pauta_id,
+    usuario_id: rawTicket.usuario_id,
+    hora_inicio: rawTicket.hora_inicio,
+    hora_final: rawTicket.hora_final,
+    fecha_vencimiento: rawTicket.fecha_vencimiento
   };
 
   this.selectedTicket = transformedTicket;
   this.showTicketFull = true;
-}
-,getPriorityColor(nivel) {
-  switch (nivel) {
-    case 1: return '#42A5F5'; // Normal
-    case 2: return '#FFA726'; // Baja
-    case 3: return '#EF5350'; // Alta
-    case 4: return '#D32F2F'; // Crítica
-    default: return '#BDBDBD';
-  }
-}
-,
-    closeTicketFull() {
-      this.showTicketFull = false;
-      this.selectedTicket = null;
+    },
+    getPriorityColor(nivel) {
+      switch (nivel) {
+        case 1: return '#42A5F5'; // Normal
+        case 2: return '#FFA726'; // Baja
+        case 3: return '#EF5350'; // Alta
+        case 4: return '#D32F2F'; // Crítica
+        default: return '#BDBDBD';
+      }
     },
     onDragStart(ticket) {
       this.draggedTicket = ticket;
@@ -257,44 +333,33 @@ export default {
         this.draggedTicket.estado = targetColumn.state;
         this.updateTicketState(this.draggedTicket);
 
-        // Remove ticket from its current column
         this.ticketColumns.forEach((column) => {
-          column.tickets = column.tickets.filter(
-            (t) => t.id !== this.draggedTicket.id
-          );
+          column.tickets = column.tickets.filter(t => t.id !== this.draggedTicket.id);
         });
 
-        // Add ticket to the target column
         targetColumn.tickets.push(this.draggedTicket);
       }
 
       this.draggedTicket = null;
     },
     updateTicketState(ticket) {
-      // Call API to update the ticket state in the backend
-      axios
-        .put(`/api/pautas/tickets/${ticket.id}`, { estado: ticket.estado })
-        .then(() => {
-          console.log('Ticket state updated successfully');
-        })
-        .catch((error) => {
-          console.error('Error updating ticket state:', error);
-        });
-    },
+      axios.put(`/api/pautas/tickets/${ticket.id}`, { estado: ticket.estado })
+        .then(() => console.log('Ticket state updated successfully'))
+        .catch((error) => console.error('Error updating ticket state:', error));
+    }
   },
   mounted() {
     this.fetchPautas().then(() => {
       const pautaId = this.route.query.id;
       if (pautaId) {
         const pauta = this.pautas.find(p => p.id === parseInt(pautaId));
-        if (pauta) {
-          this.selectPauta(pauta);
-        }
+        if (pauta) this.selectPauta(pauta);
       }
     });
   }
 };
 </script>
+
 
 <style scoped>
 /* Importar Poppins */

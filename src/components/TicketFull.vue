@@ -1,277 +1,201 @@
-  <template>
-    <v-card class="ticket-detail-card rounded-xl elevation-4" :loading="!ticket">
-      <template v-if="ticket">
-        <div class="bars-container">
-          <div
-            class="task-type-bar d-flex align-center pl-2 pr-3"
-            :style="{ backgroundColor: ticket.taskType?.color || '#757575' }"
-          >
-            <span class="bar-text">{{ ticket.taskType?.name || "Tipo" }}</span>
-          </div>
-          <div
-            class="priority-bar"
-            :style="{ backgroundColor: ticket.priority?.color || '#FFAB00' }"
-          ></div>
+<template>
+  <v-card class="ticket-detail-card rounded-xl elevation-4" :loading="!ticket">
+    <template v-if="ticket">
+      <div class="bars-container">
+        <div class="task-type-bar d-flex align-center pl-2 pr-3" :style="{ backgroundColor: ticket.taskType?.color || '#757575' }">
+          <span class="bar-text">{{ ticket.taskType?.name || "Tipo" }}</span>
         </div>
-
-        <div class="card-actions">
-          <v-menu offset-y>
-  <template #activator="{ props }">
-    <v-btn icon variant="text" density="compact" color="grey-darken-1" v-bind="props">
-      <v-icon size="small">mdi-dots-horizontal</v-icon>
-    </v-btn>
-  </template>
-
-  <v-list>
-    <v-list-item @click="editarTicket">
-      <v-list-item-title>Editar</v-list-item-title>
-    </v-list-item>
-    <v-list-item @click="eliminarTicket">
-      <v-list-item-title>Eliminar</v-list-item-title>
-    </v-list-item>
-  </v-list>
-</v-menu>
-          <v-btn
-            icon
-            variant="text"
-            density="compact"
-            color="grey-darken-1"
-            @click="$emit('close-modal')"
-          >
-            <v-icon size="small">mdi-close</v-icon>
-          </v-btn>
-        </div>
-
-        <div class="image-area-container">
-          <v-img
-            v-if="ticket.image"
-            :src="`http://localhost:3000/uploads/${ticket.image}`"
-            height="220px"
-            cover
-            # Imagen redondeada
-            class="main-image rounded-lg"
-          ></v-img>
-          <div v-else class="image-placeholder"></div>
-        </div>
-
-
-        <v-card-text class="main-content-area pb-4">
-          <div class="d-flex justify-space-between align-start mb-1">
-            <div>
-              <h1 class="text-h5 font-weight-bold mb-0">{{ ticket.title }}</h1>
-              <p v-if="ticket.assignee" class="text-body-2 text-medium-emphasis mt-1">
-                Como: {{ ticket.assignee }}
-              </p>
-            </div>
-            <span class="text-caption text-blue-grey-darken-1 mt-1">{{
-              formatDate(ticket.date)
-            }}</span>
-          </div>
-
-          <div class="section-container mt-5">
-            <label class="section-label">Descripción</label>
-            <div class="description-block pa-4 rounded-lg">
-              <p class="section-content text-body-2 ma-0"> {{ ticket.description }}
-              </p>
-            </div>
-          </div>
-
-          <div class="section-container mt-5">
-            <div class="d-flex justify-space-between align-center mb-3"> <label class="section-label">Adjuntos del creativo</label>
-              <v-btn variant="text" size="small" density="compact" prepend-icon="mdi-paperclip" color="grey-darken-2">
-                Adjuntos
-              </v-btn>
-            </div>
-            <div class="attachments-list">
-              <v-chip
-                v-for="(file, index) in ticket.attachments"
-                :key="index"
-                label
-                size="small"
-                class="mr-2 mb-2 attachment-chip"
-                :prepend-icon="getAttachmentIcon(file.type)"
-              >
-                {{ file.name }}
-              </v-chip>
-            </div>
-          </div>
-
-          <v-divider class="my-5"></v-divider>
-
-          <div class="section-container">
-            <label class="section-label mb-4">Actividad</label>
-            <div class="activity-feed">
-  <div
-    v-for="(comment, index) in comentarios"
-    :key="index"
-    class="activity-item d-flex align-start mb-4"
-  >
-    <v-avatar size="32" class="mr-3 flex-shrink-0" :style="{ backgroundColor: generateColorFromString(comment.nombre + comment.apellidos) }">
-  <span class="white--text text-subtitle-2 font-weight-medium">
-    {{ getIniciales(comment.nombre, comment.apellidos) }}
-  </span>
-</v-avatar>
-    <div class="activity-content">
-      <span class="font-weight-bold text-body-2 user-name">
-        {{ comment.nombre }}
-      </span>
-      <span class="text-body-2 text-medium-emphasis action-text">
-        {{ comment.contenido }}
-      </span>
-      <p class="text-caption text-disabled timestamp">
-        {{ formatTimestamp(comment.fecha_creacion) }}
-      </p>
-    </div>
-  </div>
-</div>
-
-          </div>
-
-          <div class="comment-section d-flex align-center mt-5 pa-2">
-            <v-avatar size="36" class="mr-3">
-              <v-img v-if="ticket.currentUser?.avatar" :src="ticket.currentUser?.avatar" :alt="ticket.currentUser?.name" cover></v-img>
-              <v-icon v-else>mdi-account-circle</v-icon>
-            </v-avatar>
-            <v-text-field
-  v-model="nuevoComentario"
-  variant="filled"
-  bg-color="grey-lighten-4"
-  placeholder="Escribe un comentario..."
-  density="compact"
-  hide-details
-  rounded
-  flat
-></v-text-field>
-<v-btn icon variant="text" size="small" class="ml-1" color="primary" @click="enviarComentario">
-  <v-icon>mdi-send</v-icon>
-</v-btn>
-            
-          </div>
-        </v-card-text>
-      </template>
-
-      <div v-else class="d-flex justify-center align-center" style="height: 400px;">
-          <v-progress-circular indeterminate color="primary"></v-progress-circular>
+        <div class="priority-bar" :style="{ backgroundColor: ticket.priority?.color || '#FFAB00' }"></div>
       </div>
 
-    </v-card>
-  </template>
+      <div class="card-actions">
+        <v-menu offset-y>
+          <template #activator="{ props }">
+            <v-btn icon variant="text" density="compact" color="grey-darken-1" v-bind="props">
+              <v-icon size="small">mdi-dots-horizontal</v-icon>
+            </v-btn>
+          </template>
 
-  <script>
-  import axios from 'axios';  
+          <v-list>
+            <v-list-item @click="editarTicket">
+              <v-list-item-title>Editar</v-list-item-title>
+            </v-list-item>
+            <v-list-item @click="eliminarTicket">
+              <v-list-item-title>Eliminar</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+
+        <v-btn icon variant="text" density="compact" color="grey-darken-1" @click="$emit('close-modal')">
+          <v-icon size="small">mdi-close</v-icon>
+        </v-btn>
+      </div>
+
+      <div class="image-area-container">
+        <v-img v-if="ticket.image" :src="`http://localhost:3000/uploads/${ticket.image}`" height="220px" cover class="main-image rounded-lg" />
+        <div v-else class="image-placeholder"></div>
+      </div>
+
+      <v-card-text class="main-content-area pb-4">
+        <div class="d-flex justify-space-between align-start mb-1">
+          <div>
+            <h1 class="text-h5 font-weight-bold mb-0">{{ ticket.title }}</h1>
+            <p v-if="ticket.assignee" class="text-body-2 text-medium-emphasis mt-1">Como: {{ ticket.assignee }}</p>
+          </div>
+          <span class="text-caption text-blue-grey-darken-1 mt-1">{{ formatDate(ticket.date) }}</span>
+        </div>
+
+        <div class="section-container mt-5">
+          <label class="section-label">Descripción</label>
+          <div class="description-block pa-4 rounded-lg">
+            <p class="section-content text-body-2 ma-0">{{ ticket.description }}</p>
+          </div>
+        </div>
+
+        <div class="section-container mt-5">
+          <div class="d-flex justify-space-between align-center mb-3">
+            <label class="section-label">Adjuntos del creativo</label>
+            <v-btn variant="text" size="small" density="compact" prepend-icon="mdi-paperclip" color="grey-darken-2">
+              Adjuntos
+            </v-btn>
+          </div>
+          <div class="attachments-list">
+            <v-chip v-for="(file, index) in ticket.attachments" :key="index" label size="small" class="mr-2 mb-2 attachment-chip" :prepend-icon="getAttachmentIcon(file.type)">
+              {{ file.name }}
+            </v-chip>
+          </div>
+        </div>
+
+        <v-divider class="my-5" />
+
+        <div class="section-container">
+          <label class="section-label mb-4">Actividad</label>
+          <div class="activity-feed">
+            <div v-for="(comment, index) in comentarios" :key="index" class="activity-item d-flex align-start mb-4">
+              <v-avatar size="32" class="mr-3 flex-shrink-0" :style="{ backgroundColor: generateColorFromString(comment.nombre + comment.apellidos) }">
+                <span class="white--text text-subtitle-2 font-weight-medium">{{ getIniciales(comment.nombre, comment.apellidos) }}</span>
+              </v-avatar>
+              <div class="activity-content">
+                <span class="font-weight-bold text-body-2 user-name">{{ comment.nombre }}</span>
+                <span class="text-body-2 text-medium-emphasis action-text">{{ comment.contenido }}</span>
+                <p class="text-caption text-disabled timestamp">{{ formatTimestamp(comment.fecha_creacion) }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="comment-section d-flex align-center mt-5 pa-2">
+          <v-avatar size="36" class="mr-3">
+            <v-img v-if="ticket.currentUser?.avatar" :src="ticket.currentUser?.avatar" :alt="ticket.currentUser?.name" cover />
+            <v-icon v-else>mdi-account-circle</v-icon>
+          </v-avatar>
+          <v-text-field
+            v-model="nuevoComentario"
+            variant="filled"
+            bg-color="grey-lighten-4"
+            placeholder="Escribe un comentario..."
+            density="compact"
+            hide-details
+            rounded
+            flat
+          />
+          <v-btn icon variant="text" size="small" class="ml-1" color="primary" @click="enviarComentario">
+            <v-icon>mdi-send</v-icon>
+          </v-btn>
+        </div>
+      </v-card-text>
+    </template>
+
+    <div v-else class="d-flex justify-center align-center" style="height: 400px;">
+      <v-progress-circular indeterminate color="primary" />
+    </div>
+  </v-card>
+</template>
+
+<script>
+import axios from 'axios';
 
 export default {
   name: "TicketDetailModal",
   props: { ticket: { type: Object, default: null } },
-  emits: ["close-modal"],
+  emits: ["close-modal", "editar-ticket", "eliminar-ticket"],
   data() {
     return {
       nuevoComentario: '',
       comentarios: [],
-       usuarioLogueado: null
+      usuarioLogueado: null
     };
   },
   watch: {
     'ticket.id': {
       immediate: true,
       handler(newId) {
-        if (newId) {
-          this.cargarComentarios(newId);
-        }
+        if (newId) this.cargarComentarios(newId);
       }
     }
-  }, mounted() {
+  },
+  mounted() {
     const stored = localStorage.getItem('usuario');
     if (stored) {
       this.usuarioLogueado = JSON.parse(stored);
-      console.log(this.usuarioLogueado);
     }
-
-    // Carga inicial si ticket ya existe
     if (this.ticket?.id) {
       this.cargarComentarios(this.ticket.id);
     }
   },
   methods: {
-  editarTicket() {
-  console.log('Editar ticket:', this.ticket.id);
-  // Aquí podrías emitir un evento o mostrar otro modal
-  this.$emit('editar-ticket', this.ticket); // si deseas capturarlo en el padre
-},
-
-eliminarTicket() {
-  if (confirm('¿Estás seguro de que deseas eliminar este ticket?')) {
-    // Puedes emitir un evento al padre para que lo maneje
-    this.$emit('eliminar-ticket', this.ticket.id);
-  }
-},
+    editarTicket() {
+      this.$emit('editar-ticket', this.ticket);
+    },
+    eliminarTicket() {
+      if (confirm('¿Estás seguro de que deseas eliminar este ticket?')) {
+        this.$emit('eliminar-ticket', this.ticket.id);
+      }
+    },
     getIniciales(nombre, apellidos) {
-    const inicialNombre = nombre?.charAt(0).toUpperCase() || '';
-    const inicialApellido = apellidos?.charAt(0).toUpperCase() || '';
-    return inicialNombre + inicialApellido;
-  },
-  generateColorFromString(input) {
-  let hash = 0;
-  for (let i = 0; i < input.length; i++) {
-    hash = input.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  // Convert hash to HSL
-  const hue = Math.abs(hash % 360); // Hue between 0 and 359
-  return `hsl(${hue}, 70%, 75%)`; // Soft pastel color
-},
-
-  getColorForUser(userId) {
-    // Colores pastel suaves
-    const colors = [
-      'red-lighten-4', 'blue-lighten-4', 'green-lighten-4',
-      'deep-purple-lighten-4', 'indigo-lighten-4', 'teal-lighten-4',
-      'orange-lighten-4', 'cyan-lighten-4', 'pink-lighten-4'
-    ];
-
-    if (!userId) return 'grey-lighten-2';
-    const index = userId % colors.length;
-    return colors[index];
-  }
-,
+      return (nombre?.charAt(0).toUpperCase() || '') + (apellidos?.charAt(0).toUpperCase() || '');
+    },
+    generateColorFromString(input) {
+      let hash = 0;
+      for (let i = 0; i < input.length; i++) {
+        hash = input.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      const hue = Math.abs(hash % 360);
+      return `hsl(${hue}, 70%, 75%)`;
+    },
     async cargarComentarios(ticketId) {
-      try {        
-        const res = await axios.get(`/api/comentarios/${ticketId}`);        
+      try {
+        const res = await axios.get(`/api/comentarios/${ticketId}`);
         this.comentarios = res.data;
       } catch (err) {
         console.error('Error al cargar comentarios:', err);
       }
     },
     async enviarComentario() {
-  if (!this.nuevoComentario.trim()) return;
-
-  try {
-    const payload = {
-      ticket_id: this.ticket.id,
-      usuario_id: this.usuarioLogueado?.id, // 👈 Ahora viene del usuario logueado
-      contenido: this.nuevoComentario
-    };
-
-    const res = await axios.post('/api/comentarios', payload);
-
-    // Agrega comentario nuevo al listado local
-    this.comentarios.push({
-      ...res.data,
-      nombre: `${this.usuarioLogueado.nombre} ${this.usuarioLogueado.apellido}`,
-      avatar: this.usuarioLogueado.avatar || '' // si tienes uno
-    });
-
-    this.nuevoComentario = '';
-  } catch (err) {
-    console.error('Error al enviar comentario:', err);
-  }
-}
-,
-    formatDate(dateString) {
-      if (!dateString) return "";
+      if (!this.nuevoComentario.trim()) return;
       try {
-        const date = new Date(dateString);
-        return date.toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" }).replace('.', '');
-      } catch (e) {
+        const payload = {
+          ticket_id: this.ticket.id,
+          usuario_id: this.usuarioLogueado?.id,
+          contenido: this.nuevoComentario
+        };
+        const res = await axios.post('/api/comentarios', payload);
+        this.comentarios.push({
+          ...res.data,
+          nombre: `${this.usuarioLogueado.nombre} ${this.usuarioLogueado.apellido}`,
+          avatar: this.usuarioLogueado.avatar || ''
+        });
+        this.nuevoComentario = '';
+      } catch (err) {
+        console.error('Error al enviar comentario:', err);
+      }
+    },
+    formatDate(dateString) {
+      try {
+        return new Date(dateString).toLocaleDateString("es-ES", {
+          day: "numeric", month: "short", year: "numeric"
+        }).replace('.', '');
+      } catch {
         return dateString;
       }
     },
@@ -285,8 +209,7 @@ eliminarTicket() {
       const hours = Math.round(minutes / 60);
       if (hours < 24) return `Hace ${hours} h`;
       const days = Math.round(hours / 24);
-      if (days === 1) return 'Ayer';
-      return `Hace ${days} días`;
+      return days === 1 ? 'Ayer' : `Hace ${days} días`;
     },
     getAttachmentIcon(fileType) {
       if (!fileType) return "mdi-file-outline";
@@ -300,9 +223,8 @@ eliminarTicket() {
     }
   }
 };
-
-  </script>
-
+</script>
+  
   <style scoped>
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 

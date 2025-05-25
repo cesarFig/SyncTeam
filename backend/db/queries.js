@@ -60,6 +60,10 @@ const getTicketsByPauta = async (pautaId) => {
         t.fecha_vencimiento,
         t.hora_inicio,
         t.hora_final,
+        t.pauta_id,               -- ✅ agregado
+        t.categoria_id,           -- ✅ agregado
+        t.prioridad_id,           -- ✅ agregado
+        a.usuario_id,             -- ✅ agregado
         c.nombre_categoria,
         c.color_rgb,
         pr.nombre AS prioridad,
@@ -74,7 +78,18 @@ const getTicketsByPauta = async (pautaId) => {
        LEFT JOIN usuario u ON a.usuario_id = u.id
        LEFT JOIN comentario co ON t.id = co.ticket_id
        WHERE t.pauta_id = $1
-       GROUP BY t.id, c.nombre_categoria, c.color_rgb, pr.nombre, pr.nivel_prioridad, u.nombre, u.apellidos
+       GROUP BY 
+         t.id,
+         t.pauta_id,
+         t.categoria_id,
+         t.prioridad_id,
+         a.usuario_id,
+         c.nombre_categoria,
+         c.color_rgb,
+         pr.nombre,
+         pr.nivel_prioridad,
+         u.nombre,
+         u.apellidos
        ORDER BY pr.nivel_prioridad DESC, t.fecha_vencimiento`,
       [pautaId]
     );
@@ -84,6 +99,8 @@ const getTicketsByPauta = async (pautaId) => {
     throw err;
   }
 };
+
+
 
 const getColaboradores = async (pautaId) => {
   try {
@@ -380,7 +397,87 @@ const eliminarNotificacion = async (id) => {
   `, [id]);
   return result.rows[0];
 };
+const eliminarTicket = async (ticketId) => {
+    try {
+    // Primero borra comentarios
+    await pool.query('DELETE FROM comentario WHERE ticket_id = $1', [ticketId]);
 
+    // Luego borra asignaciones si también tienes
+    await pool.query('DELETE FROM asignacion WHERE ticket_id = $1', [ticketId]);
+
+    // Finalmente borra el ticket
+    await pool.query('DELETE FROM ticket WHERE id = $1', [ticketId]);
+  } catch (err) {
+    console.error('Error al eliminar ticket:', err);
+    throw err;
+  }
+};
+
+
+async function editarTicket(id, data) {
+  const {
+    titulo,
+    descripcion,
+    imagen,
+    fecha_vencimiento,
+    hora_inicio,
+    hora_final,
+    prioridad_id,
+    categoria_id,
+    pauta_id
+  } = data;
+
+  const query = `
+    UPDATE ticket SET
+      titulo = $1,
+      descripcion = $2,
+      imagen = $3,
+      fecha_vencimiento = $4,
+      hora_inicio = $5,
+      hora_final = $6,
+      prioridad_id = $7,
+      categoria_id = $8,
+      pauta_id = $9
+    WHERE id = $10
+  `;
+
+  const values = [
+    titulo,
+    descripcion,
+    imagen,
+    fecha_vencimiento,
+    hora_inicio,
+    hora_final,
+    prioridad_id,
+    categoria_id,
+    pauta_id,
+    id
+  ];
+
+  await pool.query(query, values);
+}
+
+// Crear o actualizar asignación
+async function actualizarAsignacion(ticket_id, usuario_id, asignado_por) {
+  const existe = await pool.query('SELECT * FROM asignacion WHERE ticket_id = $1', [ticket_id]);
+
+  if (existe.rowCount > 0) {
+    const updateQuery = `
+      UPDATE asignacion
+      SET usuario_id = $1,
+          fecha_asignacion = NOW(),
+          asignado_por = $2
+      WHERE ticket_id = $3
+    `;
+    await pool.query(updateQuery, [usuario_id, asignado_por, ticket_id]);
+  } else {
+    const insertQuery = `
+      INSERT INTO asignaciones (ticket_id, usuario_id, fecha_asignacion, asignado_por)
+      VALUES ($1, $2, NOW(), $3)
+    `;
+    await pool.query(insertQuery, [ticket_id, usuario_id, asignado_por]);
+  }
+}
 
 
 
@@ -388,5 +485,5 @@ module.exports = {
   logAction, getPautas, getTicketsByPauta, getColaboradores, updateTicketEstado, getUsuarioPorCorreo, getRoles,
   insertUsuario, insertPauta, getCategorias, getPrioridades, insertTicket, getUsuarios, getTicketsUser, getTickets, getTicket, getComentariosByTicketId, crearComentario
   ,obtenerUsuario, asignacion,  crearNotificacionesComentario, getNotificacionesPorUsuario , marcarNotificacionLeida, eliminarNotificacion,
-
+  editarTicket, actualizarAsignacion, eliminarTicket
 };
