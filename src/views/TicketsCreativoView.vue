@@ -1,10 +1,7 @@
 <template>
     <div class="contenedor-horizontal">
   
-      <v-dialog v-model="showForm" max-width="500">
-        <FormTicket @close="toggleForm" @save="handleSavePauta" />
-      </v-dialog>
-  
+        
       <v-dialog v-model="showTicketFull" max-width="800">
         <TicketFull v-if="selectedTicket" :ticket="selectedTicket" @close="closeTicketFull" />
       </v-dialog>
@@ -164,13 +161,54 @@ const response = await axios.post('http://localhost:3000/api/usuarios/getTickets
       toggleForm() { this.showForm = !this.showForm; },
   
       openTicketFull(ticket) {
-        this.selectedTicket = ticket;
-        this.showTicketFull = true;
+       const transformedTicket = {
+    id:ticket.id,
+    title: ticket.titulo,
+    description: ticket.descripcion,
+    taskType: {
+      name: ticket.nombre_categoria || 'Sin categoría',
+      color: ticket.color_rgb || '#757575'
+    },
+    priority: {
+      name: ticket.prioridad || 'Normal',
+      color: this.getPriorityColor(ticket.nivel_prioridad)
+    },
+    image: ticket.imagen,
+    date: ticket.fecha_creacion,
+    assignee: `${ticket.asignado_nombre || ''} ${ticket.asignado_apellidos || ''}`.trim(),
+    attachments: [], // puedes rellenar esto después si necesitas
+    activityLog: [],
+    currentUser: { name: "Tú", avatar: "" },
+
+    // Campos crudos necesarios para editar luego
+    titulo: ticket.titulo,
+    descripcion: ticket.descripcion,
+    imagen: ticket.imagen,
+    prioridad_id: ticket.prioridad_id,
+    categoria_id: ticket.categoria_id,
+    pauta_id: ticket.pauta_id,
+    usuario_id: ticket.usuario_id,
+    hora_inicio: ticket.hora_inicio,
+    hora_final: ticket.hora_final,
+    fecha_vencimiento: ticket.fecha_vencimiento
+  };
+
+  this.selectedTicket = transformedTicket;
+  this.showTicketFull = true;
       },
       closeTicketFull() {
         this.showTicketFull = false;
         this.selectedTicket = null;
       },
+      getPriorityColor(nivel) {
+      switch (nivel) {
+        case 1: return '#42A5F5'; // Normal
+        case 2: return '#FFA726'; // Baja
+        case 3: return '#EF5350'; // Alta
+        case 4: return '#D32F2F'; // Crítica
+        default: return '#BDBDBD';
+      }
+    },
       onDragStart(ticket) {
         this.draggedTicket = ticket;
       },

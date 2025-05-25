@@ -186,6 +186,20 @@ usuarios: []
           creado_por: usuario.id,
         });
         const ticketId = response.data.ticketId; // ← Asegúrate que tu backend regrese esto
+        for (const archivo of this.ticket.archivos) {
+ const formData = new FormData();
+  formData.append('imagen', archivo);
+  formData.append('ticket_id', ticketId);
+  // OJO: Aquí va la corrección
+  formData.append('pauta_id', ''); // ← Así evitamos violar el check
+  formData.append('tipo_archivo', archivo.type);
+  formData.append('is_attach', true);
+  formData.append('subido_por', usuario.id);
+
+  await axios.post('http://localhost:3000/api/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+}
 
     // Crear asignación
     await axios.post('http://localhost:3000/api/asignacion', {

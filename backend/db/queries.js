@@ -99,6 +99,37 @@ const getTicketsByPauta = async (pautaId) => {
     throw err;
   }
 };
+async function registrarArchivo({
+  ticket_id,
+  pauta_id,
+  nombre_archivo,
+  url_archivo,
+  tipo_archivo,
+  tamano,
+  is_attach,
+  subido_por
+}) {
+  const query = `
+    INSERT INTO archivo (
+      ticket_id, pauta_id, nombre_archivo, url_archivo, tipo_archivo,
+      tamanio, fecha_creacion, is_attach, subido_por
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, NOW(), $7, $8)
+  `;
+
+  const values = [
+  ticket_id,
+  pauta_id && pauta_id !== '' ? pauta_id : null,
+  nombre_archivo,
+  url_archivo,
+  tipo_archivo,
+  tamano,
+  is_attach === 'true',
+  subido_por
+  ];
+
+  await pool.query(query, values);
+}
 
 
 
@@ -485,5 +516,5 @@ module.exports = {
   logAction, getPautas, getTicketsByPauta, getColaboradores, updateTicketEstado, getUsuarioPorCorreo, getRoles,
   insertUsuario, insertPauta, getCategorias, getPrioridades, insertTicket, getUsuarios, getTicketsUser, getTickets, getTicket, getComentariosByTicketId, crearComentario
   ,obtenerUsuario, asignacion,  crearNotificacionesComentario, getNotificacionesPorUsuario , marcarNotificacionLeida, eliminarNotificacion,
-  editarTicket, actualizarAsignacion, eliminarTicket
+  editarTicket, actualizarAsignacion, eliminarTicket, registrarArchivo
 };
