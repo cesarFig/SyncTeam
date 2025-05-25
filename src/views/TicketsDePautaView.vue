@@ -6,7 +6,13 @@
     </v-dialog>
 
     <v-dialog v-model="showTicketFull" max-width="800">
-      <TicketFull v-if="selectedTicket" :ticket="selectedTicket" @close="closeTicketFull" />
+   <TicketFull
+  v-if="selectedTicket"
+  :ticket="selectedTicket"
+  @close-modal="selectedTicket = null"
+  @editar-ticket="abrirFormularioEditar"
+  @eliminar-ticket="confirmarEliminacion"
+/>
     </v-dialog>
 
     <v-card class="d-flex flex-column list-panel" style="width: 13%;">
@@ -86,7 +92,7 @@
               class="mb-2"
               draggable="true"
               @dragstart="onDragStart(task)"              
-              @click="openTicketFull(task)"        
+              @click="openTicketFull(task)"                   
             />
           </div>
         </div>

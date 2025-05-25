@@ -15,9 +15,22 @@
         </div>
 
         <div class="card-actions">
-          <v-btn icon variant="text" density="compact" color="grey-darken-1">
-            <v-icon size="small">mdi-dots-horizontal</v-icon>
-          </v-btn>
+          <v-menu offset-y>
+  <template #activator="{ props }">
+    <v-btn icon variant="text" density="compact" color="grey-darken-1" v-bind="props">
+      <v-icon size="small">mdi-dots-horizontal</v-icon>
+    </v-btn>
+  </template>
+
+  <v-list>
+    <v-list-item @click="editarTicket">
+      <v-list-item-title>Editar</v-list-item-title>
+    </v-list-item>
+    <v-list-item @click="eliminarTicket">
+      <v-list-item-title>Eliminar</v-list-item-title>
+    </v-list-item>
+  </v-list>
+</v-menu>
           <v-btn
             icon
             variant="text"
@@ -32,7 +45,7 @@
         <div class="image-area-container">
           <v-img
             v-if="ticket.image"
-            :src="ticket.image"
+            :src="`http://localhost:3000/uploads/${ticket.image}`"
             height="220px"
             cover
             # Imagen redondeada
@@ -180,6 +193,18 @@ export default {
     }
   },
   methods: {
+  editarTicket() {
+  console.log('Editar ticket:', this.ticket.id);
+  // Aquí podrías emitir un evento o mostrar otro modal
+  this.$emit('editar-ticket', this.ticket); // si deseas capturarlo en el padre
+},
+
+eliminarTicket() {
+  if (confirm('¿Estás seguro de que deseas eliminar este ticket?')) {
+    // Puedes emitir un evento al padre para que lo maneje
+    this.$emit('eliminar-ticket', this.ticket.id);
+  }
+},
     getIniciales(nombre, apellidos) {
     const inicialNombre = nombre?.charAt(0).toUpperCase() || '';
     const inicialApellido = apellidos?.charAt(0).toUpperCase() || '';

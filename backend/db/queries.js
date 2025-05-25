@@ -162,6 +162,8 @@ const getPrioridades = async () => {
   return result.rows;
 };
 
+
+
 const insertTicket = async (data) => {
   const {
     titulo,
@@ -385,5 +387,6 @@ const eliminarNotificacion = async (id) => {
 module.exports = {
   logAction, getPautas, getTicketsByPauta, getColaboradores, updateTicketEstado, getUsuarioPorCorreo, getRoles,
   insertUsuario, insertPauta, getCategorias, getPrioridades, insertTicket, getUsuarios, getTicketsUser, getTickets, getTicket, getComentariosByTicketId, crearComentario
-  ,obtenerUsuario, asignacion,  crearNotificacionesComentario, getNotificacionesPorUsuario , marcarNotificacionLeida, eliminarNotificacion
+  ,obtenerUsuario, asignacion,  crearNotificacionesComentario, getNotificacionesPorUsuario , marcarNotificacionLeida, eliminarNotificacion,
+
 };
