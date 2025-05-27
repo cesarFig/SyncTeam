@@ -225,6 +225,7 @@ export default {
       try {
         const response = await axios.get(`/api/pautas/${pautaId}/tickets`);
         this.tickets = response.data;
+        console.log(this.tickets)
         this.ticketColumns.forEach((column) => {
           column.tickets = this.tickets.filter(ticket => ticket.estado === column.state);
         });
@@ -293,7 +294,7 @@ export default {
     image: rawTicket.imagen,
     date: rawTicket.fecha_creacion,
     assignee: `${rawTicket.asignado_nombre || ''} ${rawTicket.asignado_apellidos || ''}`.trim(),
-    attachments: [], // puedes rellenar esto después si necesitas
+   attachments: rawTicket.attachments || [],// puedes rellenar esto después si necesitas
     activityLog: [],
     currentUser: { name: "Tú", avatar: "" },
 

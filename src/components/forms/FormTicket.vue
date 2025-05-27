@@ -14,8 +14,7 @@
         <v-card-text>
           <v-row>
             <v-col cols="12">
-              <v-text-field label="Nombre del ticket" v-model="ticket.name" class="rounded-input"
-                variant="outlined"></v-text-field>
+              <v-text-field label="Nombre del ticket" v-model="ticket.name" class="rounded-input" variant="outlined" />
             </v-col>
           </v-row>
 
@@ -24,74 +23,118 @@
             <v-col cols="12">
               <span class="file-upload-text">Imagen de Portada</span>
               <v-icon class="file-upload-icon ml-2 cursor-pointer" @click="openImageUpload">mdi-camera</v-icon>
-              <input type="file" ref="imageInput" accept="image/*" style="display: none" @change="handleImageUpload">
+              <input type="file" ref="imageInput" accept="image/*" style="display: none" @change="handleImageUpload" />
               <div v-if="ticket.imagen" class="mt-2">{{ ticket.imagen }}</div>
             </v-col>
           </v-row>
-          <v-row>
-  <v-col cols="12">
-    <v-select
-      label="Asignar a"
-      v-model="usuarioAsignado"
-      :items="usuarios"
-      item-title="nombre_completo"
-      item-value="id"
-      class="rounded-input"
-      variant="outlined"
-    />
-  </v-col>
-</v-row>
 
           <v-row>
             <v-col cols="12">
-              <v-select label="Pauta" v-model="pautaSeleccionada" :items="pauta" item-title="titulo" item-value="id" class="rounded-input"
-                variant="outlined"></v-select>
+              <v-select
+                label="Asignar a"
+                v-model="usuarioAsignado"
+                :items="usuarios"
+                item-title="nombre_completo"
+                item-value="id"
+                class="rounded-input"
+                variant="outlined"
+              />
             </v-col>
           </v-row>
-      
+
+          <v-row>
+            <v-col cols="12">
+              <v-select
+                label="Pauta"
+                v-model="pautaSeleccionada"
+                :items="pauta"
+                item-title="titulo"
+                item-value="id"
+                class="rounded-input"
+                variant="outlined"
+              />
+            </v-col>
+          </v-row>
+
           <v-row>
             <v-col cols="4">
-              <v-menu v-model="dateMenu" :close-on-content-click="false" transition="scale-transition" offset-y min-width="auto">
+              <v-menu v-model="dateMenu" :close-on-content-click="false" transition="scale-transition" offset-y>
                 <template v-slot:activator="{ props }">
-                  <v-text-field :model-value="formattedDate" label="Fecha de Entrega" prepend-inner-icon="mdi-calendar"
-                    readonly v-bind="props" class="rounded-input" variant="outlined"></v-text-field>
+                  <v-text-field
+                    :model-value="formattedDate"
+                    label="Fecha de Entrega"
+                    prepend-inner-icon="mdi-calendar"
+                    readonly
+                    v-bind="props"
+                    class="rounded-input"
+                    variant="outlined"
+                  />
                 </template>
-                <v-date-picker v-model="ticket.fechaEntrega" no-title scrollable></v-date-picker>
+                <v-date-picker v-model="ticket.fechaEntrega" no-title scrollable />
               </v-menu>
             </v-col>
             <v-col cols="4">
-              <v-text-field label="Hora Inicial" v-model="ticket.horaInicial" type="time" class="rounded-input"
-                variant="outlined"></v-text-field>
+              <v-text-field label="Hora Inicial" v-model="ticket.horaInicial" type="time" class="rounded-input" variant="outlined" />
             </v-col>
             <v-col cols="4">
-              <v-text-field label="Hora Final" v-model="ticket.horaFinal" type="time" class="rounded-input"
-                variant="outlined"></v-text-field>
+              <v-text-field label="Hora Final" v-model="ticket.horaFinal" type="time" class="rounded-input" variant="outlined" />
             </v-col>
           </v-row>
 
           <v-row>
             <v-col cols="6">
-              <v-select label="Categoría" v-model="categoriaSeleccionada" :items="categoria"
-                item-title="nombre_categoria" item-value="id" class="rounded-input" variant="outlined" />
+              <v-select
+                label="Categoría"
+                v-model="categoriaSeleccionada"
+                :items="categoria"
+                item-title="nombre_categoria"
+                item-value="id"
+                class="rounded-input"
+                variant="outlined"
+              />
             </v-col>
             <v-col cols="6">
-              <v-select label="Prioridad" v-model="ticket.prioridad" :items="prioridad" item-title="nombre" item-value="id"
-                class="rounded-input" variant="outlined"></v-select>
+              <v-select
+                label="Prioridad"
+                v-model="ticket.prioridad"
+                :items="prioridad"
+                item-title="nombre"
+                item-value="id"
+                class="rounded-input"
+                variant="outlined"
+              />
             </v-col>
           </v-row>
 
           <div class="input-group">
-            <v-textarea label="Descripción" v-model="ticket.descripcion" class="rounded-input"
-              variant="outlined"></v-textarea>
+            <v-textarea label="Descripción" v-model="ticket.descripcion" class="rounded-input" variant="outlined" />
           </div>
+
+          <!-- Archivos seleccionados (arriba de los botones) -->
+          <v-list two-line v-if="ticket.archivos.length" class="mt-4">
+            <v-list-item
+              v-for="(archivo, index) in ticket.archivos"
+              :key="index"
+              class="d-flex justify-space-between align-center"
+            >
+              <div>
+                <v-list-item-title>{{ archivo.name }}</v-list-item-title>
+                <v-list-item-subtitle>{{ (archivo.size / 1024).toFixed(1) }} KB</v-list-item-subtitle>
+              </div>
+              <v-btn icon @click="eliminarArchivo(index)">
+                <v-icon color="red">mdi-close</v-icon>
+              </v-btn>
+            </v-list-item>
+          </v-list>
         </v-card-text>
 
         <v-card-actions class="pa-4">
           <div class="file-upload-container d-flex align-center">
             <span class="file-upload-text">Agregar Archivo</span>
             <v-icon class="file-upload-icon ml-2 cursor-pointer" @click="openFileUpload">mdi-paperclip</v-icon>
-            <input type="file" ref="fileInput" style="display: none" multiple @change="handleFileUpload">
+            <input type="file" ref="fileInput" style="display: none" multiple @change="handleFileUpload" />
           </div>
+
           <div class="ml-auto">
             <v-btn text class="mr-2 cancel-button" @click="dialog = false">Cancelar</v-btn>
             <v-btn color="purple" class="save-button rounded-lg" @click="addTicket">Guardar</v-btn>
@@ -113,7 +156,7 @@ export default {
       ticket: {
         name: '',
         descripcion: '',
-        imagen: '', // ← Se guarda el nombre de la imagen aquí
+        imagen: '',
         pauta: '',
         horaInicial: '',
         horaFinal: '',
@@ -127,7 +170,7 @@ export default {
       pautaSeleccionada: null,
       categoriaSeleccionada: null,
       usuarioAsignado: null,
-usuarios: []
+      usuarios: []
     };
   },
   computed: {
@@ -156,18 +199,38 @@ usuarios: []
     this.obtenerUsuarios();
   },
   methods: {
-    async obtenerUsuarios() {
-  try {
-    const response = await axios.get('http://localhost:3000/api/usuarios/getUsuarios');
-    // Asumimos que el backend devuelve usuarios con campos "id", "nombre", "apellidos"
-    this.usuarios = response.data.map(u => ({
-      ...u,
-      nombre_completo: `${u.nombre} ${u.apellidos}`
-    }));
-  } catch (error) {
-    console.error('Error al cargar usuarios:', error);
-  }
-},
+    eliminarArchivo(index) {
+      this.ticket.archivos.splice(index, 1);
+    },
+    openFileUpload() {
+      this.$refs.fileInput.click();
+    },
+    handleFileUpload(event) {
+      const files = event.target.files;
+      this.ticket.archivos.push(...Array.from(files));
+      console.log('Archivos seleccionados:', this.ticket.archivos);
+    },
+    openImageUpload() {
+      this.$refs.imageInput.click();
+    },
+    async handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        try {
+          const formData = new FormData();
+          formData.append('imagen', file);
+
+          const res = await axios.post('http://localhost:3000/api/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+
+          this.ticket.imagen = res.data.filename;
+          console.log('Imagen guardada como:', this.ticket.imagen);
+        } catch (err) {
+          console.error('Error al subir imagen:', err);
+        }
+      }
+    },
     async addTicket() {
       try {
         const now = new Date();
@@ -185,65 +248,46 @@ usuarios: []
           pauta_id: this.pautaSeleccionada,
           creado_por: usuario.id,
         });
-        const ticketId = response.data.ticketId; // ← Asegúrate que tu backend regrese esto
+
+        const ticketId = response.data.ticketId;
+
         for (const archivo of this.ticket.archivos) {
- const formData = new FormData();
-  formData.append('imagen', archivo);
-  formData.append('ticket_id', ticketId);
-  // OJO: Aquí va la corrección
-  formData.append('pauta_id', ''); // ← Así evitamos violar el check
-  formData.append('tipo_archivo', archivo.type);
-  formData.append('is_attach', true);
-  formData.append('subido_por', usuario.id);
+          const formData = new FormData();
+          formData.append('imagen', archivo);
+          formData.append('ticket_id', ticketId);
+          formData.append('pauta_id', ''); // evitar conflicto con CHECK
+          formData.append('tipo_archivo', archivo.type);
+          formData.append('is_attach', true);
+          formData.append('subido_por', usuario.id);
 
-  await axios.post('http://localhost:3000/api/upload', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  });
-}
+          await axios.post('http://localhost:3000/api/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+        }
 
-    // Crear asignación
-    await axios.post('http://localhost:3000/api/asignacion', {
-      ticket_id: ticketId,
-      usuario_id: this.usuarioAsignado,
-      fecha_asignacion: now.toISOString(),
-      asignado_por: usuario.id
-    });
+        await axios.post('http://localhost:3000/api/asignacion', {
+          ticket_id: ticketId,
+          usuario_id: this.usuarioAsignado,
+          fecha_asignacion: now.toISOString(),
+          asignado_por: usuario.id
+        });
 
-    console.log('Ticket y asignación guardados');
-    this.dialog = false;
-
+        console.log('Ticket y archivos guardados');
+        this.dialog = false;
       } catch (error) {
         console.error('Error al guardar el ticket:', error);
       }
     },
-    openFileUpload() {
-      this.$refs.fileInput.click();
-    },
-    handleFileUpload(event) {
-      const files = event.target.files;
-      this.ticket.archivos = Array.from(files);
-      console.log('Archivos seleccionados:', this.ticket.archivos);
-    },
-    openImageUpload() {
-      this.$refs.imageInput.click();
-    },
-    async handleImageUpload(event) {
-       const file = event.target.files[0];
-  if (file) {
-    try {
-      const formData = new FormData();
-      formData.append('imagen', file);
-
-      const res = await axios.post('http://localhost:3000/api/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-
-      this.ticket.imagen = res.data.filename; // ← guardamos el nombre que devuelve el backend
-      console.log('Imagen guardada como:', this.ticket.imagen);
-    } catch (err) {
-      console.error('Error al subir imagen:', err);
-    }
-  }
+    async obtenerUsuarios() {
+      try {
+        const response = await axios.get('http://localhost:3000/api/usuarios/getUsuarios');
+        this.usuarios = response.data.map(u => ({
+          ...u,
+          nombre_completo: `${u.nombre} ${u.apellidos}`
+        }));
+      } catch (error) {
+        console.error('Error al cargar usuarios:', error);
+      }
     },
     async obtenerCategoria() {
       try {
@@ -279,44 +323,35 @@ usuarios: []
   font-weight: 600;
   color: #333;
 }
-
 .date-header {
   color: #666;
   font-size: 0.875rem;
 }
-
 .close-button {
   margin-left: 8px;
 }
-
 .save-button {
   background-color: #9C27B0 !important;
   color: white !important;
   text-transform: none;
 }
-
 .cancel-button {
   text-transform: none;
 }
-
 .rounded-input .v-input__outline {
   border-radius: 50px !important;
 }
-
 .file-upload-container {
   flex-grow: 1;
 }
-
 .file-upload-text {
   color: #333;
   font-weight: 500;
 }
-
 .file-upload-icon {
   color: #333;
 }
-
 .file-upload-icon:hover {
   color: #9C27B0;
 }
-</style> 
+</style>

@@ -106,6 +106,23 @@
           </v-row>
 
           <v-textarea label="Descripción" v-model="ticket.descripcion" class="rounded-input" variant="outlined" />
+
+          <!-- Lista de archivos adjuntos -->
+          <v-list two-line v-if="ticket.archivos.length" class="mt-4">
+            <v-list-item
+              v-for="(archivo, index) in ticket.archivos"
+              :key="index"
+              class="d-flex justify-space-between align-center"
+            >
+              <div>
+                <v-list-item-title>{{ archivo.name }}</v-list-item-title>
+                <v-list-item-subtitle>{{ archivo.type || 'Archivo' }}</v-list-item-subtitle>
+              </div>
+              <v-btn icon color="red" @click="eliminarArchivo(archivo, index)">
+                <v-icon>mdi-delete</v-icon>
+              </v-btn>
+            </v-list-item>
+          </v-list>
         </v-card-text>
 
         <v-card-actions class="pa-4">
@@ -170,26 +187,25 @@ export default {
     },
   },
   mounted() {
-   
- if (this.ticketEdit) {
-    this.ticket = {
-        id: this.ticketEdit.id, // 👈 este es el campo que faltaba
-  name: this.ticketEdit.titulo || '',
-  descripcion: this.ticketEdit.descripcion || '',
-  imagen: this.ticketEdit.imagen || '',
-  fechaEntrega: this.ticketEdit.fecha_vencimiento
-    ? new Date(this.ticketEdit.fecha_vencimiento)
-    : null,
-  horaInicial: this.ticketEdit.hora_inicio?.slice(0, 5) || '',
-  horaFinal: this.ticketEdit.hora_final?.slice(0, 5) || '',
-  prioridad: this.ticketEdit.prioridad_id || null,
-  archivos: [],
-    };
+    if (this.ticketEdit) {
+      this.ticket = {
+        id: this.ticketEdit.id,
+        name: this.ticketEdit.titulo || '',
+        descripcion: this.ticketEdit.descripcion || '',
+        imagen: this.ticketEdit.imagen || '',
+        fechaEntrega: this.ticketEdit.fecha_vencimiento
+          ? new Date(this.ticketEdit.fecha_vencimiento)
+          : null,
+        horaInicial: this.ticketEdit.hora_inicio?.slice(0, 5) || '',
+        horaFinal: this.ticketEdit.hora_final?.slice(0, 5) || '',
+        prioridad: this.ticketEdit.prioridad_id || null,
+        archivos: this.ticketEdit.attachments || [],
+      };
 
-    this.pautaSeleccionada = this.ticketEdit.pauta_id || null;
-    this.categoriaSeleccionada = this.ticketEdit.categoria_id || null;
-    this.usuarioAsignado = this.ticketEdit.usuario_id || null; // si lo tienes
-  }
+      this.pautaSeleccionada = this.ticketEdit.pauta_id || null;
+      this.categoriaSeleccionada = this.ticketEdit.categoria_id || null;
+      this.usuarioAsignado = this.ticketEdit.usuario_id || null;
+    }
 
     this.obtenerCategoria();
     this.obtenerPrioridades();
@@ -197,6 +213,18 @@ export default {
     this.obtenerUsuarios();
   },
   methods: {
+    async eliminarArchivo(archivo, index) {
+      const confirmado = confirm(`¿Deseas eliminar el archivo "${archivo.name}"?`);
+      if (!confirmado) return;
+
+      try {
+        await axios.delete(`http://localhost:3000/api/archivo/${archivo.id}`);
+        this.ticket.archivos.splice(index, 1);
+        console.log('Archivo eliminado');
+      } catch (error) {
+        console.error('Error al eliminar archivo:', error);
+      }
+    },
     async obtenerUsuarios() {
       try {
         const response = await axios.get('http://localhost:3000/api/usuarios/getUsuarios');

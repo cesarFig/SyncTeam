@@ -52,6 +52,7 @@
           </div>
         </div>
 
+        <!-- Adjuntos del creativo -->
         <div class="section-container mt-5">
           <div class="d-flex justify-space-between align-center mb-3">
             <label class="section-label">Adjuntos del creativo</label>
@@ -60,9 +61,18 @@
             </v-btn>
           </div>
           <div class="attachments-list">
-            <v-chip v-for="(file, index) in ticket.attachments" :key="index" label size="small" class="mr-2 mb-2 attachment-chip" :prepend-icon="getAttachmentIcon(file.type)">
+            <a
+              v-for="(file, index) in ticket.attachments"
+              :key="index"
+              class="attachment-chip d-flex align-center"
+              :href="`http://localhost:3000/uploads/${file.url}`"
+              target="_blank"
+              rel="noopener"
+              download
+            >
+              <v-icon left size="18" class="mr-1">{{ getAttachmentIcon(file.type) }}</v-icon>
               {{ file.name }}
-            </v-chip>
+            </a>
           </div>
         </div>
 

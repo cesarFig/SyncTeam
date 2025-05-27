@@ -60,10 +60,10 @@ const getTicketsByPauta = async (pautaId) => {
         t.fecha_vencimiento,
         t.hora_inicio,
         t.hora_final,
-        t.pauta_id,               -- ✅ agregado
-        t.categoria_id,           -- ✅ agregado
-        t.prioridad_id,           -- ✅ agregado
-        a.usuario_id,             -- ✅ agregado
+        t.pauta_id,
+        t.categoria_id,
+        t.prioridad_id,
+        a.usuario_id,
         c.nombre_categoria,
         c.color_rgb,
         pr.nombre AS prioridad,
@@ -93,10 +93,45 @@ const getTicketsByPauta = async (pautaId) => {
        ORDER BY pr.nivel_prioridad DESC, t.fecha_vencimiento`,
       [pautaId]
     );
-    return result.rows;
+
+    const tickets = result.rows;
+
+    // 🔁 Para cada ticket, obtener sus archivos y agregarlos
+    for (const ticket of tickets) {
+      const archivosRes = await pool.query(
+        `SELECT 
+            id,
+           nombre_archivo AS name,
+           url_archivo AS url,
+           tipo_archivo AS type
+         FROM archivo
+         WHERE ticket_id = $1`,
+        [ticket.id]
+      );
+
+      ticket.attachments = archivosRes.rows; // 📎 Agrega los archivos al objeto ticket
+    }
+
+    return tickets;
   } catch (err) {
     console.error('Error fetching tickets for pauta:', err);
     throw err;
+  }
+};
+const eliminarArchivoPorId = async (id, soloObtener = false) => {
+  try {
+    if (soloObtener) {
+      const res = await pool.query(
+        'SELECT nombre_archivo, url_archivo FROM archivo WHERE id = $1',
+        [id]
+      );
+      return res.rows[0]; // para saber la URL física
+    } else {
+      await pool.query('DELETE FROM archivo WHERE id = $1', [id]);
+    }
+  } catch (error) {
+    console.error('Error en eliminarArchivoPorId:', error);
+    throw error;
   }
 };
 async function registrarArchivo({
@@ -516,5 +551,5 @@ module.exports = {
   logAction, getPautas, getTicketsByPauta, getColaboradores, updateTicketEstado, getUsuarioPorCorreo, getRoles,
   insertUsuario, insertPauta, getCategorias, getPrioridades, insertTicket, getUsuarios, getTicketsUser, getTickets, getTicket, getComentariosByTicketId, crearComentario
   ,obtenerUsuario, asignacion,  crearNotificacionesComentario, getNotificacionesPorUsuario , marcarNotificacionLeida, eliminarNotificacion,
-  editarTicket, actualizarAsignacion, eliminarTicket, registrarArchivo
+  editarTicket, actualizarAsignacion, eliminarTicket, registrarArchivo, eliminarArchivoPorId
 };
