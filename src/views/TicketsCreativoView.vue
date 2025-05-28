@@ -234,9 +234,11 @@ const response = await axios.post('http://localhost:3000/api/usuarios/getTickets
         this.draggedTicket = null;
       },
       updateTicketState(ticket) {
-        // Call API to update the ticket state in the backend
+           let usuario = JSON.parse(localStorage.getItem("usuario")); // convierte el string a objeto
+
+      let id = usuario.id; // accedes al campo "id"
         axios
-          .put(`/api/pautas/tickets/${ticket.id}`, { estado: ticket.estado })
+          .put(`/api/pautas/tickets/${ticket.id}`, { estado: ticket.estado, usuario:id })
           .then(() => {
             console.log('Ticket state updated successfully');
           })

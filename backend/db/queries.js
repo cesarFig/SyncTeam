@@ -426,8 +426,8 @@ const crearNotificacionesEstado = async (ticketId, usuario, estado) => {
       await crearNotificacion({
         usuario_id: admin.id,
         tipo_notificacion: 'Cambio de estado de ticket',
-        mensaje: `Ha cambiado el estado del ticket #${ticketId} a ${estadoNombre}`,
-        emisor_id: usuarioId,
+        mensaje: `Ha cambiado el estado del ticket #${ticketId} a la seccion: ${estadoNombre}`,
+        emisor_id: usuario,
         ticket_id: ticketId
       });
     }
@@ -439,7 +439,7 @@ const crearNotificacionesEstado = async (ticketId, usuario, estado) => {
       await crearNotificacion({
         usuario_id: destino,
         tipo_notificacion: 'Cambio del estado del ticket',
-        mensaje: `El estado de tu ticket #${ticketId} a cambiado a ${estadoNombre}`,
+        mensaje: `El estado de tu ticket #${ticketId} ha cambiado a: ${estadoNombre}`,
         emisor_id: usuario,
         ticket_id: ticketId
       });

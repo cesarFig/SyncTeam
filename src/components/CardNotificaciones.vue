@@ -1,21 +1,24 @@
 <template>
-  <v-card class="mx-auto pa-4 rounded-xl h-100" max-width="500" elevation="2">
+  <v-card class="fill-height d-flex flex-column pa-4" elevation="2">
+    <v-card-title class="text-h6 font-weight-bold mb-4">
+      Notificaciones
+    </v-card-title>
 
-    <v-card-title class="text-h6 font-weight-bold">Notificaciones</v-card-title>    
-
-    <v-list density="compact">
+    <v-list density="comfortable">
       <v-list-item
-        v-for="(noti, index) in notifications"
-        :key="index"
-        class="px-0 py-3"
+        v-for="noti in notifications"
+        :key="noti.id"
+        class="py-2"
+        :class="{
+          'bg-white': true,
+          'text-grey-darken-2': true
+        }"
+        @click="marcarComoLeida(noti)"
       >
-        <v-row no-gutters class="w-100">
+        <v-row align="center" class="w-100">
           <!-- Avatar -->
-          <v-col cols="auto" class="d-flex align-start pr-3">
-            <v-avatar
-              size="40"
-              :style="{ backgroundColor: getColor(noti.sender) }"
-            >
+          <v-col cols="auto" class="d-flex align-start">
+            <v-avatar size="40" :style="{ backgroundColor: getColor(noti.sender) }" class="mr-3">
               <span class="white--text font-weight-bold">
                 {{ getInitials(noti.sender) }}
               </span>
@@ -23,12 +26,11 @@
           </v-col>
 
           <!-- Contenido -->
-          <v-col class="d-flex flex-column">
-            <div class="d-flex justify-space-between align-start">
-              <span class="font-weight-medium">{{ noti.sender }}</span>
-              <span class="text-caption text-grey-darken-1">{{ formatDate(noti.date) }}</span>
-            </div>
-            <span class="text-body-2">{{ noti.message }}</span>
+          <v-col class="d-flex flex-column justify-center">
+            <span class="font-weight-medium">{{ noti.sender }}</span>
+            <span class="font-weight-bold text-body-2">{{ noti.title }}</span>
+            <span class="text-body-2">{{ noti.description }}</span>
+            <span class="text-caption text--secondary">{{ formatDate(noti.timestamp) }}</span>
           </v-col>
         </v-row>
       </v-list-item>
@@ -37,14 +39,39 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
-const notifications = ref([
-  { sender: 'Carlos Gómez', message: 'Comentó en tu ticket', date: new Date() },
-  { sender: 'Ana Ruiz', message: 'Asignó una tarea nueva', date: new Date(Date.now() - 3600 * 1000 * 5) }, // 5 horas antes
-  { sender: 'Brenda Torres', message: 'Actualizó el estado del proyecto', date: new Date(Date.now() - 3600 * 1000 * 24) }, // ayer
-  { sender: 'Luis Mena', message: 'Te mencionó en una nota', date: new Date(Date.now() - 3600 * 1000 * 48) } // anteayer
-])
+const notifications = ref([])
+
+const cargarNotificaciones = async () => {
+  try {
+    const usuario = JSON.parse(localStorage.getItem('usuario'))
+    const res = await fetch(`http://localhost:3000/api/notificaciones/${usuario.id}`)
+    const data = await res.json()
+
+    notifications.value = data.map(n => ({
+      id: n.id,
+      sender: `${n.sender_nombre} ${n.sender_apellidos}`,
+      title: n.tipo_notificacion,
+      description: n.mensaje,
+      timestamp: n.fecha_creacion,
+      unread: !n.is_read
+    }))
+  } catch (err) {
+    console.error('Error cargando notificaciones:', err)
+  }
+}
+
+const marcarComoLeida = async (noti) => {
+  try {
+    await fetch(`http://localhost:3000/api/notificaciones/read/${noti.id}`, {
+      method: 'PUT'
+    })
+    noti.unread = false
+  } catch (err) {
+    console.error('Error al marcar como leída:', err)
+  }
+}
 
 const getInitials = (name) => {
   return name
@@ -65,8 +92,8 @@ const getColor = (name) => {
   return colors[index]
 }
 
-const formatDate = (date) => {
-  const d = new Date(date)
+const formatDate = (timestamp) => {
+  const d = new Date(timestamp)
   const today = new Date()
   const yesterday = new Date()
   yesterday.setDate(today.getDate() - 1)
@@ -88,9 +115,16 @@ const formatDate = (date) => {
     month: 'short'
   }) + `, ${timeStr}`
 }
+
+onMounted(() => {
+  cargarNotificaciones()
+})
 </script>
 
 <style scoped>
+.v-list-item {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
 .white--text {
   color: white;
 }
