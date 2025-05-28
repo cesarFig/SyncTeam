@@ -59,7 +59,7 @@
         this.showPassword = !this.showPassword;
       },
       async login() {
-      try {
+      try {                
         const response = await axios.post('http://localhost:3000/api/login', {
           correo: this.email,
           password: this.password
@@ -68,16 +68,18 @@
         const usuario = {
           id: response.data.usuario.id,
           nombre: response.data.usuario.nombre,
-          apellido: response.data.usuario.apellido,
-          rol: response.data.usuario.rol
-        };        
-        localStorage.setItem('usuario', JSON.stringify(usuario));            
+          apellido: response.data.usuario.apellidos,
+          rol: response.data.usuario.rol_id
+        };             
+        localStorage.setItem('usuario', JSON.stringify(usuario));    
+        console.log("Este es el rol :", usuario.rol);        
          switch (usuario.rol) {            
-            case 'Administrador':
+            case 1:
               this.$router.push('/dashboard-admin');
               break;
             default:
-              this.$router.push('/dashboard-admin');
+              this.$router.push('/dashboard-creativo');
+              break;
         }
       } catch (error) {
         alert(error.response?.data?.error || 'Error al iniciar sesión');

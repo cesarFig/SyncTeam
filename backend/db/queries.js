@@ -153,14 +153,14 @@ async function registrarArchivo({
   `;
 
   const values = [
-  ticket_id,
-  pauta_id && pauta_id !== '' ? pauta_id : null,
-  nombre_archivo,
-  url_archivo,
-  tipo_archivo,
-  tamano,
-  is_attach === 'true',
-  subido_por
+    ticket_id,
+    pauta_id && pauta_id !== '' ? pauta_id : null,
+    nombre_archivo,
+    url_archivo,
+    tipo_archivo,
+    tamano,
+    is_attach === 'true',
+    subido_por
   ];
 
   await pool.query(query, values);
@@ -357,7 +357,7 @@ async function crearComentario(ticketId, usuarioId, contenido) {
   `, [ticketId, usuarioId, contenido]);
   return result.rows[0];
 }
-async function obtenerUsuario(id) {  
+async function obtenerUsuario(id) {
   console.log("entre");
   const result = await pool.query('SELECT * FROM usuario WHERE id= $1', [id]);
   return result.rows[0];
@@ -396,6 +396,51 @@ const crearNotificacionesComentario = async (ticketId, usuarioId) => {
         tipo_notificacion: 'Comentario',
         mensaje: `Nuevo comentario en tu ticket #${ticketId}`,
         emisor_id: usuarioId,
+        ticket_id: ticketId
+      });
+    }
+  }
+};
+const crearNotificacionesEstado = async (ticketId, usuario, estado) => {
+  const autor = await obtenerUsuario(usuario);
+  let estadoNombre;
+  switch (estado) {
+    case 1:
+      estadoNombre = "Por hacer"
+      break;
+    case 2:
+      estadoNombre = "En progreso"
+      break;
+    case 3:
+      estadoNombre = "Revision"
+      break;
+    case 4:
+      estadoNombre = "Terminado"
+      break;
+  }
+
+  if (autor.rol_id !== 1) {
+    // Si es editor: notificar a admins
+    const admins = await pool.query('SELECT id FROM usuario WHERE rol_id = 1');
+    for (const admin of admins.rows) {
+      await crearNotificacion({
+        usuario_id: admin.id,
+        tipo_notificacion: 'Cambio de estado de ticket',
+        mensaje: `Ha cambiado el estado del ticket #${ticketId} a ${estadoNombre}`,
+        emisor_id: usuarioId,
+        ticket_id: ticketId
+      });
+    }
+  } else {
+    // Si es admin: notificar al asignado
+    const asignado = await pool.query('SELECT usuario_id FROM asignacion WHERE ticket_id = $1 LIMIT 1', [ticketId]);
+    const destino = asignado.rows[0]?.usuario_id;
+    if (destino) {
+      await crearNotificacion({
+        usuario_id: destino,
+        tipo_notificacion: 'Cambio del estado del ticket',
+        mensaje: `El estado de tu ticket #${ticketId} a cambiado a ${estadoNombre}`,
+        emisor_id: usuario,
         ticket_id: ticketId
       });
     }
@@ -464,7 +509,7 @@ const eliminarNotificacion = async (id) => {
   return result.rows[0];
 };
 const eliminarTicket = async (ticketId) => {
-    try {
+  try {
     // Primero borra comentarios
     await pool.query('DELETE FROM comentario WHERE ticket_id = $1', [ticketId]);
 
@@ -550,6 +595,6 @@ async function actualizarAsignacion(ticket_id, usuario_id, asignado_por) {
 module.exports = {
   logAction, getPautas, getTicketsByPauta, getColaboradores, updateTicketEstado, getUsuarioPorCorreo, getRoles,
   insertUsuario, insertPauta, getCategorias, getPrioridades, insertTicket, getUsuarios, getTicketsUser, getTickets, getTicket, getComentariosByTicketId, crearComentario
-  ,obtenerUsuario, asignacion,  crearNotificacionesComentario, getNotificacionesPorUsuario , marcarNotificacionLeida, eliminarNotificacion,
-  editarTicket, actualizarAsignacion, eliminarTicket, registrarArchivo, eliminarArchivoPorId
+  , obtenerUsuario, asignacion, crearNotificacionesComentario, getNotificacionesPorUsuario, marcarNotificacionLeida, eliminarNotificacion,
+  editarTicket, actualizarAsignacion, eliminarTicket, registrarArchivo, eliminarArchivoPorId, crearNotificacionesEstado
 };

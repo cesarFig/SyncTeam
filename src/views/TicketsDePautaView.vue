@@ -344,7 +344,11 @@ export default {
       this.draggedTicket = null;
     },
     updateTicketState(ticket) {
-      axios.put(`/api/pautas/tickets/${ticket.id}`, { estado: ticket.estado })
+      let usuario = JSON.parse(localStorage.getItem("usuario")); // convierte el string a objeto
+
+let id = usuario.id; // accedes al campo "id"
+
+      axios.put(`/api/pautas/tickets/${ticket.id}`, { estado: ticket.estado, usuario:id })
         .then(() => console.log('Ticket state updated successfully'))
         .catch((error) => console.error('Error updating ticket state:', error));
     }

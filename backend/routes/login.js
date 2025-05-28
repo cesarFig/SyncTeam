@@ -8,7 +8,7 @@ router.post('/', async (req, res) => {
 
     try {
       const usuario = await getUsuarioPorCorreo(correo);
-  
+      console.log("pene", usuario)
       if (!usuario) {
         return res.status(404).json({ error: 'Usuario no encontrado' });
       }

@@ -1,0 +1,313 @@
+.MODEL SMALL
+.STACK 100h
+.DATA
+    
+    encabezado   DB 0Ah, 0Dh, '>>> LISTA DE COMPRAS (EJERCICIO 2) <<<', 0Ah, 0Dh, '$'
+    
+    menu_titulo  DB 0Ah, 0Dh, 'Opciones disponibles:', 0Ah, 0Dh, '$'
+    opcion_a     DB 'A) Agregar producto', 0Ah, 0Dh, '$'
+    opcion_b     DB 'B) Ver lista actual', 0Ah, 0Dh, '$'
+    opcion_c     DB 'C) Salir del programa', 0Ah, 0Dh, '$'
+    prompt       DB 0Ah, 0Dh, 'Seleccione una opcion: $'
+    
+    productos    DB 100 DUP(9 DUP('$'))    
+    nums         DB 100 DUP(0)            
+    contador     DB 0                     
+    seleccion    DB ?                      
+    bufferProd   DB 9 DUP('$')            
+    bufferCant   DB ?                      
+
+    msgNombre    DB 0Ah, 0Dh, 'Ingrese nombre del producto (Maximo 8 letras): $'
+    msgCantidad  DB 0Ah, 0Dh, 'Ingrese cantidad requerida (Minimo 1, maximo 99): $'
+    msgLista     DB 0Ah, 0Dh, '>>> LISTA DE COMPRAS ACTUAL <<<', 0Ah, 0Dh, '$'
+    msgTotal     DB 0Ah, 0Dh, 'Total de productos: $'
+    msgError     DB 0Ah, 0Dh, ' Atencion! Minimo 4 productos requeridos', 0Ah, 0Dh, '$'
+    salto        DB 0Ah, 0Dh, '$'
+    separador    DB ' : $'
+
+; ---------- MACRO ----------
+SALTO_LINEA MACRO
+    MOV DX, OFFSET salto
+    CALL Imprimir
+ENDM
+
+.CODE
+
+; ---------- IMPRIMIR CADENA ----------
+Imprimir PROC
+    PUSH AX
+    MOV AH, 09h
+    INT 21h
+    POP AX
+    RET
+Imprimir ENDP
+
+; ---------- MOSTRAR LISTA ----------
+MostrarLista PROC
+    CMP contador, 4
+    JL MostrarError
+
+    MOV DX, OFFSET msgLista
+    CALL Imprimir
+
+    MOV DX, OFFSET msgTotal
+    CALL Imprimir
+    
+    XOR AX, AX
+    MOV AL, contador
+    CALL MostrarNumero
+    
+    SALTO_LINEA
+
+    MOV CX, 0
+    MOV CL, contador
+    MOV SI, 0
+CicloLista:    
+    MOV AX, SI
+    MOV BX, 9
+    MUL BX
+    LEA DX, productos
+    ADD DX, AX
+    CALL Imprimir
+
+    MOV DX, OFFSET separador
+    CALL Imprimir
+
+    MOV BX, SI
+    MOV AL, nums[BX]
+    CALL MostrarNumero
+
+    SALTO_LINEA
+
+    INC SI
+    LOOP CicloLista
+        
+    SALTO_LINEA
+    CALL Pausa
+    
+    RET
+
+MostrarError:
+    MOV DX, OFFSET msgError
+    CALL Imprimir
+    RET
+MostrarLista ENDP
+
+; ---------- MOSTRAR NUMERO ----------
+MostrarNumero PROC
+    AAM
+    ADD AX, 3030h
+    MOV BX, AX
+    CMP BH, '0'
+    JE MostrarUnidad
+    MOV DL, BH
+    MOV AH, 02h
+    INT 21h
+MostrarUnidad:
+    MOV DL, BL
+    MOV AH, 02h
+    INT 21h
+    RET
+MostrarNumero ENDP
+
+; ---------- PROCEDIMIENTO PAUSA ----------
+Pausa PROC
+    MOV AH, 01h
+    INT 21h
+    RET
+Pausa ENDP
+
+; ---------- INICIO ----------
+Inicio:
+    MOV AX, @DATA
+    MOV DS, AX
+    MOV ES, AX
+
+    MOV DX, OFFSET encabezado
+    CALL Imprimir
+
+MostrarMenu:
+    MOV DX, OFFSET menu_titulo
+    CALL Imprimir
+    MOV DX, OFFSET opcion_a
+    CALL Imprimir
+    MOV DX, OFFSET opcion_b
+    CALL Imprimir
+    MOV DX, OFFSET opcion_c
+    CALL Imprimir
+    MOV DX, OFFSET prompt
+    CALL Imprimir
+
+    MOV AH, 01h
+    INT 21h
+    MOV seleccion, AL
+
+    CMP seleccion, 'A'
+    JE AgregarProducto
+    CMP seleccion, 'B'
+    JE VerLista
+    CMP seleccion, 'C'
+    JE SalirPrograma
+    JMP MostrarMenu 
+
+; ---------- AGREGAR PRODUCTO ----------
+AgregarProducto:
+    MOV CX, 8
+    LEA DI, bufferProd
+    MOV AL, ' '
+    REP STOSB
+    MOV [DI], '$'
+
+    MOV DX, OFFSET msgNombre
+    CALL Imprimir
+
+    LEA DI, bufferProd
+    MOV CX, 0
+LeerNombre:
+    MOV AH, 01h
+    INT 21h
+    CMP AL, 0Dh
+    JE FinLeerNombre
+    MOV [DI], AL
+    INC DI
+    INC CX
+    CMP CX, 8
+    JL LeerNombre
+
+    MOV AH, 01h
+    INT 21h
+    CMP AL, 0Dh
+    JNE LeerNombre
+FinLeerNombre:
+
+    MOV DX, OFFSET msgCantidad
+    CALL Imprimir
+
+    MOV AH, 01h
+    INT 21h
+    CMP AL, 0Dh
+    JE CantidadInvalida
+    
+    CMP AL, '0'
+    JB CantidadInvalida
+    CMP AL, '9'
+    JA CantidadInvalida
+    SUB AL, '0'
+    MOV BL, AL
+
+    MOV AH, 01h
+    INT 21h
+    CMP AL, 0Dh
+    JE UnDigito
+    
+    CMP AL, '0'
+    JB UnDigito
+    CMP AL, '9'
+    JA UnDigito
+    SUB AL, '0'
+    MOV BH, AL
+
+    MOV AL, BL
+    MOV AH, 10
+    MUL AH
+    ADD AL, BH
+    JMP GuardarCantidad
+
+UnDigito:
+    MOV AL, BL
+    JMP GuardarCantidad
+
+CantidadInvalida:
+    SALTO_LINEA
+    JMP MostrarMenu
+
+GuardarCantidad:
+    MOV bufferCant, AL
+    SALTO_LINEA
+
+    MOV CL, contador
+    JCXZ AgregarNuevo
+
+    MOV SI, 0
+BuscarExistente:
+    MOV AX, SI
+    MOV BX, 9
+    MUL BX
+    MOV DI, AX
+
+    MOV BX, 0
+Comparar:
+    MOV AL, productos[DI+BX]
+    CMP AL, bufferProd[BX]
+    JNE Siguiente
+    INC BX
+    CMP BX, 8
+    JL Comparar
+
+    MOV AL, bufferCant
+    ADD nums[SI], AL
+    JMP MostrarMenu
+
+Siguiente:
+    INC SI
+    LOOP BuscarExistente
+
+AgregarNuevo:
+    CMP contador, 100
+    JGE MostrarMenu
+
+    MOV AL, contador
+    XOR AH, AH
+    MOV BX, 9
+    MUL BX
+    MOV DI, AX
+
+    MOV SI, 0
+CopiarNombre:
+    MOV BX, SI
+    MOV AL, bufferProd[BX]
+
+    PUSH DI
+    ADD DI, BX
+    MOV productos[DI], AL
+    POP DI
+
+    INC SI
+    CMP SI, 8
+    JL CopiarNombre
+
+    PUSH DI
+    ADD DI, SI
+    MOV productos[DI], '$'
+    POP DI
+
+    MOV AL, bufferCant
+    MOV BX, OFFSET nums
+    ADD BL, contador
+    ADC BH, 0
+    MOV [BX], AL
+
+    INC contador
+    JMP MostrarMenu
+
+; ---------- VER LISTA ----------
+VerLista:
+    CALL MostrarLista
+    JMP MostrarMenu
+
+; ---------- SALIR ----------
+SalirPrograma:
+    CMP contador, 4
+    JL ErrorSalir
+    JMP Fin
+
+ErrorSalir:
+    MOV DX, OFFSET msgError
+    CALL Imprimir
+    JMP MostrarMenu
+
+Fin:
+    MOV AH, 4Ch
+    INT 21h
+
+END Inicio
