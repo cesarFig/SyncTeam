@@ -3,7 +3,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 export const useLayoutStore = defineStore('layout', () => {
     /* eslint-disable */
-  const isCollapsed = ref(false)
+  const isCollapsed = ref(false) // Default to open
   const windowWidth = ref(window.innerWidth) // Referencia reactiva para el ancho de la ventana
 
   // Computed para determinar si la pantalla es "móvil" (ancho < 700px)
@@ -23,23 +23,24 @@ export const useLayoutStore = defineStore('layout', () => {
     }
   }
 
+  function setSidebarCollapsed(collapsed) {
+    isCollapsed.value = collapsed;
+  }
+
   // Listener para actualizar el ancho de la ventana al redimensionar
   function updateWindowWidth() {
     windowWidth.value = window.innerWidth
-    if (!isMobile.value) {
-        isCollapsed.value = !isCollapsed.value
-      }
   }
 
   // Agregar y remover el listener en los ciclos de vida del componente
   onMounted(() => {
     window.addEventListener('resize', updateWindowWidth)
-    updateWindowWidth()
+    updateWindowWidth() // Now only updates windowWidth
   })
 
   onUnmounted(() => {
     window.removeEventListener('resize', updateWindowWidth)
   })
 
-  return { isCollapsed, isMobile, sidebarWidth, toggleSidebar }
+  return { isCollapsed, isMobile, sidebarWidth, toggleSidebar, setSidebarCollapsed }
 })
