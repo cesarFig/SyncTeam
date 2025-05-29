@@ -632,10 +632,84 @@ async function eliminarAvatarUsuario(id) {
   await pool.query(query, [id]);
 }
 
+
+async function obtenerProximoTicketDashboardPorUsuario(userId) {
+  try {
+    const ticketQuery = `
+      SELECT
+          t.id AS "ticketId",
+          t.titulo AS "tituloTicket",
+          t.imagen AS "imagenPrincipal",
+          t.estado AS "estadoId",
+          t.fecha_vencimiento AS "fechaVencimiento",
+          t.hora_final AS "horaFinal",
+          t.descripcion AS "descripcion",
+          p.titulo AS "pautaNombre",
+          r.nombre AS "rolAsignado"
+      FROM asignacion a
+      JOIN ticket t ON a.ticket_id = t.id
+      JOIN pauta p ON t.pauta_id = p.id
+      JOIN usuario u ON a.usuario_id = u.id
+      JOIN rol r ON u.rol_id = r.id
+      WHERE a.usuario_id = $1
+        AND t.estado != 4 -- Not 'Terminado'
+      ORDER BY t.fecha_vencimiento ASC, t.hora_final ASC
+      LIMIT 1;
+    `;
+    const ticketResult = await pool.query(ticketQuery, [userId]);
+
+    if (ticketResult.rows.length === 0) {
+      return null;
+    }
+
+    const ticket = ticketResult.rows[0];
+
+
+    let progreso = 0;
+    if (ticket.estadoId === 1) { // Por hacer
+      progreso = 0;
+    } else if (ticket.estadoId === 2) { // En progreso
+      progreso = 25;
+    } else if (ticket.estadoId === 3) { // En Revisión
+      progreso = 50;
+    } else if (ticket.estadoId === 4) { // Terminado
+      progreso = 100;
+    }
+
+    // 4. Calculate remaining hours until fecha_vencimiento
+    let horasRestantes = 0;
+    if (ticket.fechaVencimiento) {
+      const [year, month, day] = ticket.fechaVencimiento.toISOString().split('T')[0].split('-').map(Number);
+      const [hours, minutes, seconds] = ticket.horaFinal ? ticket.horaFinal.split(':').map(Number) : [0, 0, 0];
+      const dueDate = new Date(year, month - 1, day, hours, minutes, seconds || 0);
+      const currentTime = new Date();
+      const diffMillis = dueDate.getTime() - currentTime.getTime();
+      horasRestantes = Math.max(0, Math.round(diffMillis / (1000 * 60 * 60)));
+    }
+    
+    // 5. Format the data
+    return {
+      ticketId: ticket.ticketId,
+      tituloTicket: ticket.tituloTicket,
+      imagenPrincipal: ticket.imagenPrincipal, // Frontend handles default if null
+      pautaNombre: ticket.pautaNombre,
+      progreso: progreso,
+      horasRestantes: horasRestantes,
+      rolAsignado: ticket.rolAsignado,
+      descripcion: ticket.descripcion
+    };
+
+  } catch (err) {
+    console.error('Error fetching proximo ticket dashboard por usuario:', err);
+    throw err;
+  }
+}
+
+
 module.exports = {
   logAction, getPautas, getTicketsByPauta, getColaboradores, updateTicketEstado, getUsuarioPorCorreo, getRoles,
   insertUsuario, insertPauta, getCategorias, getPrioridades, insertTicket, getUsuarios, getTicketsUser, getTickets, getTicket, getComentariosByTicketId, crearComentario
   , obtenerUsuario, asignacion, crearNotificacionesComentario, getNotificacionesPorUsuario, marcarNotificacionLeida, eliminarNotificacion,
   editarTicket, actualizarAsignacion, eliminarTicket, registrarArchivo, eliminarArchivoPorId, crearNotificacionesEstado, actualizarAvatarUsuario, eliminarAvatarUsuario,
-  actualizarNotificaciones
+  actualizarNotificaciones, obtenerProximoTicketDashboardPorUsuario
 };

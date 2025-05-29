@@ -14,6 +14,7 @@ const ajustesRoutes = require('./routes/ajustes');
 const asignacionRoutes = require('./routes/asignacion');
 const notificacionesRoutes = require('./routes/notificaciones');
 const uploadRoute = require('./routes/upload');
+const ticketDashboard = require('./routes/ticketDashboard');
 
 const cors = require('cors');
 const path = require('path'); // <--- importante
@@ -44,6 +45,7 @@ app.use('/api/notificaciones', notificacionesRoutes);
 app.use('/api/upload', uploadRoute);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api', require('./routes/archivo')); 
+app.use('/api/ticketDashboard', ticketDashboard);
 
 
 app.listen(PORT, () => {
