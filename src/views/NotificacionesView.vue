@@ -135,7 +135,7 @@ export default {
       if (tipoLower.includes('estado')) {
         const msg = mensaje.toLowerCase();
         if (msg.includes('en progreso')) return 'en_progreso';
-        if (msg.includes('en revisión')) return 'en_revision';
+        if (msg.includes('revision')) return 'en_revision';
         if (msg.includes('terminado')) return 'terminado';
       }
       return 'otros';

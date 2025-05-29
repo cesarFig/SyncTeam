@@ -20,26 +20,39 @@
       </v-list-item>
     </v-list>
 
+    <!-- Usuario (expandido) -->
     <v-list-item 
       class="d-flex flex-column align-center pb-6 pt-0" 
       v-if="!store.isCollapsed"
     >
-       <v-avatar size="40" :style="{ backgroundColor: userColor }">
-  <span class="text-white text-subtitle-2 font-weight-medium">
-    {{ userInitials }}
-  </span>
-</v-avatar>
-       <span class="text-h6 font-weight-medium mt-2">{{ usuario.nombre }}</span>
+      <v-avatar size="40" :style="!usuario.avatar ? { backgroundColor: userColor } : {}">
+        <v-img
+          v-if="usuario.avatar"
+          :src="`http://localhost:3000/uploads/${usuario.avatar}`"
+          cover
+        />
+        <span v-else class="text-white text-subtitle-2 font-weight-medium">
+          {{ userInitials }}
+        </span>
+      </v-avatar>
+      <span class="text-h6 font-weight-medium mt-2">{{ usuario.nombre }}</span>
     </v-list-item>
+
+    <!-- Usuario (colapsado) -->
     <v-list-item 
       class="d-flex justify-center py-6 pt-0" 
       v-else
     >
-      <v-avatar size="35" :style="{ backgroundColor: userColor }">
-  <span class="text-white text-subtitle-2 font-weight-medium">
-    {{ userInitials }}
-  </span>
-</v-avatar>
+      <v-avatar size="35" :style="!usuario.avatar ? { backgroundColor: userColor } : {}">
+        <v-img
+          v-if="usuario.avatar"
+          :src="`http://localhost:3000/uploads/${usuario.avatar}`"
+          cover
+        />
+        <span v-else class="text-white text-subtitle-2 font-weight-medium">
+          {{ userInitials }}
+        </span>
+      </v-avatar>
     </v-list-item>
     
     <!-- Sidebar Menu Items -->
@@ -107,10 +120,15 @@
 import { useLayoutStore } from '@/stores/layout'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+
+// Obtener usuario desde localStorage
 const usuario = JSON.parse(localStorage.getItem("usuario")) || {};
+
+// Iniciales
 const userInitials = `${usuario.nombre?.charAt(0) || ''}${usuario.apellidos?.charAt(0) || ''}`.toUpperCase();
 
-const userColor = generateColorFromString(`${usuario.nombre}${usuario.apellido}`);
+// Color generado solo si no tiene avatar
+const userColor = generateColorFromString(`${usuario.nombre}${usuario.apellidos}`);
 
 function generateColorFromString(input) {
   let hash = 0;
@@ -141,7 +159,7 @@ const navigateTo = (route) => {
 }
 
 const logout = () => {
-  console.log("Cerrando sesión... ");
+  console.log("Cerrando sesión...");
   router.push('/');
 }
 </script>
