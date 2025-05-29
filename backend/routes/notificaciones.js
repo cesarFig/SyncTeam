@@ -13,11 +13,12 @@ router.get('/:usuario_id', async (req, res) => {
 });
 router.put('/read/:id', async (req, res) => {
   try {
-    const result = await marcarNotificacionLeida(req.params.id);
+    const { is_read } = req.body;
+    const result = await marcarNotificacionLeida(req.params.id, is_read);
     res.json(result);
   } catch (err) {
-    console.error('Error al marcar como leída:', err);
-    res.status(500).json({ error: 'Error al marcar notificación como leída' });
+    console.error('Error al marcar como leída/desmarcar:', err);
+    res.status(500).json({ error: 'Error al actualizar estado de la notificación' });
   }
 });
 router.delete('/:id', async (req, res) => {

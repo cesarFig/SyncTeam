@@ -63,16 +63,21 @@
         const response = await axios.post('http://localhost:3000/api/login', {
           correo: this.email,
           password: this.password
-        });
-        
+        });        
         const usuario = {
           id: response.data.usuario.id,
           nombre: response.data.usuario.nombre,
           apellido: response.data.usuario.apellidos,
-          rol: response.data.usuario.rol_id
-        };             
+          rol: response.data.usuario.rol_id,
+          avatar: response.data.usuario.avatar,
+          noti_en_progreso : response.data.usuario.noti_en_progreso,
+          noti_en_revision : response.data.usuario.noti_en_revision,
+          noti_terminado : response.data.usuario.noti_terminado,
+          noti_comentarios : response.data.usuario.noti_comentarios
+                              
+        };                     
         localStorage.setItem('usuario', JSON.stringify(usuario));    
-        console.log("Este es el rol :", usuario.rol);        
+            
          switch (usuario.rol) {            
             case 1:
               this.$router.push('/dashboard-admin');

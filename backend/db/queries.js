@@ -404,9 +404,9 @@ async function asignacion({ ticket_id, usuario_id, fecha_asignacion, asignado_po
 const crearNotificacionesComentario = async (ticketId, usuarioId) => {
   const autor = await obtenerUsuario(usuarioId);
 
-  if (autor.rol_id !== 1) {
+  if (autor.rol !== "Administrador") {
     // Si es editor: notificar a admins
-    const admins = await pool.query('SELECT id FROM usuario WHERE rol_id = 1');
+    const admins = await pool.query('SELECT id FROM usuario WHERE rol_id = 1');    
     for (const admin of admins.rows) {
       await crearNotificacion({
         usuario_id: admin.id,
@@ -420,6 +420,7 @@ const crearNotificacionesComentario = async (ticketId, usuarioId) => {
     // Si es admin: notificar al asignado
     const asignado = await pool.query('SELECT usuario_id FROM asignacion WHERE ticket_id = $1 LIMIT 1', [ticketId]);
     const destino = asignado.rows[0]?.usuario_id;
+    
     if (destino) {
       await crearNotificacion({
         usuario_id: destino,
@@ -449,7 +450,7 @@ const crearNotificacionesEstado = async (ticketId, usuario, estado) => {
       break;
   }
 
-  if (autor.rol_id !== 1) {
+  if (autor.rol !== "Administrador") {
     // Si es editor: notificar a admins
     const admins = await pool.query('SELECT id FROM usuario WHERE rol_id = 1');
     for (const admin of admins.rows) {
@@ -521,13 +522,13 @@ const getNotificacionesPorUsuario = async (usuario_id) => {
   }
 };
 
-const marcarNotificacionLeida = async (id) => {
+const marcarNotificacionLeida = async (id, is_read) => {
   const result = await pool.query(`
     UPDATE notificacion
-    SET is_read = true
-    WHERE id = $1
+    SET is_read = $1
+    WHERE id = $2
     RETURNING *;
-  `, [id]);
+  `, [is_read, id]);
   return result.rows[0];
 };
 const eliminarNotificacion = async (id) => {
