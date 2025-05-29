@@ -359,7 +359,7 @@ async function crearComentario(ticketId, usuarioId, contenido) {
 }
 async function obtenerUsuario(id) {
   console.log("entre");
-  const result = await pool.query('SELECT * FROM usuario WHERE id= $1', [id]);
+  const result = await pool.query(' SELECT u.id, u.nombre,u.apellidos,u.email,u.avatar,    u.password,    u.fecha_creacion,    r.nombre AS rol    FROM usuario u    LEFT JOIN rol r ON u.rol_id = r.id    WHERE u.id = $1', [id]);
   return result.rows[0];
 }
 async function asignacion({ ticket_id, usuario_id, fecha_asignacion, asignado_por }) {
@@ -589,12 +589,19 @@ async function actualizarAsignacion(ticket_id, usuario_id, asignado_por) {
     await pool.query(insertQuery, [ticket_id, usuario_id, asignado_por]);
   }
 }
-
-
+async function actualizarAvatarUsuario(id, avatar) {
+  const query = 'UPDATE usuario SET avatar = $1 WHERE id = $2';
+  const values = [avatar, id];
+  await pool.query(query, values);
+}
+async function eliminarAvatarUsuario(id) {
+  const query = 'UPDATE usuario SET avatar = NULL WHERE id = $1';
+  await pool.query(query, [id]);
+}
 
 module.exports = {
   logAction, getPautas, getTicketsByPauta, getColaboradores, updateTicketEstado, getUsuarioPorCorreo, getRoles,
   insertUsuario, insertPauta, getCategorias, getPrioridades, insertTicket, getUsuarios, getTicketsUser, getTickets, getTicket, getComentariosByTicketId, crearComentario
   , obtenerUsuario, asignacion, crearNotificacionesComentario, getNotificacionesPorUsuario, marcarNotificacionLeida, eliminarNotificacion,
-  editarTicket, actualizarAsignacion, eliminarTicket, registrarArchivo, eliminarArchivoPorId, crearNotificacionesEstado
+  editarTicket, actualizarAsignacion, eliminarTicket, registrarArchivo, eliminarArchivoPorId, crearNotificacionesEstado, actualizarAvatarUsuario, eliminarAvatarUsuario
 };
