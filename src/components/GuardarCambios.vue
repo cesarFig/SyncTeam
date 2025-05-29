@@ -7,12 +7,12 @@
         </v-avatar>
         <div class="text-start">
           <div class="text-subtitle-1 font-weight-bold" style="color: #3A0CA3;">Info</div>
-          <div class="text-body-2" style="color: #3A0CA3;">¿Cancelar Cambios?</div>
+          <div class="text-body-2" style="color: #3A0CA3;">¿Guardar Información?</div>
         </div>
       </v-card-title>
       <v-card-actions class="justify-center pt-4">
-        <v-btn variant="text" class="rounded-pill" style="color: #3A0CA3" @click="cancel">No</v-btn>
-        <v-btn variant="text" class="rounded-pill" style="color: #9c9c9c" @click="confirm">Sí</v-btn>
+        <v-btn variant="text" class="rounded-pill" style="color: #9c9c9c" @click="cancel">No</v-btn>
+        <v-btn variant="text" class="rounded-pill" style="color: #3A0CA3" @click="confirm">Sí</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
