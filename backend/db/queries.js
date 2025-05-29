@@ -497,6 +497,15 @@ const crearNotificacion = async ({ usuario_id, tipo_notificacion, mensaje, emiso
     throw err;
   }
 };
+const crearNotificacionAsignacion = async ({ ticket_id, usuario_id, asignado_por }) => {  
+  await crearNotificacion({
+    usuario_id: usuario_id,
+    tipo_notificacion: 'Asignacion a un ticket',
+    mensaje: `Te ha asignado al ticket #${ticket_id}`,
+    emisor_id: asignado_por,
+    ticket_id: ticket_id
+  });
+};
 const getNotificacionesPorUsuario = async (usuario_id) => {
   try {
     const result = await pool.query(`
@@ -711,5 +720,5 @@ module.exports = {
   insertUsuario, insertPauta, getCategorias, getPrioridades, insertTicket, getUsuarios, getTicketsUser, getTickets, getTicket, getComentariosByTicketId, crearComentario
   , obtenerUsuario, asignacion, crearNotificacionesComentario, getNotificacionesPorUsuario, marcarNotificacionLeida, eliminarNotificacion,
   editarTicket, actualizarAsignacion, eliminarTicket, registrarArchivo, eliminarArchivoPorId, crearNotificacionesEstado, actualizarAvatarUsuario, eliminarAvatarUsuario,
-  actualizarNotificaciones, obtenerProximoTicketDashboardPorUsuario
+  actualizarNotificaciones, obtenerProximoTicketDashboardPorUsuario, crearNotificacionAsignacion
 };
