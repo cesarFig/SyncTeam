@@ -508,7 +508,8 @@ const getNotificacionesPorUsuario = async (usuario_id) => {
         n.is_read,
         n.fecha_creacion,
         u.nombre AS sender_nombre,
-        u.apellidos AS sender_apellidos
+        u.apellidos AS sender_apellidos,
+        u.avatar AS emisor_avatar  -- 👈 avatar del emisor
       FROM notificacion n
       JOIN usuario u ON n.emisor_id = u.id
       WHERE n.usuario_id = $1
@@ -521,6 +522,7 @@ const getNotificacionesPorUsuario = async (usuario_id) => {
     throw err;
   }
 };
+
 
 const marcarNotificacionLeida = async (id, is_read) => {
   const result = await pool.query(`

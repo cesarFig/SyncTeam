@@ -19,7 +19,11 @@
             <!-- Avatar -->
             <v-col cols="auto" class="d-flex align-center">
               <v-avatar color="grey" size="40" class="mr-2">
-                <v-img v-if="notification.avatar" :src="notification.avatar" cover></v-img>
+                <v-img
+                  v-if="notification.avatar"
+                  :src="notification.avatar"
+                  cover
+                />
                 <span v-else class="white--text">{{ getInitials(notification.sender) }}</span>
               </v-avatar>
             </v-col>
@@ -48,9 +52,9 @@
 
             <!-- Botón Leído -->
             <v-col cols="auto">
-              <v-icon 
-                small 
-                :color="!notification.unread ? 'green' : 'grey lighten-1'" 
+              <v-icon
+                small
+                :color="!notification.unread ? 'green' : 'grey lighten-1'"
                 class="ml-2"
                 @click.stop="toggleLeido(notification)"
               >
@@ -103,12 +107,13 @@ export default {
             return {
               id: n.id,
               sender: `${n.sender_nombre} ${n.sender_apellidos}`,
+              avatar: n.emisor_avatar ? `http://localhost:3000/uploads/${n.emisor_avatar}` : null,
               title: n.tipo_notificacion,
               description: n.mensaje,
               timestamp: n.fecha_creacion,
               unread: !n.is_read,
               favorite: false,
-              tipoBase // lo usamos para el filtro
+              tipoBase
             };
           })
           .filter(n => {
@@ -116,7 +121,7 @@ export default {
             if (n.tipoBase === 'en_progreso') return usuario.noti_en_progreso;
             if (n.tipoBase === 'en_revision') return usuario.noti_en_revision;
             if (n.tipoBase === 'terminado') return usuario.noti_terminado;
-            return true; // fallback
+            return true;
           });
 
       } catch (err) {

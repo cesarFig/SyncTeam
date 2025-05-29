@@ -189,59 +189,68 @@ export default {
       this.mostrarDialogoCancelar = false;
       this.cancelarCambios();
     },
-    guardarCambios() {
-      const promesas = [];
+   guardarCambios() {
+  const promesas = [];
 
-      const promNotificaciones = fetch('http://localhost:3000/api/ajustes/actualizar-notificaciones', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: this.userId,
-          enProgreso: this.notificaciones.enProgreso,
-          enRevision: this.notificaciones.enRevision,
-          terminado: this.notificaciones.terminado,
-          comentariosNuevos: this.notificaciones.comentariosNuevos
-        })
+  const promNotificaciones = fetch('http://localhost:3000/api/ajustes/actualizar-notificaciones', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      id: this.userId,
+      enProgreso: this.notificaciones.enProgreso,
+      enRevision: this.notificaciones.enRevision,
+      terminado: this.notificaciones.terminado,
+      comentariosNuevos: this.notificaciones.comentariosNuevos
+    })
+  });
+  promesas.push(promNotificaciones);
+
+  if (this.avatarEliminado) {
+    const promEliminar = fetch(`http://localhost:3000/api/usuarios/eliminar-avatar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: this.userId })
+    }).then(() => {
+      this.datosBackup.imagenPreview = null;
+      this.avatarEliminado = false;
+    });
+    promesas.push(promEliminar);
+  }
+
+  if (this.archivoImagen) {
+    const formData = new FormData();
+    formData.append('id', this.userId);
+    formData.append('avatar', this.archivoImagen);
+
+    const promSubir = fetch('http://localhost:3000/api/usuarios/actualizar-avatar', {
+      method: 'POST',
+      body: formData
+    }).then(res => res.json())
+      .then(() => {
+        this.archivoImagen = null;
+        this.datosBackup.imagenPreview = this.imagenPreview;
       });
-      promesas.push(promNotificaciones);
 
-      if (this.avatarEliminado) {
-        const promEliminar = fetch(`http://localhost:3000/api/usuarios/eliminar-avatar`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: this.userId })
-        })
-          .then(() => {
-            this.datosBackup.imagenPreview = null;
-            this.avatarEliminado = false;
-          })
-          .catch(err => console.error('Error al eliminar avatar:', err));
-        promesas.push(promEliminar);
-      }
+    promesas.push(promSubir);
+  }
 
-      if (this.archivoImagen) {
-        const formData = new FormData();
-        formData.append('id', this.userId);
-        formData.append('avatar', this.archivoImagen);
+  // FINALMENTE: Cuando todas las operaciones terminaron
+  Promise.all(promesas).then(() => {
+    // ✅ ACTUALIZAR LOCAL STORAGE
+    const usuarioActual = JSON.parse(localStorage.getItem('usuario'));    
+    if (usuarioActual) {
+      usuarioActual.noti_en_progreso = this.notificaciones.enProgreso;
+      usuarioActual.noti_en_revision = this.notificaciones.enRevision;
+      usuarioActual.noti_terminado = this.notificaciones.terminado;
+      usuarioActual.noti_comentarios = this.notificaciones.comentariosNuevos;
+      localStorage.setItem('usuario', JSON.stringify(usuarioActual));
+    }    
 
-        const promSubir = fetch('http://localhost:3000/api/usuarios/actualizar-avatar', {
-          method: 'POST',
-          body: formData
-        })
-          .then(res => res.json())
-          .then(() => {
-            this.archivoImagen = null;
-            this.datosBackup.imagenPreview = this.imagenPreview;
-          })
-          .catch(err => console.error('Error al subir avatar:', err));
-
-        promesas.push(promSubir);
-      }
-
-      Promise.all(promesas).then(() => {
-        this.mostrarDialogoExito = true;
-      });
-    },
+    // Mostrar éxito
+    this.mostrarDialogoExito = true;
+  });
+}
+,
     cancelarCambios() {
       this.nombre = this.datosBackup.nombre;
       this.apellido = this.datosBackup.apellido;
