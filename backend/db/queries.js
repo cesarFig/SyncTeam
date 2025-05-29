@@ -357,11 +357,41 @@ async function crearComentario(ticketId, usuarioId, contenido) {
   `, [ticketId, usuarioId, contenido]);
   return result.rows[0];
 }
-async function obtenerUsuario(id) {
-  console.log("entre");
-  const result = await pool.query(' SELECT u.id, u.nombre,u.apellidos,u.email,u.avatar,    u.password,    u.fecha_creacion,    r.nombre AS rol    FROM usuario u    LEFT JOIN rol r ON u.rol_id = r.id    WHERE u.id = $1', [id]);
+async function obtenerUsuario(id) {  
+  const result = await pool.query(`
+    SELECT 
+      u.id,
+      u.nombre,
+      u.apellidos,
+      u.email,
+      u.avatar,
+      u.password,
+      u.fecha_creacion,
+      r.nombre AS rol,
+      u.noti_en_progreso,
+      u.noti_en_revision,
+      u.noti_terminado,
+      u.noti_comentarios
+    FROM usuario u
+    LEFT JOIN rol r ON u.rol_id = r.id
+    WHERE u.id = $1
+  `, [id]);
+
   return result.rows[0];
 }
+async function actualizarNotificaciones(usuarioId, notificaciones) {
+  const { enProgreso, enRevision, terminado, comentariosNuevos } = notificaciones;
+
+  await pool.query(`
+    UPDATE usuario SET
+      noti_en_progreso = $1,
+      noti_en_revision = $2,
+      noti_terminado = $3,
+      noti_comentarios = $4
+    WHERE id = $5
+  `, [enProgreso, enRevision, terminado, comentariosNuevos, usuarioId]);
+}
+
 async function asignacion({ ticket_id, usuario_id, fecha_asignacion, asignado_por }) {
   const query = `
     INSERT INTO asignacion (ticket_id, usuario_id, fecha_asignacion, asignado_por)
@@ -603,5 +633,6 @@ module.exports = {
   logAction, getPautas, getTicketsByPauta, getColaboradores, updateTicketEstado, getUsuarioPorCorreo, getRoles,
   insertUsuario, insertPauta, getCategorias, getPrioridades, insertTicket, getUsuarios, getTicketsUser, getTickets, getTicket, getComentariosByTicketId, crearComentario
   , obtenerUsuario, asignacion, crearNotificacionesComentario, getNotificacionesPorUsuario, marcarNotificacionLeida, eliminarNotificacion,
-  editarTicket, actualizarAsignacion, eliminarTicket, registrarArchivo, eliminarArchivoPorId, crearNotificacionesEstado, actualizarAvatarUsuario, eliminarAvatarUsuario
+  editarTicket, actualizarAsignacion, eliminarTicket, registrarArchivo, eliminarArchivoPorId, crearNotificacionesEstado, actualizarAvatarUsuario, eliminarAvatarUsuario,
+  actualizarNotificaciones
 };

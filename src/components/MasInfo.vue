@@ -30,30 +30,29 @@
           <v-tabs v-model="tab">
             <v-tab class="tabs">Mi información</v-tab>
             <v-tab>Notificaciones</v-tab>
-            <v-tab>App</v-tab>
           </v-tabs>
 
           <v-window v-model="tab">
             <v-window-item>
               <v-form class="pt-0">
                 <v-row class="mt-2">
-                  <v-col cols="4" class="pt-0">
+                  <v-col cols="5" md="4" class="pt-0">
                     <label class="custom-label">Nombre</label>
                     <v-text-field density="compact" variant="outlined" v-model="nombre" class="rounded-field" disabled />
                   </v-col>
-                  <v-col cols="4" class="pt-0">
+                  <v-col cols="5" md="4" class="pt-0">
                     <label class="custom-label">Apellido</label>
                     <v-text-field density="compact" variant="outlined" v-model="apellido" class="rounded-field" disabled />
                   </v-col>
                 </v-row>
                 <v-row>
-                  <v-col cols="7">
+                  <v-col cols="10" md="7">
                     <label class="custom-label">Email</label>
                     <v-text-field density="compact" variant="outlined" prepend-inner-icon="mdi-email" v-model="email" class="rounded-field" disabled />
                   </v-col>
                 </v-row>
                 <v-row>
-                  <v-col cols="7">
+                  <v-col cols="10" md="7">
                     <label class="custom-label">Rol</label>
                     <v-text-field variant="outlined" v-model="rol" class="rounded-field" disabled />
                   </v-col>
@@ -64,47 +63,10 @@
             <v-window-item>
               <v-row class="mt-0">
                 <v-col cols="12" class="pt-0">
-                  <v-switch color="#B5179F" v-model="notificaciones.alertaRevision" label="Alerta tickets revisión" disabled />
-                  <v-switch v-model="notificaciones.actualizacionTickets" label="Actualización de tickets" color="#B5179F" disabled />
-                  <v-switch v-model="notificaciones.alertaRetrasados" label="Alerta tickets retrasados" color="#B5179F" disabled />
-                  <v-switch v-model="notificaciones.sonido" label="Notificaciones con sonido" color="#B5179F" disabled />
-                </v-col>
-              </v-row>
-            </v-window-item>
-
-            <v-window-item>
-              <v-row class="mt-0">
-                <v-col cols="5" class="pa-0 pt-2">
-                  <label class="custom-label" style="margin-left: 15px;">Lenguaje</label>
-                  <v-select
-                    v-model="appConfig.idioma"
-                    :items="idiomas"
-                    density="comfortable"
-                    variant="outlined"
-                    class="select"
-                    disabled
-                  />
-                </v-col>
-              </v-row>
-              <v-row class="mt-2">
-                <v-col cols="5" class="pa-0 pt-2">
-                  <label class="custom-label" style="margin-left: 15px;">Zona horaria</label>
-                  <v-select
-                    v-model="appConfig.zonaHoraria"
-                    :items="zonasHorarias"
-                    variant="outlined"
-                    class="select"
-                    disabled
-                  />
-                </v-col>
-              </v-row>
-              <v-row class="mt-2 mb-2">
-                <v-col cols="12" class="pa-0 pt-2">
-                  <p class="text-body-1 font-weight-medium" style="margin-left: 15px;">Formato de hora</p>
-                  <v-btn-toggle v-model="appConfig.formatoHora" group disabled>
-                    <v-btn class="custom-btn" :value="'24h'">24 Horas</v-btn>
-                    <v-btn class="custom-btn" :value="'12h'">Horas</v-btn>
-                  </v-btn-toggle>
+                  <v-switch v-model="notificaciones.enProgreso" label="Notificarme actualizaciones de estado: En progreso" color="#B5179F" />
+                  <v-switch v-model="notificaciones.enRevision" label="Notificarme actualizaciones de estado: En revisión" color="#B5179F" />
+                  <v-switch v-model="notificaciones.terminado" label="Notificarme actualizaciones de estado: Terminado" color="#B5179F" />
+                  <v-switch v-model="notificaciones.comentariosNuevos" label="Notificarme comentarios nuevos" color="#B5179F" />
                 </v-col>
               </v-row>
             </v-window-item>
@@ -114,18 +76,8 @@
     </v-container>
 
     <!-- Diálogos -->
-    <guardar-cambios
-      v-if="mostrarDialogoGuardar"
-      @confirmar="handleGuardar"
-      @cancelar="mostrarDialogoGuardar = false"
-    />
-
-    <cancelar-cambios
-      v-if="mostrarDialogoCancelar"
-      @confirmar="handleCancelar"
-      @cancelar="mostrarDialogoCancelar = false"
-    />
-
+    <guardar-cambios v-if="mostrarDialogoGuardar" @confirmar="handleGuardar" @cancelar="mostrarDialogoGuardar = false" />
+    <cancelar-cambios v-if="mostrarDialogoCancelar" @confirmar="handleCancelar" @cancelar="mostrarDialogoCancelar = false" />
     <registro-exitoso v-if="mostrarDialogoExito" @close="mostrarDialogoExito = false" />
   </div>
 </template>
@@ -136,11 +88,7 @@ import CancelarCambios from "@/components/CancelarCambios.vue";
 import RegistroExitoso from "@/components/RegistroExitoso.vue";
 
 export default {
-  components: {
-    GuardarCambios,
-    CancelarCambios,
-    RegistroExitoso
-  },
+  components: { GuardarCambios, CancelarCambios, RegistroExitoso },
   data() {
     return {
       tab: 0,
@@ -151,8 +99,6 @@ export default {
       rol: "",
       notificaciones: {},
       appConfig: {},
-      idiomas: ["Español (México)", "Inglés (US)", "Francés", "Alemán"],
-      zonasHorarias: ["CDMX (GMT-6)", "Nueva York (GMT-5)", "Madrid (GMT+1)", "Tokio (GMT+9)"],
       imagenPreview: null,
       archivoImagen: null,
       datosBackup: {},
@@ -205,18 +151,30 @@ export default {
       try {
         const res = await fetch(`http://localhost:3000/api/ajustes/${this.userId}`);
         const data = await res.json();
+
         this.nombre = data.nombre;
         this.apellido = data.apellidos;
         this.email = data.email;
         this.rol = data.rol;
-        this.notificaciones = JSON.parse(data.notificaciones || "{}");
+        this.notificaciones = {
+          enProgreso: data.noti_en_progreso,
+          enRevision: data.noti_en_revision,
+          terminado: data.noti_terminado,
+          comentariosNuevos: data.noti_comentarios
+        };
         this.appConfig = JSON.parse(data.app_config || "{}");
         this.datosBackup = {
           nombre: data.nombre,
           apellido: data.apellidos,
           email: data.email,
           rol: data.rol,
-          imagenPreview: data.avatar ? `http://localhost:3000/uploads/${data.avatar}` : null
+          imagenPreview: data.avatar ? `http://localhost:3000/uploads/${data.avatar}` : null,
+          notificaciones: {
+            enProgreso: data.noti_en_progreso,
+            enRevision: data.noti_en_revision,
+            terminado: data.noti_terminado,
+            comentariosNuevos: data.noti_comentarios
+          }
         };
         this.imagenPreview = this.datosBackup.imagenPreview;
       } catch (err) {
@@ -232,27 +190,41 @@ export default {
       this.cancelarCambios();
     },
     guardarCambios() {
-      if (!this.archivoImagen && !this.avatarEliminado) return;
+      const promesas = [];
+
+      const promNotificaciones = fetch('http://localhost:3000/api/ajustes/actualizar-notificaciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: this.userId,
+          enProgreso: this.notificaciones.enProgreso,
+          enRevision: this.notificaciones.enRevision,
+          terminado: this.notificaciones.terminado,
+          comentariosNuevos: this.notificaciones.comentariosNuevos
+        })
+      });
+      promesas.push(promNotificaciones);
 
       if (this.avatarEliminado) {
-        fetch(`http://localhost:3000/api/usuarios/eliminar-avatar`, {
+        const promEliminar = fetch(`http://localhost:3000/api/usuarios/eliminar-avatar`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: this.userId })
         })
           .then(() => {
             this.datosBackup.imagenPreview = null;
-            this.mostrarDialogoExito = true;
             this.avatarEliminado = false;
           })
           .catch(err => console.error('Error al eliminar avatar:', err));
-      } else {
+        promesas.push(promEliminar);
+      }
+
+      if (this.archivoImagen) {
         const formData = new FormData();
         formData.append('id', this.userId);
         formData.append('avatar', this.archivoImagen);
-        fetch('http://localhost:3000/api/usuarios/actualizar-avatar', {
+
+        const promSubir = fetch('http://localhost:3000/api/usuarios/actualizar-avatar', {
           method: 'POST',
           body: formData
         })
@@ -260,10 +232,15 @@ export default {
           .then(() => {
             this.archivoImagen = null;
             this.datosBackup.imagenPreview = this.imagenPreview;
-            this.mostrarDialogoExito = true;
           })
-          .catch(err => console.error('Error al guardar:', err));
+          .catch(err => console.error('Error al subir avatar:', err));
+
+        promesas.push(promSubir);
       }
+
+      Promise.all(promesas).then(() => {
+        this.mostrarDialogoExito = true;
+      });
     },
     cancelarCambios() {
       this.nombre = this.datosBackup.nombre;
@@ -273,11 +250,11 @@ export default {
       this.imagenPreview = this.datosBackup.imagenPreview;
       this.archivoImagen = null;
       this.avatarEliminado = false;
+      this.notificaciones = { ...this.datosBackup.notificaciones };
     }
   }
 };
 </script>
-
 
 <style>
 .btn-quitar-avatar-debajo {
@@ -285,6 +262,7 @@ export default {
   justify-content: center;
   margin-top: 6px;
 }
+
 .btn-quitar-avatar {
   position: absolute;
   top: -5px;
@@ -292,6 +270,7 @@ export default {
   background-color: white;
   z-index: 3;
 }
+
 .ajustes-wrapper {
   display: flex;
   flex-direction: column;

@@ -1,5 +1,5 @@
 const express = require('express');
-const { obtenerUsuario } = require('../db/queries');
+const { obtenerUsuario, actualizarNotificaciones } = require('../db/queries');
 const router = express.Router();
 
 
@@ -10,6 +10,24 @@ router.get('/:id', async (req, res) => {
     res.json(usuario);
   } catch (err) {
     res.status(500).json({ error: 'aqui?' });
+  }
+});
+
+router.post('/actualizar-notificaciones', async (req, res) => {
+  try {
+    const { id, enProgreso, enRevision, terminado, comentariosNuevos } = req.body;
+
+    await actualizarNotificaciones(id, {
+      enProgreso,
+      enRevision,
+      terminado,
+      comentariosNuevos
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error al actualizar notificaciones:', error);
+    res.status(500).json({ success: false, message: 'Error al actualizar notificaciones.' });
   }
 });
 
