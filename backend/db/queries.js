@@ -853,11 +853,9 @@ async function obtenerProximoTicketDashboardPorUsuario(userId) {
       progreso = 0;
     } else if (ticket.estadoId === 2) { // En progreso
       progreso = 25;
-    } else if (ticket.estadoId === 3) { // En Revisión
-      progreso = 50;
-    } else if (ticket.estadoId === 4) { // Terminado
-      progreso = 100;
-    }
+    } else if (ticket.estadoId === 3) { // En revisión
+      progreso = 75;
+    } // No 'Terminado' (estado 4) due to WHERE clause
 
     // 4. Calculate remaining hours until fecha_vencimiento
     let horasRestantes = 0;
@@ -888,11 +886,49 @@ async function obtenerProximoTicketDashboardPorUsuario(userId) {
   }
 }
 
+async function obtenerEstadisticasTicketsCreativo(creativoId) {
+  try {
+    const totalQuery = `
+      SELECT COUNT(t.id) AS count
+      FROM ticket t
+      JOIN asignacion a ON t.id = a.ticket_id
+      WHERE a.usuario_id = $1;
+    `;
+    const totalResult = await pool.query(totalQuery, [creativoId]);
+    const ticketsTotales = parseInt(totalResult.rows[0]?.count || 0);
+
+    const estadosQuery = `
+      SELECT
+          SUM(CASE WHEN t.estado = 1 THEN 1 ELSE 0 END) AS pendientes,
+          SUM(CASE WHEN t.estado = 2 THEN 1 ELSE 0 END) AS enProgreso,
+          SUM(CASE WHEN t.estado = 3 THEN 1 ELSE 0 END) AS pendientesRevision,
+          SUM(CASE WHEN t.estado = 4 THEN 1 ELSE 0 END) AS completados
+      FROM ticket t
+      JOIN asignacion a ON t.id = a.ticket_id
+      WHERE a.usuario_id = $1;
+    `;
+    const estadosResult = await pool.query(estadosQuery, [creativoId]);
+    
+    const stats = estadosResult.rows[0] || {};
+
+    return {
+      ticketsTotales,
+      pendientes: parseInt(stats.pendientes || 0),
+      enProgreso: parseInt(stats.enprogreso || 0), // PostgreSQL column names are lowercase unless quoted
+      pendientesRevision: parseInt(stats.pendientesrevision || 0),
+      completados: parseInt(stats.completados || 0),
+    };
+  } catch (error) {
+    console.error('Error al obtener estadísticas de tickets para el creativo:', error);
+    throw error;
+  }
+}
+
 
 module.exports = {
   logAction, getPautas, getTicketsByPauta, getColaboradores, updateTicketEstado, getUsuarioPorCorreo, getRoles,
   insertUsuario, insertPauta, getCategorias, getPrioridades, insertTicket, getUsuarios, getTicketsUser, getTickets, getTicket, getComentariosByTicketId, crearComentario
   , obtenerUsuario, asignacion, crearNotificacionesComentario, getNotificacionesPorUsuario, marcarNotificacionLeida, eliminarNotificacion,
   editarTicket, actualizarAsignacion, eliminarTicket, registrarArchivo, eliminarArchivoPorId, crearNotificacionesEstado, actualizarAvatarUsuario, eliminarAvatarUsuario,
-  actualizarNotificaciones, obtenerProximoTicketDashboardPorUsuario, crearNotificacionAsignacion, getTicketById,obtenerResumenDashboard
+  actualizarNotificaciones, obtenerProximoTicketDashboardPorUsuario, crearNotificacionAsignacion, getTicketById,obtenerResumenDashboard, obtenerEstadisticasTicketsCreativo
 };

@@ -16,7 +16,6 @@ const notificacionesRoutes = require('./routes/notificaciones');
 const uploadRoute = require('./routes/upload');
 const ticketDashboard = require('./routes/ticketDashboard');
 const dashboardRoutes = require('./routes/estadisticas');
-
 const ticket = require('./routes/ticketById');
 
 const cors = require('cors');

@@ -1,5 +1,5 @@
 <template>
-  <v-card class="dashboard-ticket-card" width="400" style="height: 95vh;">
+  <v-card class="dashboard-ticket-card" width="100%" style="height: 95vh;">
     <div>
       <v-card-title class="headline">Ticket activo</v-card-title>
       <v-row no-gutters>

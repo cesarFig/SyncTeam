@@ -1,11 +1,11 @@
 <template>
-  <v-container fluid class="dashboard-layout pa-4">
+  <v-container fluid class="dashboard-layout pa-2"> <!-- Changed pa-4 to pa-2 -->
     <v-row class="fill-height" no-gutters>
       <!-- COLUMNA IZQUIERDA (Agenda, Notis, Tickets, Resumen) -->
-      <v-col cols="12" md="8" class="pa-2 h-100">
+      <v-col cols="12" md="8" class="h-100"> <!-- Removed pa-2 -->
         <div class="d-flex flex-column h-100">
           <!-- FILA SUPERIOR -->
-          <div class="d-flex flex-grow-1 flex-wrap mb-2" style="min-height: 0;">
+          <div class="d-flex flex-grow-1 flex-wrap" style="min-height: 0;"> <!-- Removed mb-2 -->
             <div class="pa-2 h-100" :class="$vuetify.display.mdAndUp ? 'w-50' : 'w-100'">
               <CalendarioCard />
             </div>
@@ -27,22 +27,24 @@
       </v-col>
 
       <!-- COLUMNA DERECHA: Ticket activo (siempre vertical) -->
-      <v-col cols="12" md="4" class="pa-2 h-100 ticket-activo">
-        <div v-if="isLoading" class="d-flex justify-center align-center fill-height">
-          <v-progress-circular indeterminate color="primary"></v-progress-circular>
-        </div>
-        <div v-else-if="error" class="d-flex justify-center align-center fill-height pa-4">
-          <v-alert type="error" dense elevation="2" prominent>
-            Error al cargar el ticket: {{ error }}
-          </v-alert>
-        </div>
-        <DashboardTicket v-else-if="ticketData" :ticketId="ticketData.ticketId" :tituloTicket="ticketData.tituloTicket"
-          :pautaNombre="ticketData.pautaNombre" :progreso="ticketData.progreso"
-          :horasRestantes="ticketData.horasRestantes" :imagenPrincipal="ticketData.imagenPrincipal"
-          :rolAsignado="ticketData.rolAsignado" :descripcion="ticketData.descripcion"
-          @open-ticket-details="handleOpenTicketDetails" />
-        <div v-else class="ticket-activo-null">
-          <p class="placeholder-text">No hay tickets activos próximos.</p>
+      <v-col cols="12" md="4" class="h-100 ticket-activo"> <!-- Removed pa-2 -->
+        <div class="pa-2 h-100 d-flex flex-column"> <!-- Added wrapper with pa-2 -->
+          <div v-if="isLoading" class="d-flex justify-center align-center flex-grow-1"> <!-- Added flex-grow-1 -->
+            <v-progress-circular indeterminate color="primary"></v-progress-circular>
+          </div>
+          <div v-else-if="error" class="d-flex justify-center align-center flex-grow-1 pa-4"> <!-- Added flex-grow-1 -->
+            <v-alert type="error" dense elevation="2" prominent>
+              Error al cargar el ticket: {{ error }}
+            </v-alert>
+          </div>
+          <DashboardTicket v-else-if="ticketData" :ticketId="ticketData.ticketId" :tituloTicket="ticketData.tituloTicket"
+            :pautaNombre="ticketData.pautaNombre" :progreso="ticketData.progreso"
+            :horasRestantes="ticketData.horasRestantes" :imagenPrincipal="ticketData.imagenPrincipal"
+            :rolAsignado="ticketData.rolAsignado" :descripcion="ticketData.descripcion"
+            @open-ticket-details="handleOpenTicketDetails" class="flex-grow-1" /> <!-- Added flex-grow-1 -->
+          <div v-else class="ticket-activo-null flex-grow-1"> <!-- Added flex-grow-1 -->
+            <p class="placeholder-text">No hay tickets activos próximos.</p>
+          </div>
         </div>
       </v-col>
     </v-row>

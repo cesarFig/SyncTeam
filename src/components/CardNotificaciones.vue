@@ -1,5 +1,5 @@
 <template>
-  <v-card class="fill-height d-flex flex-column pa-4" elevation="2">
+  <v-card class="fill-height d-flex flex-column pa-4 roundedLarge" elevation="2">
     <v-card-title class="text-h6 font-weight-bold mb-4">
       Notificaciones
     </v-card-title>
@@ -127,5 +127,9 @@ onMounted(() => {
 }
 .white--text {
   color: white;
+}
+
+.roundedLarge {
+  border-radius: 16px;
 }
 </style>
