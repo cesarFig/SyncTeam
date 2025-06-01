@@ -20,7 +20,7 @@
 
       <v-card-text class="pt-2 card-content-area"> <!-- Added class card-content-area -->
         <h2 class="title text-h5 font-weight-bold mb-1">{{ tituloTicket }}</h2>
-        <p class="pauta text-subtitle-1 grey--text text--darken-1 mb-3">Pauta:% {{ pautaNombre }}</p>
+        <p class="pauta text-subtitle-1 grey--text text--darken-1 mb-3">Pauta: {{ pautaNombre }}</p>
 
         <div class="progreso-section mb-3">
           <div class="d-flex justify-space-between align-center mb-1">

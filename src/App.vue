@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <SidebarWrapper v-if="!$route.meta.hideSidebar" />
-    <v-main :style="mainStyles">
+    <v-main :style="mainStyles" class="app-main-content">
       <router-view></router-view>
     </v-main>
   </v-app>
@@ -40,5 +40,9 @@ export default {
 <style>
 .v-main {
   transition: margin 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
+}
+
+.app-main-content {
+  background-color: #F3F4F8 !important; 
 }
 </style>

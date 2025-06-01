@@ -11,7 +11,7 @@ const vuetify = createVuetify({
     themes: {
       light: {
         colors: {
-          fucisa: '#72585',
+          fucisa: '#FF00FF',
           pucha: '#B5179E',
           morado1: '#720987',
           morado2: '#560BAD',
@@ -25,7 +25,7 @@ const vuetify = createVuetify({
       },
       dark: {
         colors: {
-          fucisa: '#72585',
+          fucisa: '#FF00FF',
           pucha: '#B5179E',
           morado1: '#720987',
           morado2: '#560BAD',

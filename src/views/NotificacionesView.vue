@@ -1,17 +1,17 @@
 <template>
-  <v-container fluid class="pa-0">
-    <v-card flat>
+  <v-container fluid class="pa-0 notificaciones-view-container">
+    <v-card flat color="#F3F4F8"> <!-- Added color="#F3F4F8" to v-card -->
       <v-card-title class="text-h5 pa-4 grey lighten-3">
         Bandeja de entrada
       </v-card-title>
 
-      <v-list v-if="notifications.length > 0">
+      <v-list v-if="notifications.length > 0" style="background-color: transparent;"> <!-- Ensure v-list is transparent -->
         <v-list-item
           v-for="notification in notifications"
           :key="notification.id"
           class="py-2"
           :class="{
-            'bg-white': notification.favorite,
+            'bg-white': notification.favorite, // Favorite items will be white
             'text-grey-darken-2': !notification.unread
           }"
         >
@@ -189,6 +189,11 @@ export default {
 </script>
 
 <style scoped>
+.notificaciones-view-container {
+  background-color: #F3F4F8;
+  min-height: 100vh; 
+}
+
 .v-list-item {
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }

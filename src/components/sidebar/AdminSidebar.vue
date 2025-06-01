@@ -3,7 +3,7 @@
     class="sidebar-shadow">
     <v-list density="compact" nav class="pt-0 pd-1">
       <v-list-item @click="store.toggleSidebar" class="mx-2 my-1 rounded-17" :height="store.isMobile ? '48px' : '55px'"
-        ripple="false">
+        >
         <template v-slot:prepend>
           <v-icon color="grey-darken-1">
             {{ store.isCollapsed ? 'mdi-chevron-right' : 'mdi-chevron-left' }}

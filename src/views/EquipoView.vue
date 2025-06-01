@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container class="equipo-view-container">
     <!-- Barra de búsqueda y filtros -->
     <v-row class="mb-4" justify="end">
       <v-col cols="6" md="4">
@@ -137,6 +137,11 @@ export default {
 </script>
 
 <style scoped>
+.equipo-view-container {
+  background-color: #F3F4F8;
+  min-height: 100vh; /* Ensure it covers the full view height */
+}
+
 .section-title {
   color: #333;
   font-size: 1.5rem;
