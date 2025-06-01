@@ -114,12 +114,15 @@ const finalImageSrc = computed(() => {
   if (imageLoadError.value) {
     return defaultImageSource;
   }
-  if (props.imagenPrincipal && typeof props.imagenPrincipal === 'string' && props.imagenPrincipal !== defaultImageSource) {
-    // Check if it's a full URL already (e.g. from a previous default or external source)
-    if (props.imagenPrincipal.startsWith('http') || props.imagenPrincipal.startsWith('/')) {
-        return props.imagenPrincipal;
+  if (props.imagenPrincipal && typeof props.imagenPrincipal === 'string') {
+    if (props.imagenPrincipal.startsWith('link:')) {
+      return props.imagenPrincipal.substring(5); // Remove "link:" prefix
+    } else if (props.imagenPrincipal.startsWith('http') || props.imagenPrincipal.startsWith('/')) {
+      // Handles existing full URLs or absolute paths (though absolute paths might not be web-accessible)
+      return props.imagenPrincipal;
+    } else if (props.imagenPrincipal !== defaultImageSource) {
+      return `http://localhost:3000/uploads/${props.imagenPrincipal}`;
     }
-    return `http://localhost:3000/uploads/${props.imagenPrincipal}`;
   }
   return defaultImageSource; // Fallback to default if null, empty, or already the default path
 });

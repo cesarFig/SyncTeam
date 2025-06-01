@@ -1,7 +1,7 @@
 <template>
   <div class="card">
     <div v-if="imagen" class="image-container">
-      <img :src="`http://localhost:3000/uploads/${imagen}`" alt="Task Image" class="task-image" />
+      <img :src="imageSrc" alt="Task Image" class="task-image" />
     </div>
     <div v-if="nombre_categoria" class="tag-container">
       <span class="tag-chip" :style="{ backgroundColor: color_rgb || '#eee', color: getTextColor(color_rgb) }">
@@ -51,6 +51,14 @@ export default {
     color_rgb: String
   },
   computed: {
+    imageSrc() {
+      if (this.imagen && this.imagen.startsWith('link:')) {
+        return this.imagen.substring(5); // Remove "link:" prefix
+      } else if (this.imagen) {
+        return `http://localhost:3000/uploads/${this.imagen}`;
+      }
+      return ''; // Or a default placeholder image
+    },
     remainingDays() {
       const today = new Date(); // Fecha actual
       const dueDate = new Date(this.fecha_vencimiento);

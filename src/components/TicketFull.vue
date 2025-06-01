@@ -34,7 +34,7 @@
       </div>
 
       <div class="image-area-container">
-        <v-img v-if="ticket.image" :src="`http://localhost:3000/uploads/${ticket.image}`" height="220px" cover class="main-image rounded-lg" />
+        <v-img v-if="ticket.image" :src="imageSrc" height="220px" cover class="main-image rounded-lg" />
         <div v-else class="image-placeholder"></div>
       </div>
 
@@ -139,6 +139,14 @@ export default {
     };
   },
   computed: {
+    imageSrc() {
+      if (this.ticket && this.ticket.image && this.ticket.image.startsWith('link:')) {
+        return this.ticket.image.substring(5); // Remove "link:" prefix
+      } else if (this.ticket && this.ticket.image) {
+        return `http://localhost:3000/uploads/${this.ticket.image}`;
+      }
+      return ''; // Or a default placeholder image
+    },
     esAdmin() {
       return this.usuarioLogueado && this.usuarioLogueado.rol === 1; // Check for rol === 1
     }
