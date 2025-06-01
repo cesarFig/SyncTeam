@@ -1,4 +1,6 @@
 const pool = require('./connection');
+const moment = require('moment-timezone');
+
 
 const logAction = async (action) => {
   try {
@@ -571,6 +573,113 @@ const crearNotificacionAsignacion = async ({ ticket_id, usuario_id, asignado_por
     ticket_id: ticket_id
   });
 };
+// db/queries.js
+
+const obtenerResumenDashboard = async (modo = 'mensual') => {
+  const totalTickets = await pool.query(`SELECT COUNT(*) FROM ticket`);
+  const porEstado = await pool.query(`SELECT estado, COUNT(*) FROM ticket GROUP BY estado`);
+  const promedioHoras = await pool.query(`
+    SELECT ROUND(AVG(EXTRACT(EPOCH FROM (fecha_vencimiento - fecha_creacion)) / 3600)) as horas
+    FROM ticket WHERE estado = '4'
+  `);
+
+  let ticketsPorPeriodo = [];
+  let porcentajeSemana = 0;
+  let rangoFechas = '';
+  let completadosSemanaAnterior = 0; // Nuevo
+
+  if (modo === 'mensual') {
+    const resultado = await pool.query(`
+      SELECT TO_CHAR(fecha_vencimiento, 'Mon') AS etiqueta, COUNT(*) 
+      FROM ticket 
+      WHERE estado = '4'
+      GROUP BY etiqueta, EXTRACT(MONTH FROM fecha_vencimiento)
+      ORDER BY EXTRACT(MONTH FROM fecha_vencimiento)
+    `);
+
+    const meses = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    ticketsPorPeriodo = meses.map(mes => {
+      const encontrado = resultado.rows.find(r => r.etiqueta.trim() === mes);
+      return { etiqueta: mes, count: encontrado ? encontrado.count : 0 };
+    });
+
+  } else if (modo === 'semanal') {
+    const inicioSemana = moment.tz('America/Mexico_City').startOf('isoWeek').startOf('day');
+    const finSemana = moment.tz('America/Mexico_City').endOf('isoWeek').endOf('day');
+
+    const resultado = await pool.query(`
+      SELECT TO_CHAR(fecha_vencimiento, 'Dy') AS etiqueta, COUNT(*)
+      FROM ticket 
+      WHERE estado = '4'
+      AND fecha_vencimiento BETWEEN $1 AND $2
+      GROUP BY etiqueta
+    `, [inicioSemana.toDate(), finSemana.toDate()]);
+
+    const dias = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    ticketsPorPeriodo = dias.map(dia => {
+      const encontrado = resultado.rows.find(r => r.etiqueta.trim() === dia);
+      return { etiqueta: dia, count: encontrado ? encontrado.count : 0 };
+    });
+
+    const totalSemana = await pool.query(`
+      SELECT COUNT(*) FROM ticket 
+      WHERE fecha_vencimiento BETWEEN $1 AND $2
+    `, [inicioSemana.toDate(), finSemana.toDate()]);
+
+    const completadosSemana = await pool.query(`
+      SELECT COUNT(*) FROM ticket 
+      WHERE estado = '4' AND fecha_vencimiento BETWEEN $1 AND $2
+    `, [inicioSemana.toDate(), finSemana.toDate()]);
+
+    porcentajeSemana = totalSemana.rows[0].count > 0
+      ? Math.round((completadosSemana.rows[0].count / totalSemana.rows[0].count) * 100)
+      : 0;
+
+    rangoFechas = `Del ${inicioSemana.format('D [de] MMMM')} al ${finSemana.format('D [de] MMMM')}`;
+
+    // NUEVO: calcular tickets completados la semana anterior
+    const inicioAnterior = moment(inicioSemana).subtract(1, 'week');
+    const finAnterior = moment(finSemana).subtract(1, 'week');
+    const completadosPrevios = await pool.query(`
+      SELECT COUNT(*) FROM ticket
+      WHERE estado = '4' AND fecha_vencimiento BETWEEN $1 AND $2
+    `, [inicioAnterior.toDate(), finAnterior.toDate()]);
+
+    completadosSemanaAnterior = parseInt(completadosPrevios.rows[0].count);
+  } 
+  else if (modo === 'diario') {
+    const hoy = moment().startOf('day');
+    const mañana = moment(hoy).add(1, 'day');
+
+    const resultado = await pool.query(`
+      SELECT TO_CHAR(fecha_vencimiento, 'HH24') AS etiqueta, COUNT(*) 
+      FROM ticket 
+      WHERE estado = '4'
+      AND fecha_vencimiento BETWEEN $1 AND $2
+      GROUP BY etiqueta
+      ORDER BY etiqueta
+    `, [hoy.toDate(), mañana.toDate()]);
+
+    const horas = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
+    ticketsPorPeriodo = horas.map(h => {
+      const encontrado = resultado.rows.find(r => r.etiqueta === h);
+      return { etiqueta: h, count: encontrado ? encontrado.count : 0 };
+    });
+  }
+
+  return {
+    totalTickets: parseInt(totalTickets.rows[0].count),
+    ticketsPorEstado: porEstado.rows,
+    ticketsPorPeriodo,
+    tiempoPromedio: promedioHoras.rows[0].horas ? parseInt(promedioHoras.rows[0].horas) : 0,
+    porcentajeSemana,
+    rangoFechas,
+    completadosSemanaAnterior // <- nuevo
+  };
+};
+
+
+
 const getNotificacionesPorUsuario = async (usuario_id) => {
   try {
     const result = await pool.query(`
@@ -785,5 +894,5 @@ module.exports = {
   insertUsuario, insertPauta, getCategorias, getPrioridades, insertTicket, getUsuarios, getTicketsUser, getTickets, getTicket, getComentariosByTicketId, crearComentario
   , obtenerUsuario, asignacion, crearNotificacionesComentario, getNotificacionesPorUsuario, marcarNotificacionLeida, eliminarNotificacion,
   editarTicket, actualizarAsignacion, eliminarTicket, registrarArchivo, eliminarArchivoPorId, crearNotificacionesEstado, actualizarAvatarUsuario, eliminarAvatarUsuario,
-  actualizarNotificaciones, obtenerProximoTicketDashboardPorUsuario, crearNotificacionAsignacion, getTicketById
+  actualizarNotificaciones, obtenerProximoTicketDashboardPorUsuario, crearNotificacionAsignacion, getTicketById,obtenerResumenDashboard
 };
