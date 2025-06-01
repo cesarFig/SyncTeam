@@ -1,7 +1,7 @@
 <template>
   <div class="pauta-form">
     <v-dialog v-model="dialog" persistent max-width="500px">
-      <v-card>
+      <v-card class="rounded-xl">
         <v-card-title class="d-flex align-center pa-4">
           <h2 class="form-title">Añadir Pauta</h2>
           <v-spacer></v-spacer>
@@ -189,7 +189,7 @@ export default {
           cliente: this.pauta.cliente,
           titulo: this.pauta.name,
           descripcion: this.pauta.descripcion,
-          imagen: imagenFinal || 'https://cdn.pixabay.com/photo/2016/11/18/17/20/living-room-1835923_1280.jpg',
+          imagen: imagenFinal || null,
           fecha_inicio: now.toISOString(),
           fecha_vencimiento: this.pauta.fechaEntrega,
           hora_inicial: this.pauta.horaInicial,

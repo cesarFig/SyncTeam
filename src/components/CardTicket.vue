@@ -52,12 +52,17 @@ export default {
   },
   computed: {
     imageSrc() {
-      if (this.imagen && this.imagen.startsWith('link:')) {
-        return this.imagen.substring(5); // Remove "link:" prefix
-      } else if (this.imagen) {
-        return `http://localhost:3000/uploads/${this.imagen}`;
+      const img = this.imagen || '';
+      // If prefixed with 'link:', strip it
+      if (img.startsWith('link:')) {
+        return img.substring(5);
       }
-      return ''; // Or a default placeholder image
+      // If already full URL, return as is
+      if (img.startsWith('http://') || img.startsWith('https://')) {
+        return img;
+      }
+      // Otherwise, treat as local upload filename
+      return img ? `${window.location.protocol}//${window.location.hostname}:${window.location.port}/uploads/${img}` : '';
     },
     remainingDays() {
       const today = new Date(); // Fecha actual
