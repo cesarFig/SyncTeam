@@ -12,6 +12,7 @@
         sm="6"
         class="ticket-col"
         :class="index % 2 === 0 ? 'pr-2' : 'pl-2'"
+        @click="onTicketClick(ticket.id)"
       >
         <CardTicket
           :titulo="ticket.titulo"
@@ -28,9 +29,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, defineEmits } from 'vue' // Added defineEmits
 import axios from 'axios'
 import CardTicket from '@/components/CardTicket.vue'
+
+const emit = defineEmits(['ticket-clicked']) // Defined emits
 
 const ticketsProximos = ref([])
 
@@ -48,10 +51,14 @@ const fetchTicketsProximos = async () => {
       .filter(ticket => !!ticket.fecha_vencimiento)
       .sort((a, b) => new Date(a.fecha_vencimiento) - new Date(b.fecha_vencimiento))
 
-    ticketsProximos.value = ordenados.slice(0, 2)
+    ticketsProximos.value = ordenados.slice(0, 2).map(t => ({ ...t, id: t.id || t.ticket_id })); // Ensure id is present
   } catch (error) {
     console.error('Error al cargar tickets próximos:', error)
   }
+}
+
+const onTicketClick = (ticketId) => {
+  emit('ticket-clicked', ticketId);
 }
 
 onMounted(() => {

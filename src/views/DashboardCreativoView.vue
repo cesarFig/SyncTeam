@@ -17,7 +17,7 @@
           <!-- FILA INFERIOR -->
           <div class="d-flex flex-grow-1 flex-wrap" style="min-height: 0;">
             <div class="pa-2 h-100 d-flex flex-column" :class="$vuetify.display.mdAndUp ? 'w-50' : 'w-100'">
-              <CardTicketDashboard />
+              <CardTicketDashboard @ticket-clicked="handleOpenTicketDetails" />
             </div>
             <div class="pa-2 h-100 d-flex flex-column" :class="$vuetify.display.mdAndUp ? 'w-50' : 'w-100'">
               <ResumenTickets />
