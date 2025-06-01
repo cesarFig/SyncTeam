@@ -24,4 +24,14 @@ router.get('/TicketsStats/Creativo/:id', async (req, res) => {
   }
 });
 
+router.get('/TicketsStats/Todos', async (req, res) => {
+  try {
+    const data = await obtenerEstadisticasTicketsCreativo('todos');
+    res.status(200).json(data);
+  } catch (error) {
+    console.error('Error al obtener estadísticas de tickets:', error);
+    res.status(500).json({ error: 'Error en el servidor' });
+  }
+});
+
 module.exports = router;

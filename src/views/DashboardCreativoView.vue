@@ -5,7 +5,7 @@
       <v-col cols="12" md="8" class="h-100"> <!-- Removed pa-2 -->
         <div class="d-flex flex-column h-100">
           <!-- FILA SUPERIOR -->
-          <div class="d-flex flex-grow-1 flex-wrap" style="min-height: 0;"> <!-- Removed mb-2 -->
+          <div class="d-flex flex-grow-1 flex-wrap" style="min-height: 65%; max-height: 65%;"> <!-- Removed mb-2 -->
             <div class="pa-2 h-100" :class="$vuetify.display.mdAndUp ? 'w-50' : 'w-100'">
               <CalendarioCard />
             </div>

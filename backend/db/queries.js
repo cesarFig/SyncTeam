@@ -888,16 +888,12 @@ async function obtenerProximoTicketDashboardPorUsuario(userId) {
 
 async function obtenerEstadisticasTicketsCreativo(creativoId) {
   try {
-    const totalQuery = `
+    let totalQuery = `
       SELECT COUNT(t.id) AS count
       FROM ticket t
       JOIN asignacion a ON t.id = a.ticket_id
-      WHERE a.usuario_id = $1;
     `;
-    const totalResult = await pool.query(totalQuery, [creativoId]);
-    const ticketsTotales = parseInt(totalResult.rows[0]?.count || 0);
-
-    const estadosQuery = `
+    let estadosQuery = `
       SELECT
           SUM(CASE WHEN t.estado = 1 THEN 1 ELSE 0 END) AS pendientes,
           SUM(CASE WHEN t.estado = 2 THEN 1 ELSE 0 END) AS enProgreso,
@@ -905,21 +901,31 @@ async function obtenerEstadisticasTicketsCreativo(creativoId) {
           SUM(CASE WHEN t.estado = 4 THEN 1 ELSE 0 END) AS completados
       FROM ticket t
       JOIN asignacion a ON t.id = a.ticket_id
-      WHERE a.usuario_id = $1;
     `;
-    const estadosResult = await pool.query(estadosQuery, [creativoId]);
+
+    const params = [];
+    if (creativoId !== 'todos') {
+      totalQuery += ' WHERE a.usuario_id = $1';
+      estadosQuery += ' WHERE a.usuario_id = $1';
+      params.push(creativoId);
+    }
+
+    const totalResult = await pool.query(totalQuery, params);
+    const ticketsTotales = parseInt(totalResult.rows[0]?.count || 0);
+
+    const estadosResult = await pool.query(estadosQuery, params);
     
     const stats = estadosResult.rows[0] || {};
 
     return {
       ticketsTotales,
       pendientes: parseInt(stats.pendientes || 0),
-      enProgreso: parseInt(stats.enprogreso || 0), // PostgreSQL column names are lowercase unless quoted
+      enProgreso: parseInt(stats.enprogreso || 0),
       pendientesRevision: parseInt(stats.pendientesrevision || 0),
       completados: parseInt(stats.completados || 0),
     };
   } catch (error) {
-    console.error('Error al obtener estadísticas de tickets para el creativo:', error);
+    console.error('Error al obtener estadísticas de tickets:', error); // Generic error message
     throw error;
   }
 }

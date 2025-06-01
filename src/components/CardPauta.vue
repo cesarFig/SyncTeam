@@ -69,8 +69,8 @@ export default {
 }
 
 .task-image {
-  width: 300px;
-  height: 120px;
+  width: 100%; /* Changed from 300px to 100% */
+  height: 120px; /* You might want to adjust this or use aspect-ratio */
   object-fit: cover;
 }
 
