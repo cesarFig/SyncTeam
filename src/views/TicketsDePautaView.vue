@@ -11,6 +11,16 @@
       <FormEditarTicket v-if="ticketParaEditar" :ticket-edit="ticketParaEditar" @close="cerrarFormularioEditar" />
     </v-dialog>
 
+    <!-- Formulario para editar pauta -->
+    <v-dialog v-model="showEditarPauta" max-width="500px">
+      <FormEditarPauta
+        v-if="pautaParaEditar"
+        :pauta-edit="pautaParaEditar"
+        @close="cerrarEditarPauta"
+        @save="handleSaveEditPauta"
+      />
+    </v-dialog>
+
     <!-- Detalle del ticket -->
     <v-dialog v-model="showTicketFull" max-width="800">
       <TicketFull v-if="selectedTicket" :ticket="selectedTicket" @close-modal="closeTicketFullDialog"
@@ -78,7 +88,7 @@
         </div>
       </div>
       <div class="mt-auto pa-4 pt-2 flex-grow-0 footer-action">
-        <v-btn block variant="text" color="grey-darken-1">
+        <v-btn block variant="text" color="grey-darken-1" @click="abrirEditarPauta">
           <v-icon start>mdi-pencil-outline</v-icon> Editar
         </v-btn>
       </div>
@@ -134,12 +144,13 @@ import FormTicket from '../components/forms/FormTicket.vue';
 import FormEditarTicket from '../components/forms/FormEditarTicket.vue';
 import TicketCard from '../components/CardTicket.vue';
 import TicketFull from '../components/TicketFull.vue';
+import FormEditarPauta from '../components/forms/FormEditarPauta.vue';
 import axios from 'axios';
 import { useRoute } from 'vue-router';
 
 export default {
   name: 'PautasView',
-  components: { TicketCard, FormTicket, TicketFull, FormEditarTicket },
+  components: { TicketCard, FormTicket, TicketFull, FormEditarTicket, FormEditarPauta },
   setup() {
     const route = useRoute();
     return { route };
@@ -156,6 +167,8 @@ export default {
       showTicketFull: false,
       selectedTicket: null,
       draggedTicket: null,
+      showEditarPauta: false,
+      pautaParaEditar: null,
       ticketColumns: [
         { title: 'Por hacer', state: 1, tickets: [] },
         { title: 'En progreso', state: 2, tickets: [] },
@@ -232,6 +245,14 @@ export default {
       this.ticketParaEditar = null;
       this.showFormEditar = false;
     },
+    abrirEditarPauta() {
+      this.pautaParaEditar = this.selectedPauta;
+      this.showEditarPauta = true;
+    },
+    cerrarEditarPauta() {
+      this.pautaParaEditar = null;
+      this.showEditarPauta = false;
+    },
     async selectPauta(pauta) {
       this.selectedPauta = {
         ...pauta,
@@ -259,6 +280,17 @@ export default {
       this.pautas.push(newPauta);
       this.selectedPauta = newPauta;
       this.showForm = false;
+    },
+    async handleSaveEditPauta(updatedPauta) {
+      // update on backend
+      await axios.put(`/api/addPauta/${updatedPauta.id}`, updatedPauta);
+      // update locally
+      const idx = this.pautas.findIndex(p => p.id === updatedPauta.id);
+      if (idx !== -1) this.pautas.splice(idx, 1, updatedPauta);
+      this.selectedPauta = updatedPauta;
+      this.cerrarEditarPauta();
+      // refresh page to reflect changes
+      window.location.reload();
     },
     openTicketFull(rawTicket) {
       const transformedTicket = {

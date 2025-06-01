@@ -51,7 +51,7 @@
                 <div class="d-flex align-center mt-2">
                   <v-text-field
                     label="URL de la Imagen"
-                    v-model="pauta.imagen"
+                    v-model="form.imagen"
                     @input="handleLinkInput"
                     class="rounded-input flex-grow-1"
                     variant="outlined"
@@ -60,7 +60,7 @@
                     clearable
                     @click:clear="removeImage"
                   />
-                  <v-btn v-if="pauta.imagen && imagePreviewSrc" small icon @click="removeImage" title="Quitar Imagen" density="compact" variant="text" class="ml-2" rounded="circle">
+                  <v-btn v-if="form.imagen && imagePreviewSrc" small icon @click="removeImage" title="Quitar Imagen" density="compact" variant="text" class="ml-2" rounded="circle">
                     <v-icon color="red" size="small">mdi-close-circle</v-icon>
                   </v-btn>
                 </div>
@@ -73,13 +73,13 @@
 
           <v-row>
             <v-col cols="12">
-              <v-text-field label="Titulo" v-model="pauta.name" class="rounded-input" variant="outlined"></v-text-field>
+              <v-text-field label="Titulo" v-model="form.name" class="rounded-input" variant="outlined"></v-text-field>
             </v-col>
           </v-row>
 
           <v-row>
             <v-col cols="12">
-              <v-text-field label="Cliente" v-model="pauta.cliente" class="rounded-input"
+              <v-text-field label="Cliente" v-model="form.cliente" class="rounded-input"
                 variant="outlined"></v-text-field>
             </v-col>
 
@@ -93,16 +93,16 @@
                   <v-text-field :model-value="formattedDate" label="Fecha de Entrega" prepend-inner-icon="mdi-calendar"
                     readonly v-bind="props" class="rounded-input" variant="outlined"></v-text-field>
                 </template>
-                <v-date-picker v-model="pauta.fechaEntrega" no-title scrollable
-                  :value="pauta.fechaEntrega"></v-date-picker>
+                <v-date-picker v-model="form.fechaEntrega" no-title scrollable
+                  :value="form.fechaEntrega"></v-date-picker>
               </v-menu>
             </v-col>
             <v-col cols="4">
-              <v-text-field label="Hora Inicial" v-model="pauta.horaInicial" type="time" class="rounded-input"
+              <v-text-field label="Hora Inicial" v-model="form.horaInicial" type="time" class="rounded-input"
                 variant="outlined"></v-text-field>
             </v-col>
             <v-col cols="4">
-              <v-text-field label="Hora Final" v-model="pauta.horaFinal" type="time" class="rounded-input"
+              <v-text-field label="Hora Final" v-model="form.horaFinal" type="time" class="rounded-input"
                 variant="outlined"></v-text-field>
             </v-col>
           </v-row>
@@ -110,7 +110,7 @@
 
 
           <div class="input-group">
-            <v-textarea label="Descripción" v-model="pauta.descripcion" class="rounded-input"
+            <v-textarea label="Descripción" v-model="form.descripcion" class="rounded-input"
               variant="outlined"></v-textarea>
           </div>
         </v-card-text>
@@ -123,7 +123,7 @@
           </div>
           <div class="ml-auto">
             <v-btn text class="mr-2 cancel-button" @click="dialog = false">Cancelar</v-btn>
-            <v-btn color="purple" class="save-button rounded-lg" @click="savePauta">Guardar</v-btn>
+            <v-btn color="purple" class="save-button rounded-lg" @click="updatePauta">Guardar</v-btn>
           </div>
         </v-card-actions>
       </v-card>
@@ -134,30 +134,50 @@
 <script>
 import axios from 'axios';
 export default {
+  props: ['pautaEdit'],
   data() {
-    // default times
     const now = new Date();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const currentTime = `${hours}:${minutes}`;
+    const h = String(now.getHours()).padStart(2,'0');
+    const m = String(now.getMinutes()).padStart(2,'0');
+    const currentTime = `${h}:${m}`;
     return {
       dialog: true,
       dateMenu: false,
-      pauta: {
+      form: {
+        id: null,
         name: '',
         cliente: '',
-        imagen: '',
-        fechaEntrega: new Date(), // Asegúrate de que sea un objeto Date
+        descripcion: '',
+        fechaEntrega: new Date(),
         horaInicial: currentTime,
         horaFinal: '23:59',
-        descripcion: '',
-        creado_por:null
+        imagen: ''
       },
       // image upload/link state
       imageInputType: null,
       uploadedImageFile: null,
       uploadedImagePreview: null,
-      showImageSubMenu: false,
+      showImageSubMenu: false
+    };
+  },
+  mounted() {
+    if (this.pautaEdit) {
+      const p = this.pautaEdit;
+      this.form.id = p.id;
+      this.form.name = p.titulo;
+      this.form.cliente = p.cliente;
+      this.form.descripcion = p.descripcion;
+      this.form.fechaEntrega = new Date(p.fecha_vencimiento || p.fechaEntrega);
+      this.form.horaInicial = p.hora_inicial || p.horaInicial;
+      this.form.horaFinal = p.hora_final || p.horaFinal;
+      // set image and input type
+      if (p.imagen?.startsWith('link:')) {
+        this.imageInputType = 'link';
+        this.form.imagen = p.imagen.substring(5);
+      } else if (p.imagen) {
+        this.imageInputType = 'upload';
+        this.form.imagen = p.imagen;
+      }
     }
   },
   computed: {
@@ -165,53 +185,61 @@ export default {
       return new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     },
     formattedDate() {
-      const date = new Date(this.pauta.fechaEntrega);
+      const date = new Date(this.form.fechaEntrega);
       return date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     },
     imagePreviewSrc() {
+      // if existing image URL from backend, show it directly
+      if (this.form.imagen && this.isHttpUrl(this.form.imagen)) return this.form.imagen;
       if (this.imageInputType==='upload' && this.uploadedImagePreview) return this.uploadedImagePreview;
-      if (this.imageInputType==='link' && this.pauta.imagen && this.isHttpUrl(this.pauta.imagen)) return this.pauta.imagen;
-      if (!this.imageInputType && this.pauta.imagen) {
-        if (this.isHttpUrl(this.pauta.imagen)) return this.pauta.imagen;
-        return `http://localhost:3000/uploads/${this.pauta.imagen}`;
+      // show existing uploaded image when editing (filename)
+      if (this.imageInputType==='upload' && this.form.imagen) {
+        return `${window.location.origin}/uploads/${this.form.imagen}`;
+      }
+      if (this.imageInputType==='link' && this.form.imagen && this.isHttpUrl(this.form.imagen)) return this.form.imagen;
+      if (!this.imageInputType && this.form.imagen) {
+        if (this.isHttpUrl(this.form.imagen)) return this.form.imagen;
+        return `http://localhost:3000/uploads/${this.form.imagen}`;
       }
       return null;
     }
   },
   methods: {
-    async savePauta() {
+    async updatePauta() {
       try {
-        // handle image: upload or link
-        let imagenFinal = '';
+        let imagenFinal = ''; 
         if (this.imageInputType==='upload' && this.uploadedImageFile) {
           imagenFinal = await this.uploadPortadaImage();
-        } else if (this.imageInputType==='link' && this.pauta.imagen && this.isHttpUrl(this.pauta.imagen)) {
-          imagenFinal = `link:${this.pauta.imagen}`;
+        } else if (this.imageInputType==='link' && this.isHttpUrl(this.form.imagen)) {
+          imagenFinal = `link:${this.form.imagen}`;
+        } else {
+          // Keep existing upload filename if full URL is loaded
+          if (this.imageInputType==='upload' && this.isHttpUrl(this.form.imagen)) {
+            imagenFinal = this.form.imagen.split('/').pop();
+          } else {
+            imagenFinal = this.form.imagen;
+          }
         }
-        const now = new Date();
-        const usuario = JSON.parse(localStorage.getItem('usuario'));
-        const response = await axios.post('http://localhost:3000/api/addPauta', {
-          cliente: this.pauta.cliente,
-          titulo: this.pauta.name,
-          descripcion: this.pauta.descripcion,
-          imagen: imagenFinal || null,
-          fecha_inicio: now.toISOString(),
-          fecha_vencimiento: this.pauta.fechaEntrega,
-          hora_inicial: this.pauta.horaInicial,
-          hora_final: this.pauta.horaFinal,
-          creado_por: usuario.id
-        });
-
-        console.log('Pauta guardada:', response.data);
-        this.dialog = false;
-      } catch (error) {
-        console.error('Error al guardar la pauta:', error);
+        const payload = {
+          cliente: this.form.cliente,
+          titulo: this.form.name,
+          descripcion: this.form.descripcion,
+          imagen: imagenFinal,
+          fecha_vencimiento: this.form.fechaEntrega,
+          hora_inicial: this.form.horaInicial,
+          hora_final: this.form.horaFinal
+        };
+        const res = await axios.put(`http://localhost:3000/api/addPauta/${this.form.id}`, payload);
+        this.$emit('save', res.data);
+        this.$emit('close');
+      } catch (err) {
+        console.error('Error al editar pauta:', err);
       }
     },
     // new image methods
     setImageInputType(type) {
       this.imageInputType = type;
-      this.pauta.imagen = '';
+      this.form.imagen = '';
       this.uploadedImageFile = null;
       this.uploadedImagePreview = null;
       this.showImageSubMenu = false;
@@ -253,7 +281,7 @@ export default {
       return null;
     },
     removeImage() {
-      this.pauta.imagen = '';
+      this.form.imagen = '';
       this.uploadedImageFile = null;
       this.uploadedImagePreview = null;
       if (this.$refs.imageInput) this.$refs.imageInput.value = null;

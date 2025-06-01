@@ -238,6 +238,32 @@ const insertPauta = async (data) => {
 
   return result.rows[0];
 };
+/** Update an existing pauta */
+const updatePauta = async (id, data) => {
+  const {
+    cliente,
+    titulo,
+    descripcion,
+    imagen,
+    fecha_vencimiento,
+    hora_inicial,
+    hora_final
+  } = data;
+  const result = await pool.query(
+    `UPDATE pauta SET
+      cliente = $1,
+      titulo = $2,
+      descripcion = $3,
+      imagen = $4,
+      fecha_vencimiento = $5,
+      hora_inicial = $6,
+      hora_final = $7
+     WHERE id = $8 RETURNING *`,
+    [cliente, titulo, descripcion, imagen, fecha_vencimiento, hora_inicial, hora_final, id]
+  );
+  return result.rows[0];
+};
+
 const getCategorias = async () => {
   const result = await pool.query('SELECT * FROM categoria');
   return result.rows;
@@ -941,7 +967,7 @@ async function obtenerEstadisticasTicketsCreativo(creativoId) {
 
 module.exports = {
   logAction, getPautas, getTicketsByPauta, getColaboradores, updateTicketEstado, getUsuarioPorCorreo, getRoles,
-  insertUsuario, insertPauta, getCategorias, getPrioridades, insertTicket, getUsuarios, getTicketsUser, getTickets, getTicket, getComentariosByTicketId, crearComentario
+  insertUsuario, insertPauta, updatePauta, getCategorias, getPrioridades, insertTicket, getUsuarios, getTicketsUser, getTickets, getTicket, getComentariosByTicketId, crearComentario
   , obtenerUsuario, asignacion, crearNotificacionesComentario, getNotificacionesPorUsuario, marcarNotificacionLeida, eliminarNotificacion,
   editarTicket, actualizarAsignacion, eliminarTicket, registrarArchivo, eliminarArchivoPorId, crearNotificacionesEstado, actualizarAvatarUsuario, eliminarAvatarUsuario,
   actualizarNotificaciones, obtenerProximoTicketDashboardPorUsuario, crearNotificacionAsignacion, getTicketById,obtenerResumenDashboard, obtenerEstadisticasTicketsCreativo
