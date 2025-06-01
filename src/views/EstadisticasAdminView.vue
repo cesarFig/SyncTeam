@@ -47,21 +47,34 @@
         </v-card>
       </v-col>
 
-      <!-- Tarjetas resumen -->
-      <v-col cols="6" sm="4" md="2" v-for="item in resumen" :key="item.label" class="pa-1">
-        <v-card :color="item.color" dark class="pa-3 text-center fill-height">
-          <div class="text-h6 font-weight-bold">{{ item.valor }}</div>
-          <div class="text-caption">{{ item.label }}</div>
-        </v-card>
+      <!-- Wrapper para Tarjetas resumen -->
+      <v-col cols="12" class="py-0 px-1">
+        <v-row no-gutters>
+          <!-- Tarjetas resumen -->
+          <v-col cols="12" sm="6" md="4" lg="2.4" v-for="item in resumen" :key="item.label" class="pa-1 d-flex">
+            <div :class="['ticket-box', item.gradientClass, 'flex-grow-1']">
+              <v-icon size="28" class="mr-2">{{ item.icon }}</v-icon>
+              <div class="ticket-data-container">  <!-- Added class -->
+                <div class="count">{{ item.valor }}</div>
+                <div class="label">{{ item.label }}</div>
+              </div>
+            </div>
+          </v-col>
+        </v-row>
       </v-col>
 
-      <!-- Tarjetas inferiores -->
-      <v-col cols="12" md="4" class="pa-2" v-for="(info, index) in detalles" :key="index">
-        <v-card class="pa-4 fill-height d-flex flex-column justify-center">
-          <div class="text-subtitle-1">{{ info.titulo }}</div>
-          <div class="text-h6 font-weight-bold">{{ info.valor() }}</div>
-          <div :class="`text-caption ${info.color}`">{{ info.extra }}</div>
-        </v-card>
+      <!-- Wrapper para Detalles inferiores -->
+      <v-col cols="12" class="py-0 px-1 mt-1"> <!-- Added mt-1 for spacing -->
+        <v-row no-gutters>
+          <!-- Detalles inferiores -->
+          <v-col cols="12" md="4" class="pa-2" v-for="(info, index) in detalles" :key="index">
+            <v-card class="pa-4 fill-height d-flex flex-column justify-center">
+              <div class="text-subtitle-1">{{ info.titulo }}</div>
+              <div class="text-h6 font-weight-bold">{{ info.valor() }}</div>
+              <div :class="`text-caption ${info.color}`">{{ info.extra }}</div>
+            </v-card>
+          </v-col>
+        </v-row>
       </v-col>
     </v-row>
   </v-container>
@@ -75,11 +88,11 @@ import LineChart from '../components/LineChart.vue';
 const tab = ref('semanal');
 
 const resumen = ref([
-  { label: 'Tickets totales', valor: 0, color: 'deep-purple accent-4' },
-  { label: 'Pendientes revisión', valor: 0, color: 'pink lighten-1' },
-  { label: 'En progreso', valor: 0, color: 'indigo accent-1' },
-  { label: 'Por hacer', valor: 0, color: 'cyan lighten-2' },
-  { label: 'Completados', valor: 0, color: 'green accent-3' },
+  { label: 'Tickets totales', valor: 0, gradientClass: 'purple', icon: 'mdi-check-circle' },
+  { label: 'Pendientes revisión', valor: 0, gradientClass: 'magenta', icon: 'mdi-email-open' },
+  { label: 'En progreso', valor: 0, gradientClass: 'blue', icon: 'mdi-progress-clock' },
+  { label: 'Por hacer', valor: 0, gradientClass: 'cyan', icon: 'mdi-bell-ring' },
+  { label: 'Completados', valor: 0, gradientClass: 'green', icon: 'mdi-check-decagram' },
 ]);
 
 const resumenEstado = ref({
@@ -236,6 +249,57 @@ canvas {
   max-height: 220px;
   height: 220px !important;
 }
+
+/* Copied styles from ResumentTicketsAdmin.vue */
+.ticket-box {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-radius: 16px;
+  color: white;
+  font-weight: bold;
+  min-height: 56px; /* Adjusted to ensure consistency */
+  height: 100%; /* Make it fill the v-col height */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  box-sizing: border-box; /* Ensure padding is included in height */
+}
+
+.ticket-data-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.count {
+  font-size: 20px; /* Adjusted to match ResumentTicketsAdmin, was text-h6 */
+}
+
+.label {
+  font-size: 13px; /* Adjusted to match ResumentTicketsAdmin, was text-caption */
+  line-height: 1.2;
+}
+
+.purple {
+  background: linear-gradient(to right, #7b1fa2, #B14CF4);
+}
+
+.magenta {
+  background: linear-gradient(to right, #B5179F, #E048CB);
+}
+
+.blue {
+  background: linear-gradient(to right, #546FFF, #889BFF);
+}
+
+.cyan {
+  background: linear-gradient(to right, #4BC9F1, #89E3FF);
+}
+
+.green {
+  background: linear-gradient(to right, #43a047, #4DC17B);
+}
+
+
 @media (max-width: 960px) {
   .dashboard-wrapper {
     height: auto;
