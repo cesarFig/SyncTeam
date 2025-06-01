@@ -336,9 +336,74 @@ const getTickets = async (id) => {
     throw err;
   }
 };
+
 async function getTicket(id) {
   const result = await pool.query('SELECT * FROM usuario WHERE id= $1', [id]);
   return result.rows[0];
+}
+
+async function getTicketById(id) {
+  // const result = await pool.query('SELECT * FROM usuario WHERE id= $1', [id]); // Old query for user
+  // return result.rows[0];
+  try {
+    const result = await pool.query(
+      `SELECT 
+        t.id,
+        t.titulo,
+        t.descripcion,
+        t.imagen,
+        t.estado,
+        t.fecha_creacion,
+        t.fecha_vencimiento,
+        t.hora_inicio,
+        t.hora_final,
+        t.pauta_id,
+        t.categoria_id,
+        t.prioridad_id,
+        c.nombre_categoria,
+        c.color_rgb,
+        pr.nombre AS prioridad,
+        pr.nivel_prioridad,
+        u.nombre AS asignado_nombre,
+        u.apellidos AS asignado_apellidos,
+        asg.usuario_id -- to get the assigned user's ID for currentUser later if needed
+      FROM ticket t
+      LEFT JOIN categoria c ON t.categoria_id = c.id
+      LEFT JOIN prioridad pr ON t.prioridad_id = pr.id
+      LEFT JOIN asignacion asg ON t.id = asg.ticket_id
+      LEFT JOIN usuario u ON asg.usuario_id = u.id
+      WHERE t.id = $1`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return null; // Ticket not found
+    }
+
+    const ticket = result.rows[0];
+
+    // Fetch attachments for the ticket
+    const archivosRes = await pool.query(
+      `SELECT 
+          id,
+         nombre_archivo AS name,
+         url_archivo AS url,
+         tipo_archivo AS type
+       FROM archivo
+       WHERE ticket_id = $1 AND is_attach = TRUE`,
+      [ticket.id]
+    );
+    ticket.attachments = archivosRes.rows;
+
+    // Fetch comments for the ticket (optional, if TicketFull needs them directly)
+    // const comentariosRes = await getComentariosByTicketId(ticket.id);
+    // ticket.activityLog = comentariosRes; // Or map to a different structure
+
+    return ticket;
+  } catch (err) {
+    console.error('Error fetching single ticket by ID:', err);
+    throw err;
+  }
 }
 async function getComentariosByTicketId(ticketId) {
   const result = await pool.query(`
@@ -829,5 +894,5 @@ module.exports = {
   insertUsuario, insertPauta, getCategorias, getPrioridades, insertTicket, getUsuarios, getTicketsUser, getTickets, getTicket, getComentariosByTicketId, crearComentario
   , obtenerUsuario, asignacion, crearNotificacionesComentario, getNotificacionesPorUsuario, marcarNotificacionLeida, eliminarNotificacion,
   editarTicket, actualizarAsignacion, eliminarTicket, registrarArchivo, eliminarArchivoPorId, crearNotificacionesEstado, actualizarAvatarUsuario, eliminarAvatarUsuario,
-  actualizarNotificaciones, obtenerProximoTicketDashboardPorUsuario, crearNotificacionAsignacion,obtenerResumenDashboard
+  actualizarNotificaciones, obtenerProximoTicketDashboardPorUsuario, crearNotificacionAsignacion, getTicketById,obtenerResumenDashboard
 };

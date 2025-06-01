@@ -63,13 +63,19 @@
           :horasRestantes="ticketData.horasRestantes"
           :imagenPrincipal="ticketData.imagenPrincipal"
           :rolAsignado="ticketData.rolAsignado"
-          :descripcion="ticketData.descripcion" 
+          :descripcion="ticketData.descripcion"
+          @open-ticket-details="handleOpenTicketDetails"
         />
         <div v-else class="ticket-activo-null">
           <p class="placeholder-text">No hay tickets activos próximos.</p>
         </div>
       </v-col>
     </v-row>
+
+    <v-dialog v-model="showTicketFullDialog" max-width="800">
+      <TicketFull v-if="selectedTicketFull" :ticket="selectedTicketFull" @close="closeTicketFullDialog" />
+    </v-dialog>
+
   </v-container>
 </template>
 
@@ -80,10 +86,81 @@ import CardNotificaciones from '@/components/CardNotificaciones.vue'
 import CardTicketDashboard from '@/components/CardTicketsDashboard.vue'
 import ResumenTickets from '@/components/ResumentTickets.vue'
 import DashboardTicket from '@/components/DashboardTicket.vue';
+import TicketFull from '@/components/TicketFull.vue'; // Import TicketFull
+import axios from 'axios'; // Import axios for fetching full ticket details
 
 const ticketData = ref(null);
 const isLoading = ref(true);
 const error = ref(null);
+
+const showTicketFullDialog = ref(false);
+const selectedTicketFull = ref(null);
+
+// Function to get priority color (copied from TicketsCreativoView.vue)
+const getPriorityColor = (nivel) => {
+  switch (nivel) {
+    case 1: return '#42A5F5'; // Normal
+    case 2: return '#FFA726'; // Baja
+    case 3: return '#EF5350'; // Alta
+    case 4: return '#D32F2F'; // Crítica
+    default: return '#BDBDBD';
+  }
+};
+
+const handleOpenTicketDetails = async (ticketId) => {
+  try {
+    // Fetch the full ticket details using the ticketId
+    // This endpoint might need to be created or adjusted in your backend
+    const response = await axios.get(`/api/ticket/${ticketId}`); 
+    const ticket = response.data;
+
+    // Transform the ticket data to the format expected by TicketFull.vue
+    // This transformation logic is similar to the one in TicketsCreativoView.vue
+    const transformedTicket = {
+      id: ticket.id,
+      title: ticket.titulo,
+      description: ticket.descripcion,
+      taskType: {
+        name: ticket.nombre_categoria || 'Sin categoría',
+        color: ticket.color_rgb || '#757575'
+      },
+      priority: {
+        name: ticket.prioridad || 'Normal',
+        color: getPriorityColor(ticket.nivel_prioridad) 
+      },
+      image: ticket.imagen,
+      date: ticket.fecha_creacion,
+      assignee: `${ticket.asignado_nombre || ''} ${ticket.asignado_apellidos || ''}`.trim(),
+      attachments: [], // Populate if available
+      activityLog: [], // Populate if available
+      currentUser: { name: "Tú", avatar: "" }, // Adjust as needed
+
+      // Raw fields for editing
+      titulo: ticket.titulo,
+      descripcion: ticket.descripcion,
+      imagen: ticket.imagen,
+      prioridad_id: ticket.prioridad_id,
+      categoria_id: ticket.categoria_id,
+      pauta_id: ticket.pauta_id,
+      usuario_id: ticket.usuario_id,
+      hora_inicio: ticket.hora_inicio,
+      hora_final: ticket.hora_final,
+      fecha_vencimiento: ticket.fecha_vencimiento
+    };
+
+    selectedTicketFull.value = transformedTicket;
+    showTicketFullDialog.value = true;
+  } catch (err) {
+    console.error('Error fetching full ticket details:', err);
+    // Optionally, show an error message to the user
+    error.value = 'No se pudieron cargar los detalles completos del ticket.'; 
+  }
+};
+
+const closeTicketFullDialog = () => {
+  showTicketFullDialog.value = false;
+  selectedTicketFull.value = null;
+};
 
 onMounted(async () => {
   const userRaw = localStorage.getItem('usuario')
@@ -134,7 +211,6 @@ onMounted(async () => {
     isLoading.value = false;
   }
 });
-
 </script>
 
 <style scoped>
@@ -144,31 +220,38 @@ onMounted(async () => {
   overflow: hidden;
 }
 
-.ticket-activo-null {
+.h-100 {
   height: 100%;
-  background-color: #f8f8f8; /* Light grey background */
-  border-radius: 16px; /* Consistent with DashboardTicket */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border: 2px dashed #e0e0e0; /* Softer dashed border */
-  text-align: center;
-  padding: 1rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Subtle shadow */
+}
+
+.w-50 {
+  width: 50% !important;
+}
+
+.w-100 {
+  width: 100% !important;
 }
 
 .ticket-activo {
-  height: 100%; 
+  /* Ensures this column tries to maintain its height if content is less */
+  display: flex;
+  flex-direction: column;
+}
+
+.ticket-activo-null {
   display: flex;
   justify-content: center;
   align-items: center;
-  text-align: center;
-  padding: 1rem;
+  height: 100%; /* Take full height of its container */
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  background-color: #f9f9f9;
 }
 
 .placeholder-text {
-  color: #757575; /* Darker grey for better readability */
-  font-weight: 500;
-  font-size: 1rem;
+  font-size: 1.1rem;
+  color: #777;
+  text-align: center;
+  padding: 20px;
 }
 </style>
