@@ -62,7 +62,7 @@ export default {
         return img;
       }
       // Otherwise, treat as local upload filename
-      return img ? `${window.location.protocol}//${window.location.hostname}:${window.location.port}/uploads/${img}` : '';
+      return img ? `http://localhost:3000/uploads/${img}` : '';
     },
     remainingDays() {
       const today = new Date(); // Fecha actual
