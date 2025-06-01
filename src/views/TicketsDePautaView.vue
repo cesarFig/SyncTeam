@@ -8,22 +8,13 @@
 
     <!-- Formulario para editar ticket -->
     <v-dialog v-model="showFormEditar" max-width="700px">
-      <FormEditarTicket
-        v-if="ticketParaEditar"
-        :ticket-edit="ticketParaEditar"
-        @close="cerrarFormularioEditar"
-      />
+      <FormEditarTicket v-if="ticketParaEditar" :ticket-edit="ticketParaEditar" @close="cerrarFormularioEditar" />
     </v-dialog>
 
     <!-- Detalle del ticket -->
     <v-dialog v-model="showTicketFull" max-width="800">
-      <TicketFull
-  v-if="selectedTicket"
-  :ticket="selectedTicket"
-  @close-modal="selectedTicket = null"
-  @editar-ticket="abrirFormularioEditar"
-  @eliminar-ticket="confirmarEliminacion"
-/>
+      <TicketFull v-if="selectedTicket" :ticket="selectedTicket" @close-modal="closeTicketFullDialog"
+        @editar-ticket="abrirFormularioEditar" @eliminar-ticket="confirmarEliminacion" />
     </v-dialog>
 
     <!-- Lista de pautas -->
@@ -32,13 +23,8 @@
         <h2 class="text-h6 mb-4">Pautas</h2>
       </div>
       <v-list density="compact" class="flex-grow-1 list-scroll-area" lines="one">
-        <v-list-item
-          v-for="(pauta) in filteredPautas"
-          :key="pauta.id"
-          @click="selectPauta(pauta)"
-          :class="{ 'selected-pauta': selectedPauta?.id === pauta.id }"
-          class="pauta-list-item rounded-lg mx-1 my-1"
-        >
+        <v-list-item v-for="(pauta) in filteredPautas" :key="pauta.id" @click="selectPauta(pauta)"
+          :class="{ 'selected-pauta': selectedPauta?.id === pauta.id }" class="pauta-list-item rounded-lg mx-1 my-1">
           <v-list-item-title class="list-item-title">{{ pauta.titulo }}</v-list-item-title>
           <v-list-item-subtitle class="list-item-subtitle">{{ pauta.subtitulo }}</v-list-item-subtitle>
         </v-list-item>
@@ -49,7 +35,8 @@
     <v-card class="d-flex flex-column detail-panel" width="20%" v-if="selectedPauta">
       <div class="detail-scroll-area pa-4">
         <h2 class="text-h5 font-weight-medium mb-3">{{ selectedPauta.titulo }}</h2>
-        <v-img v-if="selectedPauta.imagen" :src="selectedPauta.imagen" height="180px" cover class="mb-4 rounded elevation-1"></v-img>
+        <v-img v-if="selectedPauta.imagen" :src="selectedPauta.imagen" height="180px" cover
+          class="mb-4 rounded elevation-1"></v-img>
         <div class="mb-5">
           <span class="text-subtitle-2 text-grey-darken-1">Cliente:</span>
           <span class="text-body-1 ml-2">{{ selectedPauta.cliente }}</span>
@@ -79,7 +66,8 @@
         </div>
         <div class="mb-5">
           <h4 class="text-subtitle-1 font-weight-medium mb-2">Progreso</h4>
-          <v-progress-linear :model-value="selectedPauta.progreso" color="blue-darken-2" height="8" rounded class="mb-1"></v-progress-linear>
+          <v-progress-linear :model-value="selectedPauta.progreso" color="blue-darken-2" height="8" rounded
+            class="mb-1"></v-progress-linear>
           <p class="text-caption text-grey-darken-1 text-right">{{ selectedPauta.progreso }}%</p>
         </div>
         <div class="mb-2 pb-2">
@@ -118,13 +106,8 @@
       </div>
 
       <div class="ticket-columns-container pa-4 pt-2 justify-space-between align-center">
-        <div
-          class="ticket-column"
-          v-for="(column, index) in ticketColumns"
-          :key="index"
-          @dragover.prevent
-          @drop="onDrop(index)"
-        >
+        <div class="ticket-column" v-for="(column, index) in ticketColumns" :key="index" @dragover.prevent
+          @drop="onDrop(index)">
           <div class="column-header pa-2">
             <span class="column-title">{{ column.title }}</span>
             <v-spacer></v-spacer>
@@ -133,15 +116,8 @@
             </v-btn>
           </div>
           <div class="ticket-list">
-            <TicketCard
-              v-for="task in column.tickets"
-              :key="task.id"
-              v-bind="task"
-              class="mb-2"
-              draggable="true"
-              @dragstart="onDragStart(task)"
-              @click="openTicketFull(task)"
-            />
+            <TicketCard v-for="task in column.tickets" :key="task.id" v-bind="task" class="mb-2" draggable="true"
+              @dragstart="onDragStart(task)" @click="openTicketFull(task)" />
           </div>
         </div>
       </div>
@@ -192,24 +168,28 @@ export default {
     filteredPautas() { return this.pautas; },
   },
   methods: {
+    closeTicketFullDialog() {
+      this.selectedTicket = null;
+      this.showTicketFull = false;
+    },
     async confirmarEliminacion(ticketId) {
-  try {
-    if (!confirm('¿Seguro que deseas eliminar este ticket?')) return;
+      try {
+        if (!confirm('¿Seguro que deseas eliminar este ticket?')) return;
 
-    await axios.delete(`api/addTicket/ticketsEliminar/${ticketId}`);
+        await axios.delete(`api/addTicket/ticketsEliminar/${ticketId}`);
 
-    // Elimina localmente
-    this.ticketColumns.forEach(column => {
-      column.tickets = column.tickets.filter(t => t.id !== ticketId);
-    });
+        // Elimina localmente
+        this.ticketColumns.forEach(column => {
+          column.tickets = column.tickets.filter(t => t.id !== ticketId);
+        });
 
-    this.selectedTicket = null;
-    this.showTicketFull = false;
-  } catch (error) {
-    console.error('Error al eliminar el ticket:', error);
-  }
-}
-,
+        this.selectedTicket = null;
+        this.showTicketFull = false;
+      } catch (error) {
+        console.error('Error al eliminar el ticket:', error);
+      }
+    }
+    ,
     async fetchPautas() {
       try {
         const response = await axios.get('/api/pautas');
@@ -279,40 +259,40 @@ export default {
       this.showForm = false;
     },
     openTicketFull(rawTicket) {
-        const transformedTicket = {
-    id: rawTicket.id,
-    title: rawTicket.titulo,
-    description: rawTicket.descripcion,
-    taskType: {
-      name: rawTicket.nombre_categoria || 'Sin categoría',
-      color: rawTicket.color_rgb || '#757575'
-    },
-    priority: {
-      name: rawTicket.prioridad || 'Normal',
-      color: this.getPriorityColor(rawTicket.nivel_prioridad)
-    },
-    image: rawTicket.imagen,
-    date: rawTicket.fecha_creacion,
-    assignee: `${rawTicket.asignado_nombre || ''} ${rawTicket.asignado_apellidos || ''}`.trim(),
-   attachments: rawTicket.attachments || [],// puedes rellenar esto después si necesitas
-    activityLog: [],
-    currentUser: { name: "Tú", avatar: "" },
+      const transformedTicket = {
+        id: rawTicket.id,
+        title: rawTicket.titulo,
+        description: rawTicket.descripcion,
+        taskType: {
+          name: rawTicket.nombre_categoria || 'Sin categoría',
+          color: rawTicket.color_rgb || '#757575'
+        },
+        priority: {
+          name: rawTicket.prioridad || 'Normal',
+          color: this.getPriorityColor(rawTicket.nivel_prioridad)
+        },
+        image: rawTicket.imagen,
+        date: rawTicket.fecha_creacion,
+        assignee: `${rawTicket.asignado_nombre || ''} ${rawTicket.asignado_apellidos || ''}`.trim(),
+        attachments: rawTicket.attachments || [],// puedes rellenar esto después si necesitas
+        activityLog: [],
+        currentUser: { name: "Tú", avatar: "" },
 
-    // Campos crudos necesarios para editar luego
-    titulo: rawTicket.titulo,
-    descripcion: rawTicket.descripcion,
-    imagen: rawTicket.imagen,
-    prioridad_id: rawTicket.prioridad_id,
-    categoria_id: rawTicket.categoria_id,
-    pauta_id: rawTicket.pauta_id,
-    usuario_id: rawTicket.usuario_id,
-    hora_inicio: rawTicket.hora_inicio,
-    hora_final: rawTicket.hora_final,
-    fecha_vencimiento: rawTicket.fecha_vencimiento
-  };
+        // Campos crudos necesarios para editar luego
+        titulo: rawTicket.titulo,
+        descripcion: rawTicket.descripcion,
+        imagen: rawTicket.imagen,
+        prioridad_id: rawTicket.prioridad_id,
+        categoria_id: rawTicket.categoria_id,
+        pauta_id: rawTicket.pauta_id,
+        usuario_id: rawTicket.usuario_id,
+        hora_inicio: rawTicket.hora_inicio,
+        hora_final: rawTicket.hora_final,
+        fecha_vencimiento: rawTicket.fecha_vencimiento
+      };
 
-  this.selectedTicket = transformedTicket;
-  this.showTicketFull = true;
+      this.selectedTicket = transformedTicket;
+      this.showTicketFull = true;
     },
     getPriorityColor(nivel) {
       switch (nivel) {
@@ -346,9 +326,9 @@ export default {
     updateTicketState(ticket) {
       let usuario = JSON.parse(localStorage.getItem("usuario")); // convierte el string a objeto
 
-let id = usuario.id; // accedes al campo "id"
+      let id = usuario.id; // accedes al campo "id"
 
-      axios.put(`/api/pautas/tickets/${ticket.id}`, { estado: ticket.estado, usuario:id })
+      axios.put(`/api/pautas/tickets/${ticket.id}`, { estado: ticket.estado, usuario: id })
         .then(() => console.log('Ticket state updated successfully'))
         .catch((error) => console.error('Error updating ticket state:', error));
     }
@@ -371,19 +351,42 @@ let id = usuario.id; // accedes al campo "id"
 /* @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap'); */
 
 .contenedor-horizontal {
-  display: flex; flex-direction: row; height: 100%; width: 100%;
-  gap: 0; background-color: #f8f8fa; overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  width: 100%;
+  gap: 0;
+  background-color: #f8f8fa;
+  overflow: hidden;
 }
 
-.list-panel, .detail-panel, .tickets-panel {
-  height: 100%; border-right: 1px solid #e0e0e0; background-color: #ffffff;
-  display: flex; flex-direction: column; position: relative; overflow: hidden;
+.list-panel,
+.detail-panel,
+.tickets-panel {
+  height: 100%;
+  border-right: 1px solid #e0e0e0;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
 }
-.tickets-panel { border-right: none; background-color: #F3F4F8; }
+
+.tickets-panel {
+  border-right: none;
+  background-color: #F3F4F8;
+}
 
 /* Areas de scroll internas */
-.list-scroll-area, .detail-scroll-area, .ticket-list /* .ticket-list ahora tiene scroll */ {
-  overflow-y: auto; flex-grow: 1; flex-basis: 0;
+.list-scroll-area,
+.detail-scroll-area,
+.ticket-list
+
+/* .ticket-list ahora tiene scroll */
+  {
+  overflow-y: auto;
+  flex-grow: 1;
+  flex-basis: 0;
 }
 
 /* Estilo scrollbar */
@@ -391,71 +394,161 @@ let id = usuario.id; // accedes al campo "id"
 .detail-scroll-area::-webkit-scrollbar,
 .description-block::-webkit-scrollbar,
 .ticket-columns-container::-webkit-scrollbar,
-.ticket-list::-webkit-scrollbar
-{ height: 6px; width: 5px; }
+.ticket-list::-webkit-scrollbar {
+  height: 6px;
+  width: 5px;
+}
 
 .list-scroll-area::-webkit-scrollbar-track,
 .detail-scroll-area::-webkit-scrollbar-track,
 .description-block::-webkit-scrollbar-track,
 .ticket-columns-container::-webkit-scrollbar-track,
-.ticket-list::-webkit-scrollbar-track
- { background: #f1f1f1; border-radius: 3px; }
+.ticket-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
 
 .list-scroll-area::-webkit-scrollbar-thumb,
 .detail-scroll-area::-webkit-scrollbar-thumb,
 .description-block::-webkit-scrollbar-thumb,
 .ticket-columns-container::-webkit-scrollbar-thumb,
-.ticket-list::-webkit-scrollbar-thumb
-{ background: #c1c1c1; border-radius: 3px; }
+.ticket-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
 
 .list-scroll-area::-webkit-scrollbar-thumb:hover,
 .detail-scroll-area::-webkit-scrollbar-thumb:hover,
 .description-block::-webkit-scrollbar-thumb:hover,
 .ticket-columns-container::-webkit-scrollbar-thumb:hover,
-.ticket-list::-webkit-scrollbar-thumb:hover
-{ background: #a8a8a8; }
+.ticket-list::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
 
 
 /* Estilos lista pautas */
-.pauta-list-item { border-bottom: 1px solid #eee; transition: background-color 0.2s ease-in-out; }
-.pauta-list-item:hover { background-color: #f5f5f5; }
-.list-item-title { font-size: 0.85rem; line-height: 1.3; white-space: normal; font-weight: 500; }
-.list-item-subtitle { font-size: 0.75rem; line-height: 1.2; white-space: normal; color: #757575; }
-.selected-pauta { background-color: #e3f2fd !important; border-left: 3px solid #1976D2; }
-.selected-pauta .list-item-title { font-weight: 700; color: #1976D2; }
-.list-scroll-area .v-list-item:last-child { border-bottom: none; }
+.pauta-list-item {
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.pauta-list-item:hover {
+  background-color: #f5f5f5;
+}
+
+.list-item-title {
+  font-size: 0.85rem;
+  line-height: 1.3;
+  white-space: normal;
+  font-weight: 500;
+}
+
+.list-item-subtitle {
+  font-size: 0.75rem;
+  line-height: 1.2;
+  white-space: normal;
+  color: #757575;
+}
+
+.selected-pauta {
+  background-color: #e3f2fd !important;
+  border-left: 3px solid #1976D2;
+}
+
+.selected-pauta .list-item-title {
+  font-weight: 700;
+  color: #1976D2;
+}
+
+.list-scroll-area .v-list-item:last-child {
+  border-bottom: none;
+}
 
 /* Estilos detalle pauta */
-.description-block { background-color: #f5f5f5; border: 1px solid #eeeeee; max-height: 10rem; overflow-y: auto; position: relative; }
-.description-text { font-family: 'Poppins', sans-serif; font-size: 12px; line-height: 1.6; color: #333; text-align: justify; hyphens: auto; }
-.footer-action { border-top: 1px solid #e0e0e0; background-color: #ffffff; position: relative; z-index: 2; }
+.description-block {
+  background-color: #f5f5f5;
+  border: 1px solid #eeeeee;
+  max-height: 10rem;
+  overflow-y: auto;
+  position: relative;
+}
+
+.description-text {
+  font-family: 'Poppins', sans-serif;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #333;
+  text-align: justify;
+  hyphens: auto;
+}
+
+.footer-action {
+  border-top: 1px solid #e0e0e0;
+  background-color: #ffffff;
+  position: relative;
+  z-index: 2;
+}
 
 .ticket-columns-container {
-  display: flex; gap: 16px; height: 100%;
+  display: flex;
+  gap: 16px;
+  height: 100%;
   align-content: center;
-  overflow-x: auto; overflow-y: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   flex-grow: 1;
 }
+
 .ticket-column {
-  flex: 0 0 220px; height: 100%; background-color: #f5f5f5;
-  border-radius: 8px; display: flex; flex-direction: column;
+  flex: 0 0 220px;
+  height: 100%;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
+
 .column-header {
-  display: flex; align-items: center; padding: 8px 12px;
-  border-bottom: 1px solid #e0e0e0; flex-shrink: 0;
-  background-color: #ffffff; border-radius: 8px
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
+  background-color: #ffffff;
+  border-radius: 8px
 }
-.column-title { font-weight: 500; color: #333; font-size: 0.95rem; }
+
+.column-title {
+  font-weight: 500;
+  color: #333;
+  font-size: 0.95rem;
+}
+
 .ticket-list {
   padding: 12px 8px;
 }
 
-.btnAddPauta { position: fixed; bottom: 30px; right: 30px; z-index: 1000; background-color: #B5179E; color: white; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+.btnAddPauta {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 1000;
+  background-color: #B5179E;
+  color: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
 
-.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
 
-@media (max-width: 1280px) { .card-grid { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); } }
-
+@media (max-width: 1280px) {
+  .card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
 </style>
-``` 

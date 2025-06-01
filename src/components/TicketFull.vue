@@ -9,22 +9,24 @@
       </div>
 
       <div class="card-actions">
-        <v-menu offset-y>
-          <template #activator="{ props }">
-            <v-btn icon variant="text" density="compact" color="grey-darken-1" v-bind="props">
-              <v-icon size="small">mdi-dots-horizontal</v-icon>
-            </v-btn>
-          </template>
+        <template v-if="esAdmin">
+          <v-menu offset-y>
+            <template #activator="{ props }">
+              <v-btn icon variant="text" density="compact" color="grey-darken-1" v-bind="props">
+                <v-icon size="small">mdi-dots-horizontal</v-icon>
+              </v-btn>
+            </template>
 
-          <v-list>
-            <v-list-item @click="editarTicket">
-              <v-list-item-title>Editar</v-list-item-title>
-            </v-list-item>
-            <v-list-item @click="eliminarTicket">
-              <v-list-item-title>Eliminar</v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-menu>
+            <v-list>
+              <v-list-item @click="editarTicket">
+                <v-list-item-title>Editar</v-list-item-title>
+              </v-list-item>
+              <v-list-item @click="eliminarTicket">
+                <v-list-item-title>Eliminar</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
+        </template>
 
         <v-btn icon variant="text" density="compact" color="grey-darken-1" @click="$emit('close-modal')">
           <v-icon size="small">mdi-close</v-icon>
@@ -136,6 +138,11 @@ export default {
       usuarioLogueado: null
     };
   },
+  computed: {
+    esAdmin() {
+      return this.usuarioLogueado && this.usuarioLogueado.rol === 1; // Check for rol === 1
+    }
+  },
   watch: {
     'ticket.id': {
       immediate: true,
@@ -148,6 +155,7 @@ export default {
     const stored = localStorage.getItem('usuario');
     if (stored) {
       this.usuarioLogueado = JSON.parse(stored);
+      // console.log('Usuario logueado:', this.usuarioLogueado); // For debugging
     }
     if (this.ticket?.id) {
       this.cargarComentarios(this.ticket.id);

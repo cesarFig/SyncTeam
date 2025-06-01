@@ -3,7 +3,7 @@
   
         
       <v-dialog v-model="showTicketFull" max-width="800">
-        <TicketFull v-if="selectedTicket" :ticket="selectedTicket" @close="closeTicketFull" />
+        <TicketFull v-if="selectedTicket" :ticket="selectedTicket" @close-modal="closeTicketFull" />
       </v-dialog>
       <v-card class="d-flex flex-column tickets-panel" style="flex-grow: 1;">
         <div class="pa-4 pb-2 d-flex justify-space-between align-center flex-grow-0">
@@ -459,4 +459,3 @@ const response = await axios.post('http://localhost:3000/api/usuarios/getTickets
     }
   }
   </style>
-  

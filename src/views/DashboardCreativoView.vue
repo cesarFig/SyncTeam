@@ -5,39 +5,21 @@
       <v-col cols="12" md="8" class="pa-2 h-100">
         <div class="d-flex flex-column h-100">
           <!-- FILA SUPERIOR -->
-          <div
-            class="d-flex flex-grow-1 flex-wrap mb-2"
-            style="min-height: 0;"
-          >
-            <div
-              class="pa-2 h-100"
-              :class="$vuetify.display.mdAndUp ? 'w-50' : 'w-100'"
-            >
+          <div class="d-flex flex-grow-1 flex-wrap mb-2" style="min-height: 0;">
+            <div class="pa-2 h-100" :class="$vuetify.display.mdAndUp ? 'w-50' : 'w-100'">
               <CalendarioCard />
             </div>
-            <div
-              class="pa-2 h-100"
-              :class="$vuetify.display.mdAndUp ? 'w-50' : 'w-100'"
-            >
+            <div class="pa-2 h-100" :class="$vuetify.display.mdAndUp ? 'w-50' : 'w-100'">
               <CardNotificaciones />
             </div>
           </div>
 
           <!-- FILA INFERIOR -->
-          <div
-            class="d-flex flex-grow-1 flex-wrap"
-            style="min-height: 0;"
-          >
-            <div
-              class="pa-2 h-100 d-flex flex-column"
-              :class="$vuetify.display.mdAndUp ? 'w-50' : 'w-100'"
-            >
+          <div class="d-flex flex-grow-1 flex-wrap" style="min-height: 0;">
+            <div class="pa-2 h-100 d-flex flex-column" :class="$vuetify.display.mdAndUp ? 'w-50' : 'w-100'">
               <CardTicketDashboard />
             </div>
-            <div
-              class="pa-2 h-100 d-flex flex-column"
-              :class="$vuetify.display.mdAndUp ? 'w-50' : 'w-100'"
-            >
+            <div class="pa-2 h-100 d-flex flex-column" :class="$vuetify.display.mdAndUp ? 'w-50' : 'w-100'">
               <ResumenTickets />
             </div>
           </div>
@@ -54,18 +36,11 @@
             Error al cargar el ticket: {{ error }}
           </v-alert>
         </div>
-        <DashboardTicket
-          v-else-if="ticketData"
-          :ticketId="ticketData.ticketId"
-          :tituloTicket="ticketData.tituloTicket"
-          :pautaNombre="ticketData.pautaNombre"
-          :progreso="ticketData.progreso"
-          :horasRestantes="ticketData.horasRestantes"
-          :imagenPrincipal="ticketData.imagenPrincipal"
-          :rolAsignado="ticketData.rolAsignado"
-          :descripcion="ticketData.descripcion"
-          @open-ticket-details="handleOpenTicketDetails"
-        />
+        <DashboardTicket v-else-if="ticketData" :ticketId="ticketData.ticketId" :tituloTicket="ticketData.tituloTicket"
+          :pautaNombre="ticketData.pautaNombre" :progreso="ticketData.progreso"
+          :horasRestantes="ticketData.horasRestantes" :imagenPrincipal="ticketData.imagenPrincipal"
+          :rolAsignado="ticketData.rolAsignado" :descripcion="ticketData.descripcion"
+          @open-ticket-details="handleOpenTicketDetails" />
         <div v-else class="ticket-activo-null">
           <p class="placeholder-text">No hay tickets activos próximos.</p>
         </div>
@@ -73,7 +48,7 @@
     </v-row>
 
     <v-dialog v-model="showTicketFullDialog" max-width="800">
-      <TicketFull v-if="selectedTicketFull" :ticket="selectedTicketFull" @close="closeTicketFullDialog" />
+      <TicketFull v-if="selectedTicketFull" :ticket="selectedTicketFull" @close-modal="closeTicketFull" />
     </v-dialog>
 
   </v-container>
@@ -96,6 +71,11 @@ const error = ref(null);
 const showTicketFullDialog = ref(false);
 const selectedTicketFull = ref(null);
 
+const closeTicketFull = () => {
+  showTicketFullDialog.value = false;
+  selectedTicketFull.value = null;
+}
+
 // Function to get priority color (copied from TicketsCreativoView.vue)
 const getPriorityColor = (nivel) => {
   switch (nivel) {
@@ -111,7 +91,7 @@ const handleOpenTicketDetails = async (ticketId) => {
   try {
     // Fetch the full ticket details using the ticketId
     // This endpoint might need to be created or adjusted in your backend
-    const response = await axios.get(`/api/ticket/${ticketId}`); 
+    const response = await axios.get(`/api/ticket/${ticketId}`);
     const ticket = response.data;
 
     // Transform the ticket data to the format expected by TicketFull.vue
@@ -126,7 +106,7 @@ const handleOpenTicketDetails = async (ticketId) => {
       },
       priority: {
         name: ticket.prioridad || 'Normal',
-        color: getPriorityColor(ticket.nivel_prioridad) 
+        color: getPriorityColor(ticket.nivel_prioridad)
       },
       image: ticket.imagen,
       date: ticket.fecha_creacion,
@@ -153,13 +133,8 @@ const handleOpenTicketDetails = async (ticketId) => {
   } catch (err) {
     console.error('Error fetching full ticket details:', err);
     // Optionally, show an error message to the user
-    error.value = 'No se pudieron cargar los detalles completos del ticket.'; 
+    error.value = 'No se pudieron cargar los detalles completos del ticket.';
   }
-};
-
-const closeTicketFullDialog = () => {
-  showTicketFullDialog.value = false;
-  selectedTicketFull.value = null;
 };
 
 onMounted(async () => {
@@ -242,7 +217,8 @@ onMounted(async () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100%; /* Take full height of its container */
+  height: 100%;
+  /* Take full height of its container */
   border: 2px dashed #ccc;
   border-radius: 8px;
   background-color: #f9f9f9;

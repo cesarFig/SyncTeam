@@ -43,6 +43,5 @@ export default {
 }
 
 .app-main-content {
-  background-color: #F3F4F8 !important; 
 }
 </style>
