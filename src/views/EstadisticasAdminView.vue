@@ -1,9 +1,13 @@
 <template>
   <v-container fluid class="pa-3 pt-1 dashboard-wrapper">
+    <h2 class="text-h5 font-weight-bold mb-2 mt-4">Estadísticas de tickets</h2>
+
     <v-row class="dashboard-grid" align="stretch" justify="center" no-gutters>
+
+
       <!-- Título y Tabs -->
       <v-col cols="12">
-        <h2 class="text-h5 font-weight-bold mb-2">Estadísticas de tickets</h2>
+
         <v-tabs v-model="tab" color="primary" class="mb-4">
           <v-tab value="semanal">Semanales</v-tab>
           <v-tab value="mensual">Mes</v-tab>
@@ -12,32 +16,22 @@
 
       <!-- Gráfica principal -->
       <v-col cols="12" lg="8" class="pa-2">
-        <v-sheet elevation="1" class="pa-2 fill-height">
+        <v-sheet elevation="1" class="pa-2 fill-height" rounded="xl">
           <LineChart :chart-data="lineChartData" :chart-options="lineChartOptions" />
         </v-sheet>
       </v-col>
 
       <!-- Progreso Semanal -->
       <v-col cols="12" lg="4" class="pa-2">
-        <v-card class="pa-4 fill-height d-flex flex-column justify-center align-center">
+        <v-card class="pa-4 fill-height d-flex flex-column justify-center align-center" rounded="xl">
           <p class="text-subtitle-1 font-weight-medium">Progreso semanal</p>
           <p class="text-caption grey--text">{{ rangoFechas }}</p>
           <div class="progress-container mt-4">
             <svg width="110" height="110" class="progress-ring">
               <circle cx="55" cy="55" r="49" stroke="#e0e0e0" stroke-width="12" fill="transparent" />
-              <circle
-                cx="55"
-                cy="55"
-                r="49"
-                stroke="#4CAF50"
-                stroke-width="12"
-                fill="transparent"
-                :stroke-dasharray="circumference"
-                :stroke-dashoffset="strokeDashoffset"
-                stroke-linecap="round"
-                transform="rotate(-90 55 55)"
-                class="progress-circle"
-              />
+              <circle cx="55" cy="55" r="49" stroke="#4CAF50" stroke-width="12" fill="transparent"
+                :stroke-dasharray="circumference" :stroke-dashoffset="strokeDashoffset" stroke-linecap="round"
+                transform="rotate(-90 55 55)" class="progress-circle" />
             </svg>
             <div class="progress-text">
               <strong class="text-green text-h6">{{ porcentajeSemana }}%</strong>
@@ -49,12 +43,12 @@
 
       <!-- Wrapper para Tarjetas resumen -->
       <v-col cols="12" class="py-0 px-1">
-        <v-row no-gutters>
+        <v-row no-gutters justify="center">
           <!-- Tarjetas resumen -->
           <v-col cols="12" sm="6" md="4" lg="2.4" v-for="item in resumen" :key="item.label" class="pa-1 d-flex">
             <div :class="['ticket-box', item.gradientClass, 'flex-grow-1']">
               <v-icon size="28" class="mr-2">{{ item.icon }}</v-icon>
-              <div class="ticket-data-container">  <!-- Added class -->
+              <div class="ticket-data-container"> <!-- Added class -->
                 <div class="count">{{ item.valor }}</div>
                 <div class="label">{{ item.label }}</div>
               </div>
@@ -65,13 +59,22 @@
 
       <!-- Wrapper para Detalles inferiores -->
       <v-col cols="12" class="py-0 px-1 mt-1"> <!-- Added mt-1 for spacing -->
-        <v-row no-gutters>
+        <v-row no-gutters justify="center">
           <!-- Detalles inferiores -->
           <v-col cols="12" md="4" class="pa-2" v-for="(info, index) in detalles" :key="index">
-            <v-card class="pa-4 fill-height d-flex flex-column justify-center">
-              <div class="text-subtitle-1">{{ info.titulo }}</div>
-              <div class="text-h6 font-weight-bold">{{ info.valor() }}</div>
-              <div :class="`text-caption ${info.color}`">{{ info.extra }}</div>
+            <v-card class="pa-4 fill-height d-flex flex-row align-center" rounded="xl">
+              <img
+                v-if="info.imageSrc()"
+                :src="info.imageSrc()"
+                alt=""
+                class="mr-4"
+                style="max-width:100px; max-height:100px;"
+              />
+              <div class="flex-grow-1 text-center">
+                <div class="text-subtitle-1 mb-1">{{ info.titulo }}</div>
+                <div class="text-h5 font-weight-bold mb-1">{{ info.valor() }}</div>
+                <div :class="['text-caption', info.color]">{{ info.extra }}</div>
+              </div>
             </v-card>
           </v-col>
         </v-row>
@@ -84,15 +87,17 @@
 import { ref, watch, onMounted, computed } from 'vue';
 import axios from 'axios';
 import LineChart from '../components/LineChart.vue';
+import vectorMejora from '@/assets/VectorMejora.png';
+import vectorReduccion from '@/assets/VectorReduccion.png';
 
 const tab = ref('semanal');
 
 const resumen = ref([
-  { label: 'Tickets totales', valor: 0, gradientClass: 'purple', icon: 'mdi-check-circle' },
-  { label: 'Pendientes revisión', valor: 0, gradientClass: 'magenta', icon: 'mdi-email-open' },
-  { label: 'En progreso', valor: 0, gradientClass: 'blue', icon: 'mdi-progress-clock' },
-  { label: 'Por hacer', valor: 0, gradientClass: 'cyan', icon: 'mdi-bell-ring' },
-  { label: 'Completados', valor: 0, gradientClass: 'green', icon: 'mdi-check-decagram' },
+  { label: 'ㅤTickets totales', valor: 0, gradientClass: 'purple', icon: 'mdi-check-circle' },
+  { label: 'ㅤPendientes revisión', valor: 0, gradientClass: 'magenta', icon: 'mdi-email-open' },
+  { label: 'ㅤEn progreso', valor: 0, gradientClass: 'blue', icon: 'mdi-progress-clock' },
+  { label: 'ㅤPor hacer', valor: 0, gradientClass: 'cyan', icon: 'mdi-bell-ring' },
+  { label: 'ㅤCompletados', valor: 0, gradientClass: 'green', icon: 'mdi-check-decagram' },
 ]);
 
 const resumenEstado = ref({
@@ -124,7 +129,13 @@ const detalles = ref([
     color: computed(() => {
       const diferencia = resumenEstado.value.completados - resumenEstado.value.completadosPrevios;
       return diferencia >= 0 ? 'text-success' : 'text-error';
-    })
+    }),
+    imageSrc: () => {
+      const diferencia = resumenEstado.value.completados - resumenEstado.value.completadosPrevios;
+      if (diferencia > 0) return vectorMejora;
+      if (diferencia < 0) return vectorReduccion;
+      return null;
+    }
   },
   {
     titulo: 'Pautas completadas',
@@ -137,7 +148,13 @@ const detalles = ref([
     color: computed(() => {
       const diferencia = resumenEstado.value.pautas - resumenEstado.value.pautasPrevias;
       return diferencia >= 0 ? 'text-success' : 'text-error';
-    })
+    }),
+    imageSrc: () => {
+      const diferencia = resumenEstado.value.pautas - resumenEstado.value.pautasPrevias;
+      if (diferencia > 0) return vectorMejora;
+      if (diferencia < 0) return vectorReduccion;
+      return null;
+    }
   }
 ]);
 
@@ -224,20 +241,25 @@ function getValorEstado(array, estadoNumero) {
   flex-direction: column;
   padding-top: 6px !important;
 }
+
 .dashboard-grid {
   flex-grow: 1;
   flex-wrap: wrap;
 }
+
 .progress-container {
   position: relative;
   display: inline-block;
 }
+
 .progress-ring {
   transform: rotate(0deg);
 }
+
 .progress-circle {
   transition: stroke-dashoffset 0.5s ease-in-out;
 }
+
 .progress-text {
   position: absolute;
   top: 50%;
@@ -245,6 +267,7 @@ function getValorEstado(array, estadoNumero) {
   transform: translate(-50%, -50%);
   text-align: center;
 }
+
 canvas {
   max-height: 220px;
   height: 220px !important;
@@ -258,24 +281,37 @@ canvas {
   border-radius: 16px;
   color: white;
   font-weight: bold;
-  min-height: 56px; /* Adjusted to ensure consistency */
-  height: 100%; /* Make it fill the v-col height */
+  min-height: 56px;
+  /* Adjusted to ensure consistency */
+  height: 100%;
+  /* Make it fill the v-col height */
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  box-sizing: border-box; /* Ensure padding is included in height */
+  box-sizing: border-box;
+  /* Ensure padding is included in height */
 }
 
 .ticket-data-container {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  flex-direction: row;
+  /* Ensure items are in a row */
+  align-items: baseline;
+  /* Align items by their text baseline */
+  justify-content: flex-start;
+  /* Align items to the start of the container */
+  flex-grow: 1;
+  /* Allow it to take available space next to the icon */
 }
 
 .count {
-  font-size: 20px; /* Adjusted to match ResumentTicketsAdmin, was text-h6 */
+  font-size: 25px;
+  /* Adjusted to match ResumentTicketsAdmin, was text-h6 */
+  margin-right: 5px;
+  /* Add some space between count and label */
 }
 
 .label {
-  font-size: 13px; /* Adjusted to match ResumentTicketsAdmin, was text-caption */
+  font-size: 20px;
+  /* Adjusted to match ResumentTicketsAdmin, was text-caption */
   line-height: 1.2;
 }
 
