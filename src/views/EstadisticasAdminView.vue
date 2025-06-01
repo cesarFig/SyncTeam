@@ -3,7 +3,7 @@
     <v-row class="dashboard-grid" align="stretch" justify="center" no-gutters>
       <!-- Título y Tabs -->
       <v-col cols="12">
-        <h2 class="text-h5 font-weight-bold mb-2">Estadisticas de tickets</h2>
+        <h2 class="text-h5 font-weight-bold mb-2">Estadísticas de tickets</h2>
         <v-tabs v-model="tab" color="primary" class="mb-4">
           <v-tab value="semanal">Semanales</v-tab>
           <v-tab value="mensual">Mes</v-tab>
@@ -17,23 +17,14 @@
         </v-sheet>
       </v-col>
 
-      <!-- Progreso Semanal (SIEMPRE visible) -->
+      <!-- Progreso Semanal -->
       <v-col cols="12" lg="4" class="pa-2">
         <v-card class="pa-4 fill-height d-flex flex-column justify-center align-center">
           <p class="text-subtitle-1 font-weight-medium">Progreso semanal</p>
           <p class="text-caption grey--text">{{ rangoFechas }}</p>
           <div class="progress-container mt-4">
             <svg width="110" height="110" class="progress-ring">
-              <!-- Círculo gris -->
-              <circle
-                cx="55"
-                cy="55"
-                r="49"
-                stroke="#e0e0e0"
-                stroke-width="12"
-                fill="transparent"
-              />
-              <!-- Círculo de progreso -->
+              <circle cx="55" cy="55" r="49" stroke="#e0e0e0" stroke-width="12" fill="transparent" />
               <circle
                 cx="55"
                 cy="55"
@@ -64,7 +55,7 @@
         </v-card>
       </v-col>
 
-      <!-- Detalles inferiores -->
+      <!-- Tarjetas inferiores -->
       <v-col cols="12" md="4" class="pa-2" v-for="(info, index) in detalles" :key="index">
         <v-card class="pa-4 fill-height d-flex flex-column justify-center">
           <div class="text-subtitle-1">{{ info.titulo }}</div>
@@ -81,34 +72,33 @@ import { ref, watch, onMounted, computed } from 'vue';
 import axios from 'axios';
 import LineChart from '../components/LineChart.vue';
 
-const tab = ref('semanal'); // Tab por defecto
+const tab = ref('semanal');
 
-// Datos generales de tickets
 const resumen = ref([
   { label: 'Tickets totales', valor: 0, color: 'deep-purple accent-4' },
-  { label: 'Pendientes revisión', valor: 0, color: 'pink lighten-1' },   // estado 3
-  { label: 'En progreso', valor: 0, color: 'indigo accent-1' },          // estado 2
-  { label: 'Por hacer', valor: 0, color: 'cyan lighten-2' },             // estado 1
-  { label: 'Completados', valor: 0, color: 'green accent-3' },           // estado 4
+  { label: 'Pendientes revisión', valor: 0, color: 'pink lighten-1' },
+  { label: 'En progreso', valor: 0, color: 'indigo accent-1' },
+  { label: 'Por hacer', valor: 0, color: 'cyan lighten-2' },
+  { label: 'Completados', valor: 0, color: 'green accent-3' },
 ]);
 
 const resumenEstado = ref({
   completados: 0,
   promedio: 0,
-  completadosPrevios: 0
+  completadosPrevios: 0,
+  pautas: 0,
+  pautasPrevias: 0
 });
 
 const porcentajeSemana = ref(0);
 const rangoFechas = ref('');
 
-// SVG circular progress
 const circumference = 2 * Math.PI * 49;
 const strokeDashoffset = computed(() => {
   const progress = porcentajeSemana.value / 100;
   return circumference - (progress * circumference);
 });
 
-// Información de tarjetas inferiores
 const detalles = ref([
   {
     titulo: 'Tickets completados',
@@ -124,20 +114,20 @@ const detalles = ref([
     })
   },
   {
-    titulo: 'Tiempo promedio de entrega',
-    valor: () => `${resumenEstado.value.promedio} hrs`,
-    extra: '02- hrs menos que la semana anterior',
-    color: 'text-error'
-  },
-  {
     titulo: 'Pautas completadas',
-    valor: () => '4',
-    extra: '1+ más que la semana anterior',
-    color: 'text-success'
+    valor: () => resumenEstado.value.pautas,
+    extra: computed(() => {
+      const diferencia = resumenEstado.value.pautas - resumenEstado.value.pautasPrevias;
+      const signo = diferencia >= 0 ? '+' : '-';
+      return `${signo}${Math.abs(diferencia)} respecto al mes anterior`;
+    }),
+    color: computed(() => {
+      const diferencia = resumenEstado.value.pautas - resumenEstado.value.pautasPrevias;
+      return diferencia >= 0 ? 'text-success' : 'text-error';
+    })
   }
 ]);
 
-// Gráfica lineal
 const lineChartData = ref({
   labels: [],
   datasets: [
@@ -160,19 +150,11 @@ const lineChartOptions = {
     tooltip: { mode: 'index', intersect: false }
   },
   scales: {
-    y: {
-      beginAtZero: true,
-      min: 0,
-      max: 50,
-      ticks: { stepSize: 5 }
-    },
-    x: {
-      ticks: { autoSkip: false }
-    }
+    y: { beginAtZero: true, min: 0, max: 50, ticks: { stepSize: 5 } },
+    x: { ticks: { autoSkip: false } }
   }
 };
 
-// Gráfica según tab (semanal/mensual)
 async function cargarGrafica() {
   try {
     const res = await axios.get(`http://localhost:3001/api/dashboard/resumen?modo=${tab.value}`);
@@ -184,7 +166,6 @@ async function cargarGrafica() {
   }
 }
 
-// Carga de resumen semanal
 async function cargarResumen() {
   try {
     const res = await axios.get(`http://localhost:3001/api/dashboard/resumen?modo=semanal`);
@@ -197,8 +178,9 @@ async function cargarResumen() {
     resumen.value[4].valor = getValorEstado(data.ticketsPorEstado, 4);
 
     resumenEstado.value.completados = getValorEstado(data.ticketsPorEstado, 4);
-    resumenEstado.value.promedio = data.tiempoPromedio;
     resumenEstado.value.completadosPrevios = data.completadosSemanaAnterior || 0;
+    resumenEstado.value.pautas = data.pautas || 0;
+    resumenEstado.value.pautasPrevias = data.pautasPrevias || 0;
 
     porcentajeSemana.value = data.porcentajeSemana || 0;
     rangoFechas.value = data.rangoFechas || '';
@@ -219,7 +201,6 @@ function getValorEstado(array, estadoNumero) {
 }
 </script>
 
-
 <style scoped>
 .dashboard-wrapper {
   background-color: #f5f7fb;
@@ -230,25 +211,20 @@ function getValorEstado(array, estadoNumero) {
   flex-direction: column;
   padding-top: 6px !important;
 }
-
 .dashboard-grid {
   flex-grow: 1;
   flex-wrap: wrap;
 }
-
 .progress-container {
   position: relative;
   display: inline-block;
 }
-
 .progress-ring {
   transform: rotate(0deg);
 }
-
 .progress-circle {
   transition: stroke-dashoffset 0.5s ease-in-out;
 }
-
 .progress-text {
   position: absolute;
   top: 50%;
@@ -256,12 +232,10 @@ function getValorEstado(array, estadoNumero) {
   transform: translate(-50%, -50%);
   text-align: center;
 }
-
 canvas {
   max-height: 220px;
   height: 220px !important;
 }
-
 @media (max-width: 960px) {
   .dashboard-wrapper {
     height: auto;

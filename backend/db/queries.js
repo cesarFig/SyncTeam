@@ -586,7 +586,7 @@ const obtenerResumenDashboard = async (modo = 'mensual') => {
   let ticketsPorPeriodo = [];
   let porcentajeSemana = 0;
   let rangoFechas = '';
-  let completadosSemanaAnterior = 0; // Nuevo
+  let completadosSemanaAnterior = 0;
 
   if (modo === 'mensual') {
     const resultado = await pool.query(`
@@ -637,7 +637,6 @@ const obtenerResumenDashboard = async (modo = 'mensual') => {
 
     rangoFechas = `Del ${inicioSemana.format('D [de] MMMM')} al ${finSemana.format('D [de] MMMM')}`;
 
-    // NUEVO: calcular tickets completados la semana anterior
     const inicioAnterior = moment(inicioSemana).subtract(1, 'week');
     const finAnterior = moment(finSemana).subtract(1, 'week');
     const completadosPrevios = await pool.query(`
@@ -646,26 +645,30 @@ const obtenerResumenDashboard = async (modo = 'mensual') => {
     `, [inicioAnterior.toDate(), finAnterior.toDate()]);
 
     completadosSemanaAnterior = parseInt(completadosPrevios.rows[0].count);
-  } 
-  else if (modo === 'diario') {
-    const hoy = moment().startOf('day');
-    const mañana = moment(hoy).add(1, 'day');
-
-    const resultado = await pool.query(`
-      SELECT TO_CHAR(fecha_vencimiento, 'HH24') AS etiqueta, COUNT(*) 
-      FROM ticket 
-      WHERE estado = '4'
-      AND fecha_vencimiento BETWEEN $1 AND $2
-      GROUP BY etiqueta
-      ORDER BY etiqueta
-    `, [hoy.toDate(), mañana.toDate()]);
-
-    const horas = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
-    ticketsPorPeriodo = horas.map(h => {
-      const encontrado = resultado.rows.find(r => r.etiqueta === h);
-      return { etiqueta: h, count: encontrado ? encontrado.count : 0 };
-    });
   }
+
+  // 👇 Nueva lógica para pautas completadas basadas en tickets
+  const pautasActuales = await pool.query(`
+    SELECT COUNT(*) FROM (
+  SELECT pauta_id
+  FROM ticket
+  WHERE pauta_id IS NOT NULL
+  GROUP BY pauta_id
+  HAVING COUNT(*) = COUNT(CASE WHEN estado = 4 THEN 1 END)
+    AND MIN(EXTRACT(MONTH FROM fecha_creacion)) = EXTRACT(MONTH FROM CURRENT_DATE)
+) AS pautas_completadas;
+  `);
+
+  const pautasAnteriores = await pool.query(`
+   SELECT COUNT(*) FROM (
+  SELECT pauta_id
+  FROM ticket
+  WHERE pauta_id IS NOT NULL
+  GROUP BY pauta_id
+  HAVING COUNT(*) = COUNT(CASE WHEN estado = 4 THEN 1 END)
+    AND MIN(EXTRACT(MONTH FROM fecha_creacion)) = EXTRACT(MONTH FROM CURRENT_DATE - INTERVAL '1 month')
+) AS pautas_previas;
+  `);
 
   return {
     totalTickets: parseInt(totalTickets.rows[0].count),
@@ -674,9 +677,12 @@ const obtenerResumenDashboard = async (modo = 'mensual') => {
     tiempoPromedio: promedioHoras.rows[0].horas ? parseInt(promedioHoras.rows[0].horas) : 0,
     porcentajeSemana,
     rangoFechas,
-    completadosSemanaAnterior // <- nuevo
+    completadosSemanaAnterior,
+    pautas: parseInt(pautasActuales.rows[0].count),
+    pautasPrevias: parseInt(pautasAnteriores.rows[0].count)
   };
 };
+
 
 
 
@@ -888,12 +894,16 @@ async function obtenerProximoTicketDashboardPorUsuario(userId) {
 
 async function obtenerEstadisticasTicketsCreativo(creativoId) {
   try {
-    let totalQuery = `
+    const totalQuery = `
       SELECT COUNT(t.id) AS count
       FROM ticket t
       JOIN asignacion a ON t.id = a.ticket_id
+      WHERE a.usuario_id = $1;
     `;
-    let estadosQuery = `
+    const totalResult = await pool.query(totalQuery, [creativoId]);
+    const ticketsTotales = parseInt(totalResult.rows[0]?.count || 0);
+
+    const estadosQuery = `
       SELECT
           SUM(CASE WHEN t.estado = 1 THEN 1 ELSE 0 END) AS pendientes,
           SUM(CASE WHEN t.estado = 2 THEN 1 ELSE 0 END) AS enProgreso,
@@ -901,31 +911,21 @@ async function obtenerEstadisticasTicketsCreativo(creativoId) {
           SUM(CASE WHEN t.estado = 4 THEN 1 ELSE 0 END) AS completados
       FROM ticket t
       JOIN asignacion a ON t.id = a.ticket_id
+      WHERE a.usuario_id = $1;
     `;
-
-    const params = [];
-    if (creativoId !== 'todos') {
-      totalQuery += ' WHERE a.usuario_id = $1';
-      estadosQuery += ' WHERE a.usuario_id = $1';
-      params.push(creativoId);
-    }
-
-    const totalResult = await pool.query(totalQuery, params);
-    const ticketsTotales = parseInt(totalResult.rows[0]?.count || 0);
-
-    const estadosResult = await pool.query(estadosQuery, params);
+    const estadosResult = await pool.query(estadosQuery, [creativoId]);
     
     const stats = estadosResult.rows[0] || {};
 
     return {
       ticketsTotales,
       pendientes: parseInt(stats.pendientes || 0),
-      enProgreso: parseInt(stats.enprogreso || 0),
+      enProgreso: parseInt(stats.enprogreso || 0), // PostgreSQL column names are lowercase unless quoted
       pendientesRevision: parseInt(stats.pendientesrevision || 0),
       completados: parseInt(stats.completados || 0),
     };
   } catch (error) {
-    console.error('Error al obtener estadísticas de tickets:', error); // Generic error message
+    console.error('Error al obtener estadísticas de tickets para el creativo:', error);
     throw error;
   }
 }
