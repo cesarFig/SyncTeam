@@ -240,6 +240,8 @@ export default {
       };
       await this.fetchTickets(pauta.id);
       this.colaboradores = await this.fetchColaboradores(pauta.id);
+      // update URL when changing pauta
+      this.$router.replace({ query: { id: pauta.id } });
     },
     handleSavePauta(newPautaData) {
       const newPauta = {
