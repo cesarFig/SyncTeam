@@ -453,13 +453,13 @@ export default {
 }
 
 .selected-pauta {
-  background-color: #e3f2fd !important;
-  border-left: 3px solid #1976D2;
+  background-color: #fde3f8 !important;
+  border-left: 3px solid #F72585;
 }
 
 .selected-pauta .list-item-title {
   font-weight: 700;
-  color: #1976D2;
+  color: #F72585;
 }
 
 .list-scroll-area .v-list-item:last-child {
