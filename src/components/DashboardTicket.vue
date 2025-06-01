@@ -20,7 +20,7 @@
 
       <v-card-text class="pt-2 card-content-area"> <!-- Added class card-content-area -->
         <h2 class="title text-h5 font-weight-bold mb-1">{{ tituloTicket }}</h2>
-        <p class="pauta text-subtitle-1 grey--text text--darken-1 mb-3">Pauta: {{ pautaNombre }}</p>
+        <p class="pauta text-subtitle-1 grey--text text--darken-1 mb-3">Pauta:% {{ pautaNombre }}</p>
 
         <div class="progreso-section mb-3">
           <div class="d-flex justify-space-between align-center mb-1">
@@ -30,9 +30,14 @@
           <v-progress-linear :model-value="progreso" color="primary" height="10" rounded></v-progress-linear>
         </div>
 
-        <div class="d-flex align-center text-subtitle-1 grey--text text--darken-2 mb-4">
-          <v-icon left>{{ iconoTiempo }}</v-icon>
-          <span>{{ horasRestantes }} Horas restantes</span>
+        <div class="d-flex align-center text-subtitle-1 mb-4">
+          <v-icon left :color="horasRestantes === 0 ? 'red' : undefined">{{ iconoTiempo }}</v-icon>
+          <span v-if="horasRestantes > 0" class="grey--text text--darken-2">
+            {{ horasRestantes }} Horas restantes
+          </span>
+          <span v-else class="red--text font-weight-bold">
+            Ticket retrasado
+          </span>
         </div>
 
         <v-divider class="my-3"></v-divider>
@@ -42,7 +47,7 @@
             <h3 class="text-h6 font-weight-medium">Detalles ticket</h3>
             <span v-if="rolAsignado" class="text-subtitle-2 grey--text text--darken-1">{{ rolAsignado }}</span>
           </div>
-          <p v-if="descripcion" class="text-body-1">{{ descripcion }}</p>
+          <p v-if="descripcion" class="text-body-1 text-justify descripcion-truncada">{{ descripcion }}</p>
           <p v-else class="text-body-1 grey--text">No hay descripción disponible.</p>
         </div>
       </v-card-text>
@@ -58,12 +63,10 @@
 </template>
 
 <script setup>
-import { defineProps, computed, ref } from 'vue'; // Imported computed and ref
-import defaultImageSource from '@/assets/default-image.png'; // Import the image
-// Assuming you might use useRouter for navigation
-// import { useRouter } from 'vue-router';
+import { defineProps, computed, ref, defineEmits } from 'vue'; // Imported defineEmits
+import defaultImageSource from '@/assets/default-image.png';
 
-// const router = useRouter();
+const emit = defineEmits(['open-ticket-details']); // Defined emits
 
 const props = defineProps({
   imagenPrincipal: {
@@ -127,9 +130,7 @@ const handleImageError = () => {
 };
 
 const irAlTicket = () => {
-  console.log(`Navegar al ticket ID: ${props.ticketId}`);
-  // Example navigation:
-  // router.push({ name: 'TicketDetalleView', params: { id: props.ticketId } });
+  emit('open-ticket-details', props.ticketId); // Emit event
 };
 </script>
 
@@ -156,6 +157,10 @@ const irAlTicket = () => {
   overflow-y: auto;
 }
 
+.detalles-ticket-section {
+  padding: 15px;
+}
+
 .title {
   line-height: 1.3;
 }
@@ -179,5 +184,18 @@ const irAlTicket = () => {
   padding: 15 px;
   background-color: #3A0CA3;
   color: #fff;
+}
+
+.text-justify {
+  text-align: justify;
+}
+
+.descripcion-truncada {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 7; 
+  line-clamp: 3; 
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>
