@@ -4,14 +4,14 @@
       Notificaciones
     </v-card-title>
 
-    <div v-if="notifications.length === 0" class="no-notifications d-flex flex-column align-center justify-center flex-grow-1">
+    <div v-if="notifications.filter(n => n.unread).length === 0" class="no-notificaciones d-flex flex-column align-center justify-center flex-grow-1">
       <img src="https://cdn3.iconfinder.com/data/icons/party-fill-recreation-story/512/Appointed_Date-512.png" alt="Sin notificaciones" style="width:110px;height:110px;opacity:0.5;" />
       <span class="mt-3 text-grey-darken-1 font-weight-medium">¡Estás al día!</span>
     </div>
 
     <v-list v-else density="comfortable">
       <v-list-item
-        v-for="noti in notifications"
+        v-for="noti in notifications.filter(n => n.unread)"
         :key="noti.id"
         class="py-2"
         :class="{
@@ -137,7 +137,7 @@ onMounted(() => {
 .roundedLarge {
   border-radius: 16px;
 }
-.no-notifications {
+.no-notificaciones {
   min-height: 180px;
   text-align: center;
 }

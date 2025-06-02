@@ -1,8 +1,16 @@
 <template>
   <v-container fluid class="pa-0 notificaciones-view-container">
     <v-card flat color="#F3F4F8"> <!-- Added color="#F3F4F8" to v-card -->
-      <v-card-title class="text-h5 pa-4 grey lighten-3">
-        Bandeja de entrada
+      <v-card-title class="text-h5 pa-4 grey lighten-3 d-flex align-center justify-space-between">
+        <span>Bandeja de entrada</span>
+        <div>
+          <v-btn size="small" color="primary" variant="text" class="mr-2" @click="marcarTodasLeidas" v-if="notifications.length > 0">
+            <v-icon left size="18">mdi-check-all</v-icon> Marcar todas como leídas
+          </v-btn>
+          <v-btn size="small" color="red" variant="text" @click="eliminarTodas" v-if="notifications.length > 0">
+            <v-icon left size="18">mdi-delete-sweep</v-icon> Eliminar todas
+          </v-btn>
+        </div>
       </v-card-title>
 
       <v-list v-if="notifications.length > 0" style="background-color: transparent;"> <!-- Ensure v-list is transparent -->
@@ -182,6 +190,31 @@ export default {
         this.notifications = this.notifications.filter(n => n.id !== notification.id);
       } catch (err) {
         console.error("Error al eliminar notificación:", err);
+      }
+    },
+
+    async marcarTodasLeidas() {
+      try {
+        const usuario = JSON.parse(localStorage.getItem('usuario'));
+        await fetch(`http://localhost:3000/api/notificaciones/read-all/${usuario.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        this.notifications.forEach(notification => notification.unread = false);
+      } catch (err) {
+        console.error("Error al marcar todas como leídas:", err);
+      }
+    },
+
+    async eliminarTodas() {
+      try {
+        const usuario = JSON.parse(localStorage.getItem('usuario'));
+        await fetch(`http://localhost:3000/api/notificaciones/delete-all/${usuario.id}`, {
+          method: 'DELETE'
+        });
+        this.notifications = [];
+      } catch (err) {
+        console.error("Error al eliminar todas las notificaciones:", err);
       }
     }
   }

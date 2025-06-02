@@ -757,6 +757,27 @@ const eliminarNotificacion = async (id) => {
   `, [id]);
   return result.rows[0];
 };
+// Marcar todas las notificaciones como leídas para un usuario
+async function marcarTodasNotificacionesLeidas(usuarioId) {
+  try {
+    await pool.query('UPDATE notificacion SET is_read = true WHERE usuario_id = $1', [usuarioId]);
+    return { success: true };
+  } catch (err) {
+    console.error('Error al marcar todas como leídas:', err);
+    throw err;
+  }
+}
+
+// Eliminar todas las notificaciones de un usuario
+async function eliminarTodasNotificaciones(usuarioId) {
+  try {
+    await pool.query('DELETE FROM notificacion WHERE usuario_id = $1', [usuarioId]);
+    return { success: true };
+  } catch (err) {
+    console.error('Error al eliminar todas las notificaciones:', err);
+    throw err;
+  }
+}
 const eliminarTicket = async (ticketId) => {
   try {
     // Primero borra comentarios
@@ -976,4 +997,6 @@ module.exports = {
   editarTicket, actualizarAsignacion, eliminarTicket, registrarArchivo, eliminarArchivoPorId, crearNotificacionesEstado, actualizarAvatarUsuario, eliminarAvatarUsuario,
   actualizarNotificaciones, obtenerProximoTicketDashboardPorUsuario, crearNotificacionAsignacion, getTicketById,obtenerResumenDashboard, obtenerEstadisticasTicketsCreativo,
   getAllTickets,
+  marcarTodasNotificacionesLeidas,
+  eliminarTodasNotificaciones,
 };
