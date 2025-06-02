@@ -17,21 +17,23 @@
         /> 
       </v-col>
       <v-col cols="6" sm="6" md="2">
-        <v-text-field
-          density="compact"
-          variant="outlined"
-          v-model="categoria"
+        <v-select
+           density="compact"
+           variant="outlined"
+          v-model="orderPriority"
+          :items="['Alta a Baja','Baja a Alta']"
           class="categoria-field"
-          label="Categoría"      
+          label="Prioridad"
         />
       </v-col>
       <v-col cols="6" sm="6" md="2">
-        <v-text-field
-          density="compact"
-          variant="outlined"
-          v-model="orden"
+        <v-select
+           density="compact"
+           variant="outlined"
+          v-model="orderDate"
+          :items="['Más lejana','Más cercana']"
           class="Ordenar-field"
-          label="Ordenar por:"
+          label="Días restantes"
         />
       </v-col>
     </v-row>
@@ -39,7 +41,7 @@
     <v-btn @click="toggleForm" variant="outlined" class="btnAddPauta">Nueva pauta</v-btn>
     <div class="card-grid">
       <TaskCard
-        v-for="(task, index) in tasks"
+        v-for="(task, index) in displayedTasks"
         :key="index"
         :image="task.image"
         :title="task.title"
@@ -66,8 +68,35 @@ export default {
   data() {
     return {
       showForm: false,
-      tasks: [] 
+      tasks: [],
+      nombre: '',
+      orderPriority: '',
+      orderDate: ''
     };
+  },
+  computed: {
+    displayedTasks() {
+      let list = this.tasks;
+      if (this.nombre) {
+        const search = this.nombre.toLowerCase();
+        list = list.filter(task => task.title.toLowerCase().includes(search));
+      }
+      if (this.orderPriority) {
+        if (this.orderPriority === 'Alta a Baja') {
+          list = [...list].sort((a,b) => b.prioridad - a.prioridad);
+        } else {
+          list = [...list].sort((a,b) => a.prioridad - b.prioridad);
+        }
+      }
+      if (this.orderDate) {
+        if (this.orderDate === 'Más lejana') {
+          list = [...list].sort((a, b) => b.remainingDays - a.remainingDays);
+        } else {
+          list = [...list].sort((a, b) => a.remainingDays - b.remainingDays);
+        }
+      }
+      return list;
+    }
   },
   methods: {
     toggleForm() {
@@ -83,6 +112,7 @@ export default {
           tickets: pauta.total_tickets,
           progress: Math.round((pauta.tickets_completados / pauta.total_tickets) * 100) || 0, // Redondear el porcentaje
           remainingDays: pauta.dias_restantes,
+          date: pauta.fecha_creacion,
           prioridad: pauta.prioridad_id,
           prioridad_color: pauta.prioridad_color
         }));
