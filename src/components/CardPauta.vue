@@ -24,8 +24,10 @@
       <div class="time-remaining">
         <div>
           <span class="clock-icon">⏳</span>
-          <span>{{ remainingDays }} Días restantes</span>
-        </div>        
+          <span :style="{ color: progress === 100 ? 'green' : remainingDays < 0 ? '#ba0000' : remainingDays === 0 ? '#008080' : '#666', fontWeight: '550' }">
+            {{ progress === 100 ? 'Pauta completada' : remainingDays < 0 ? 'Pauta retrasada' : remainingDays === 0 ? 'Hoy' : remainingDays + ' Día(s) restante(s)' }}
+          </span>
+        </div>
         <div class="user-list">
           <img
             v-for="(user, index) in users"
@@ -157,5 +159,21 @@ export default {
   width: 25%;
   height: 8px;
   border-radius: 15px;
+}
+
+.alert {
+  background-color: #fff3cd;
+  border-color: #ffeeba;
+  color: #856404;
+  padding: 8px;
+  border-radius: 4px;
+  margin-top: 4px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.alert-text {
+  margin-left: 4px;
 }
 </style>
