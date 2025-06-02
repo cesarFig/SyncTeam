@@ -88,9 +88,9 @@
 			</v-col>
 		</v-row>
 
-		<!-- <v-dialog v-model="showTicketFullDialog" max-width="800"> -->
-			<!-- <TicketFull v-if="selectedTicketFull" :ticket="selectedTicketFull" @close-modal="closeTicketFull" /> -->
-		<!-- </v-dialog> -->
+		<v-dialog v-model="showTicketFullDialog" max-width="800">
+			<TicketFull v-if="selectedTicketFull" :ticket="selectedTicketFull" @close-modal="closeTicketFull" @attachment-uploaded="handleAttachmentUploaded" />
+		</v-dialog>
 
 		<!-- Dialog for Creating Ticket -->
 		<v-dialog v-model="showCreateTicketDialog" max-width="800px">
@@ -115,6 +115,7 @@ import FormTicket from '@/components/forms/FormTicket.vue';
 import FormPauta from '@/components/forms/FormPauta.vue';
 import CardPauta from '@/components/CardPauta.vue';
 import defaultImage from '@/assets/default-image.png';
+import TicketFull from '@/components/TicketFull.vue'; // Import TicketFull
 import axios from 'axios';
 
 const router = useRouter(); // Initialized router
@@ -125,6 +126,70 @@ const pautasError = ref(null);
 
 const showCreateTicketDialog = ref(false);
 const showCreatePautaDialog = ref(false);
+
+// Refs for TicketFull dialog
+const showTicketFullDialog = ref(false);
+const selectedTicketFull = ref(null);
+
+const closeTicketFull = () => {
+	showTicketFullDialog.value = false;
+	selectedTicketFull.value = null;
+};
+
+// Function to get priority color (copied from other views)
+const getPriorityColor = (nivel) => {
+  switch (nivel) {
+    case 1: return '#42A5F5'; // Normal
+    case 2: return '#FFA726'; // Baja
+    case 3: return '#EF5350'; // Alta
+    case 4: return '#D32F2F'; // Crítica
+    default: return '#BDBDBD';
+  }
+};
+
+
+const handleAttachmentUploaded = async () => {
+  if (selectedTicketFull.value && selectedTicketFull.value.id) {
+    try {
+      const response = await axios.get(`/api/ticket/${selectedTicketFull.value.id}`);
+      const ticket = response.data;
+      const transformedTicket = {
+        // ... (repeat transformation logic from handleOpenTicketDetails or refactor into a common function)
+        id: ticket.id,
+        title: ticket.titulo,
+        description: ticket.descripcion,
+        taskType: {
+          name: ticket.nombre_categoria || 'Sin categoría',
+          color: ticket.color_rgb || '#757575'
+        },
+        priority: {
+          name: ticket.prioridad || 'Normal',
+          color: getPriorityColor(ticket.nivel_prioridad)
+        },
+        image: ticket.imagen,
+        date: ticket.fecha_creacion,
+        assignee: `${ticket.asignado_nombre || ''} ${ticket.asignado_apellidos || ''}`.trim(),
+        attachments: ticket.attachments || [],
+        activityLog: [],
+        currentUser: { name: "Admin", avatar: "" },
+        // Raw fields
+        titulo: ticket.titulo,
+        descripcion: ticket.descripcion,
+        imagen: ticket.imagen,
+        prioridad_id: ticket.prioridad_id,
+        categoria_id: ticket.categoria_id,
+        pauta_id: ticket.pauta_id,
+        usuario_id: ticket.usuario_id,
+        hora_inicio: ticket.hora_inicio,
+        hora_final: ticket.hora_final,
+        fecha_vencimiento: ticket.fecha_vencimiento
+      };
+      selectedTicketFull.value = transformedTicket;
+    } catch (err) {
+      console.error('Error refreshing full ticket details after upload for admin:', err);
+    }
+  }
+};
 
 const handleCloseTicketDialog = () => {
 	console.log('Attempting to close Ticket dialog');

@@ -24,7 +24,8 @@
     <!-- Detalle del ticket -->
     <v-dialog v-model="showTicketFull" max-width="800">
       <TicketFull v-if="selectedTicket" :ticket="selectedTicket" @close-modal="closeTicketFullDialog"
-        @editar-ticket="abrirFormularioEditar" @eliminar-ticket="confirmarEliminacion" />
+        @editar-ticket="abrirFormularioEditar" @eliminar-ticket="confirmarEliminacion" 
+        @attachment-uploaded="handleAttachmentUploaded" />
     </v-dialog>
 
     <!-- Lista de pautas -->
@@ -185,6 +186,61 @@ export default {
       this.selectedTicket = null;
       this.showTicketFull = false;
     },
+    
+    async handleAttachmentUploaded() {
+      if (this.selectedTicket && this.selectedTicket.id) {
+        try {
+          const response = await axios.get(`/api/ticket/${this.selectedTicket.id}`);
+          // Re-transform and update selectedTicket to include new attachment
+          let rawTicket = response.data;
+          let imgValue = rawTicket.imagen || '';
+          if (imgValue.startsWith('http://') || imgValue.startsWith('https://')) {
+            imgValue = `link:${imgValue}`;
+          }
+          const transformedTicket = {
+            id: rawTicket.id,
+            title: rawTicket.titulo,
+            description: rawTicket.descripcion,
+            taskType: {
+              name: rawTicket.nombre_categoria || 'Sin categoría',
+              color: rawTicket.color_rgb || '#757575'
+            },
+            priority: {
+              name: rawTicket.prioridad || 'Normal',
+              color: this.getPriorityColor(rawTicket.nivel_prioridad)
+            },
+            image: imgValue,
+            date: rawTicket.fecha_creacion,
+            assignee: `${rawTicket.asignado_nombre || ''} ${rawTicket.asignado_apellidos || ''}`.trim(),
+            attachments: rawTicket.attachments || [],
+            activityLog: [],
+            currentUser: { name: "Tú", avatar: "" },
+
+            // Campos crudos necesarios para editar luego
+            titulo: rawTicket.titulo,
+            descripcion: rawTicket.descripcion,
+            imagen: rawTicket.imagen,
+            prioridad_id: rawTicket.prioridad_id,
+            categoria_id: rawTicket.categoria_id,
+            pauta_id: rawTicket.pauta_id,
+            usuario_id: rawTicket.usuario_id,
+            hora_inicio: rawTicket.hora_inicio,
+            hora_final: rawTicket.hora_final,
+            fecha_vencimiento: rawTicket.fecha_vencimiento
+          };
+          this.selectedTicket = transformedTicket;
+          
+          // Optionally, refresh the main tickets list for the current pauta
+          if (this.selectedPauta && this.selectedPauta.id) {
+            await this.fetchTickets(this.selectedPauta.id);
+          }
+
+        } catch (error) {
+          console.error('Error refreshing ticket details after upload:', error);
+        }
+      }
+    },
+
     async confirmarEliminacion(ticketId) {
       try {
         if (!confirm('¿Seguro que deseas eliminar este ticket?')) return;
@@ -292,49 +348,92 @@ export default {
       // refresh page to reflect changes
       window.location.reload();
     },
-    openTicketFull(rawTicket) {
-      // Ensure TicketFull receives raw format: prefix full URLs with 'link:' so TicketFull strips correctly
-      let imgValue = rawTicket.imagen || '';
-      if (imgValue.startsWith('http://') || imgValue.startsWith('https://')) {
-        imgValue = `link:${imgValue}`;
+    async openTicketFull(rawTicket) { // Make this async
+      try {
+        // Fetch full ticket details including attachments
+        const response = await axios.get(`/api/ticket/${rawTicket.id}`);
+        const fullTicketData = response.data;
+
+        let imgValue = fullTicketData.imagen || '';
+        if (imgValue.startsWith('http://') || imgValue.startsWith('https://')) {
+          imgValue = `link:${imgValue}`;
+        }
+        
+        const transformedTicket = {
+          id: fullTicketData.id,
+          title: fullTicketData.titulo,
+          description: fullTicketData.descripcion,
+          taskType: {
+            name: fullTicketData.nombre_categoria || 'Sin categoría',
+            color: fullTicketData.color_rgb || '#757575'
+          },
+          priority: {
+            name: fullTicketData.prioridad || 'Normal',
+            color: this.getPriorityColor(fullTicketData.nivel_prioridad)
+          },
+          image: imgValue,
+          date: fullTicketData.fecha_creacion,
+          assignee: `${fullTicketData.asignado_nombre || ''} ${fullTicketData.asignado_apellidos || ''}`.trim(),
+          attachments: fullTicketData.attachments || [],
+          activityLog: [], // Consider fetching activity log if needed
+          currentUser: { name: "Tú", avatar: "" }, // Update as necessary
+
+          // Campos crudos necesarios para editar luego
+          titulo: fullTicketData.titulo,
+          descripcion: fullTicketData.descripcion,
+          imagen: fullTicketData.imagen,
+          prioridad_id: fullTicketData.prioridad_id,
+          categoria_id: fullTicketData.categoria_id,
+          pauta_id: fullTicketData.pauta_id,
+          usuario_id: fullTicketData.usuario_id,
+          hora_inicio: fullTicketData.hora_inicio,
+          hora_final: fullTicketData.hora_final,
+          fecha_vencimiento: fullTicketData.fecha_vencimiento
+        };
+
+        this.selectedTicket = transformedTicket;
+        this.showTicketFull = true;
+      } catch (error) {
+        console.error('Error fetching full ticket details:', error);
+        // Fallback to rawTicket if API call fails, but without attachments
+        let imgValue = rawTicket.imagen || '';
+        if (imgValue.startsWith('http://') || imgValue.startsWith('https://')) {
+          imgValue = `link:${imgValue}`;
+        }
+        const transformedTicket = {
+          id: rawTicket.id,
+          title: rawTicket.titulo,
+          description: rawTicket.descripcion,
+          taskType: {
+            name: rawTicket.nombre_categoria || 'Sin categoría',
+            color: rawTicket.color_rgb || '#757575'
+          },
+          priority: {
+            name: rawTicket.prioridad || 'Normal',
+            color: this.getPriorityColor(rawTicket.nivel_prioridad)
+          },
+          image: imgValue,
+          date: rawTicket.fecha_creacion,
+          assignee: `${rawTicket.asignado_nombre || ''} ${rawTicket.asignado_apellidos || ''}`.trim(),
+          attachments: [], // No attachments in fallback
+          activityLog: [],
+          currentUser: { name: "Tú", avatar: "" },
+
+          // Campos crudos
+          titulo: rawTicket.titulo,
+          descripcion: rawTicket.descripcion,
+          imagen: rawTicket.imagen,
+          prioridad_id: rawTicket.prioridad_id,
+          categoria_id: rawTicket.categoria_id,
+          pauta_id: rawTicket.pauta_id,
+          usuario_id: rawTicket.usuario_id,
+          hora_inicio: rawTicket.hora_inicio,
+          hora_final: rawTicket.hora_final,
+          fecha_vencimiento: rawTicket.fecha_vencimiento
+        };
+        this.selectedTicket = transformedTicket;
+        this.showTicketFull = true;
       }
-      // Debug: print image string sent to TicketFull
-      console.log('openTicketFull - raw image:', rawTicket.imagen);
-      console.log('openTicketFull - imgValue after adjustment:', imgValue);
-      const transformedTicket = {
-        id: rawTicket.id,
-        title: rawTicket.titulo,
-        description: rawTicket.descripcion,
-        taskType: {
-          name: rawTicket.nombre_categoria || 'Sin categoría',
-          color: rawTicket.color_rgb || '#757575'
-        },
-        priority: {
-          name: rawTicket.prioridad || 'Normal',
-          color: this.getPriorityColor(rawTicket.nivel_prioridad)
-        },
-        image: imgValue,
-        date: rawTicket.fecha_creacion,
-        assignee: `${rawTicket.asignado_nombre || ''} ${rawTicket.asignado_apellidos || ''}`.trim(),
-        attachments: rawTicket.attachments || [],// puedes rellenar esto después si necesitas
-        activityLog: [],
-        currentUser: { name: "Tú", avatar: "" },
-
-        // Campos crudos necesarios para editar luego
-        titulo: rawTicket.titulo,
-        descripcion: rawTicket.descripcion,
-        imagen: rawTicket.imagen,
-        prioridad_id: rawTicket.prioridad_id,
-        categoria_id: rawTicket.categoria_id,
-        pauta_id: rawTicket.pauta_id,
-        usuario_id: rawTicket.usuario_id,
-        hora_inicio: rawTicket.hora_inicio,
-        hora_final: rawTicket.hora_final,
-        fecha_vencimiento: rawTicket.fecha_vencimiento
-      };
-
-      this.selectedTicket = transformedTicket;
-      this.showTicketFull = true;
     },
     getPriorityColor(nivel) {
       switch (nivel) {

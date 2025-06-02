@@ -414,9 +414,10 @@ async function getTicketById(id) {
           id,
          nombre_archivo AS name,
          url_archivo AS url,
-         tipo_archivo AS type
+         tipo_archivo AS type,
+         is_attach
        FROM archivo
-       WHERE ticket_id = $1 AND is_attach = TRUE`,
+       WHERE ticket_id = $1`,
       [ticket.id]
     );
     ticket.attachments = archivosRes.rows;

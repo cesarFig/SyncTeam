@@ -37,35 +37,45 @@ router.post('/', upload.single('imagen'), async (req, res) => {
 
   console.log('Imagen guardada como:', req.file.filename);
 
-  // Extra: intenta registrar en la tabla "archivo" si se reciben los datos
   const {
     ticket_id,
-    pauta_id,
+    pauta_id, // pauta_id puede ser undefined si no se envía desde el frontend para este flujo
     tipo_archivo,
-    is_attach,
+    is_attach, // Se espera 'true' o 'false' como string desde FormData
     subido_por
   } = req.body;
 
+  // Convertir is_attach de string ('true'/'false') a booleano
+  const isAttachBoolean = is_attach === 'true';
+
   try {
+    // Asegurarse de que ticket_id y subido_por están presentes
     if (ticket_id && subido_por) {
-      await registrarArchivo({
-        ticket_id,
-        pauta_id,
+      const newFile = await registrarArchivo({
+        ticket_id: parseInt(ticket_id, 10), // Asegurar que ticket_id es un número
+        pauta_id: pauta_id ? parseInt(pauta_id, 10) : null, // Manejar pauta_id opcional
         nombre_archivo: req.file.originalname,
-        url_archivo: req.file.filename,
+        url_archivo: req.file.filename, // El nombre del archivo guardado en el servidor
         tipo_archivo: tipo_archivo || req.file.mimetype,
         tamano: req.file.size,
-        is_attach,
-        subido_por
+        is_attach: isAttachBoolean, // Usar el valor booleano
+        subido_por: parseInt(subido_por, 10) // Asegurar que subido_por es un número
       });
-      console.log('Archivo registrado en la base de datos');
+      console.log('Archivo registrado en la base de datos:', newFile);
+      // Devolver el objeto del archivo creado para que el frontend pueda actualizar la UI
+      res.status(200).json({ filename: req.file.filename, newFile });
+    } else {
+      // Si faltan datos cruciales, no registrar en DB pero el archivo ya se subió.
+      // Esto podría indicar un problema en el frontend.
+      console.warn('Faltan ticket_id o subido_por. El archivo se subió pero no se registró en la BD.');
+      res.status(200).json({ filename: req.file.filename, message: 'Archivo subido pero no registrado por falta de datos.' });
     }
   } catch (error) {
     console.error('Error al guardar archivo en DB:', error);
-    // No detenemos la respuesta aunque falle el insert
+    // Aunque falle el insert en DB, el archivo se subió al servidor.
+    // Se podría considerar eliminar el archivo del servidor si la transacción completa falla.
+    res.status(500).json({ error: 'Error al registrar el archivo en la base de datos', details: error.message, filename: req.file.filename });
   }
-
-  res.status(200).json({ filename: req.file.filename });
 });
 
 module.exports = router;

@@ -5,6 +5,7 @@
         <div class="task-type-bar d-flex align-center pl-2 pr-3" :style="{ backgroundColor: ticket.taskType?.color || '#757575' }">
           <span class="bar-text">{{ ticket.taskType?.name || "Tipo" }}</span>
         </div>
+         
         <div class="priority-bar" :style="{ backgroundColor: ticket.priority?.color || '#FFAB00' }"></div>
       </div>
 
@@ -42,36 +43,60 @@
         <div class="d-flex justify-space-between align-start mb-1">
           <div>
             <h1 class="text-h5 font-weight-bold mb-0">{{ ticket.title }}</h1>
+            <!-- Placeholder for Pauta Name -->
+            <p v-if="ticket.pautaName" class="text-caption text-medium-emphasis mt-1" style="text-align: left;">Pauta: {{ ticket.pautaName }}</p>
             <p v-if="ticket.assignee" class="text-body-2 text-medium-emphasis mt-1">Como: {{ ticket.assignee }}</p>
           </div>
           <span class="text-caption text-blue-grey-darken-1 mt-1">{{ formatDate(ticket.date) }}</span>
         </div>
 
-        <div class="section-container mt-5">
+        <div class="section-container mt-5 mb-0">
           <label class="section-label">Descripción</label>
           <div class="description-block pa-4 rounded-lg">
             <p class="section-content text-body-2 ma-0">{{ ticket.description }}</p>
           </div>
         </div>
+        <!-- Botón de Adjuntos, alineado a la derecha fuera del contenedor -->
+        <div class="d-flex justify-end mt-0 mb-4">
+          <input type="file" ref="fileInput" style="display: none" @change="onFileSelected" />
+          <v-btn variant="text" size="small" density="compact" prepend-icon="mdi-paperclip" color="grey-darken-2" @click="triggerFileInput">
+            Adjuntar
+          </v-btn>
+        </div>
 
-        <!-- Adjuntos del creativo -->
-        <div class="section-container mt-5">
-          <div class="d-flex justify-space-between align-center mb-3">
-            <label class="section-label">Adjuntos del creativo</label>
-            <v-btn variant="text" size="small" density="compact" prepend-icon="mdi-paperclip" color="grey-darken-2">
-              Adjuntos
-            </v-btn>
+        <!-- Archivos del ticket (is_attach = true) -->
+        <div v-if="ticketFiles.length > 0" class="section-container mt-5">
+          <div class="d-flex justify-space-between align-center mb-0">
+            <label class="section-label">Archivos del ticket</label>
           </div>
           <div class="attachments-list">
             <a
-              v-for="(file, index) in ticket.attachments"
+              v-for="(file, index) in ticketFiles"
               :key="index"
               class="attachment-chip d-flex align-center"
               :href="`http://localhost:3000/uploads/${file.url}`"
               target="_blank"
               rel="noopener"
-              download
-            >
+              download>
+              <v-icon left size="18" class="mr-1">{{ getAttachmentIcon(file.type) }}</v-icon>
+              {{ file.name }}
+            </a>
+          </div>
+        </div>
+        <!-- Adjuntos del creativo (is_attach = false) -->
+        <div v-if="creativeAttachments.length > 0" class="section-container mt-5">
+          <div class="d-flex justify-space-between align-center mb-0">
+            <label class="section-label">Adjuntos del creativo</label>
+          </div>
+          <div class="attachments-list">
+            <a
+              v-for="(file, index) in creativeAttachments"
+              :key="index"
+              class="attachment-chip d-flex align-center"
+              :href="`http://localhost:3000/uploads/${file.url}`"
+              target="_blank"
+              rel="noopener"
+              download>
               <v-icon left size="18" class="mr-1">{{ getAttachmentIcon(file.type) }}</v-icon>
               {{ file.name }}
             </a>
@@ -82,7 +107,7 @@
 
         <div class="section-container">
           <label class="section-label mb-4">Actividad</label>
-          <div class="activity-feed">
+          <div v-if="comentarios && comentarios.length > 0" class="activity-feed">
             <div v-for="(comment, index) in comentarios" :key="index" class="activity-item d-flex align-start mb-4">
               <v-avatar size="32" class="mr-3 flex-shrink-0" :style="{ backgroundColor: generateColorFromString(comment.nombre + comment.apellidos) }">
                 <span class="white--text text-subtitle-2 font-weight-medium">{{ getIniciales(comment.nombre, comment.apellidos) }}</span>
@@ -93,6 +118,9 @@
                 <p class="text-caption text-disabled timestamp">{{ formatTimestamp(comment.fecha_creacion) }}</p>
               </div>
             </div>
+          </div>
+          <div v-else class="text-center text-medium-emphasis pa-4">
+            No hay comentarios para mostrar
           </div>
         </div>
 
@@ -130,7 +158,7 @@ import axios from 'axios';
 export default {
   name: "TicketDetailModal",
   props: { ticket: { type: Object, default: null } },
-  emits: ["close-modal", "editar-ticket", "eliminar-ticket"],
+  emits: ["close-modal", "editar-ticket", "eliminar-ticket", "attachment-uploaded"],
   data() {
     return {
       nuevoComentario: '',
@@ -149,6 +177,14 @@ export default {
     },
     esAdmin() {
       return this.usuarioLogueado && this.usuarioLogueado.rol === 1; // Check for rol === 1
+    },
+    ticketFiles() {
+      // Archivos del ticket: is_attach es true o 1
+      return (this.ticket.attachments || []).filter(file => file.is_attach === true || file.is_attach === 1);
+    },
+    creativeAttachments() {
+      // Adjuntos del creativo: is_attach es false o 0 o null/undefined
+      return (this.ticket.attachments || []).filter(file => !file.is_attach);
     }
   },
   watch: {
@@ -170,6 +206,61 @@ export default {
     }
   },
   methods: {
+    triggerFileInput() {
+      this.$refs.fileInput.click();
+    },
+    async onFileSelected(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (!this.ticket || !this.ticket.id) {
+        console.error("ID del ticket no disponible.");
+        // Considerar mostrar un error al usuario
+        return;
+      }
+      if (!this.usuarioLogueado || !this.usuarioLogueado.id) {
+        console.error("Usuario no logueado o ID de usuario no disponible.");
+        // Considerar mostrar un error al usuario
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('imagen', file); // 'imagen' es el nombre de campo que espera el backend
+      formData.append('ticket_id', this.ticket.id);
+      formData.append('subido_por', this.usuarioLogueado.id);
+      
+      // Determinar is_attach basado en el rol del usuario
+      // rol === 1 es Admin, cualquier otro rol es creativo u otro.
+      const isAdmin = this.usuarioLogueado.rol === 1;
+      formData.append('is_attach', isAdmin ? 'true' : 'false');
+
+
+      try {
+        const response = await axios.post('/api/upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        
+        // console.log('Archivo subido:', response.data);
+        
+        // Emit an event to the parent to refresh ticket data
+        // instead of mutating the prop directly.
+        if (response.data && response.data.newFile) {
+          this.$emit('attachment-uploaded'); 
+        } else {
+           console.warn("El backend no devolvió el objeto newFile completo o la subida falló parcialmente.");
+           // Incluso si newFile no está, pero la subida fue 200, es bueno refrescar.
+           this.$emit('attachment-uploaded');
+        }
+
+      } catch (error) {
+        console.error('Error al subir archivo:', error);
+        // Considerar mostrar un error al usuario
+      } finally {
+        this.$refs.fileInput.value = '';
+      }
+    },
     editarTicket() {
       this.$emit('editar-ticket', this.ticket);
     },
@@ -299,7 +390,7 @@ export default {
   .main-content-area { padding: 20px 24px 24px 24px !important; }
 
   .text-h5 { color: #1E293B; line-height: 1.3; }
-  .text-body-2.text-medium-emphasis { color: #64748B; }
+  .text-body-2.text-medium-emphasis { color: #9E9E9E; }
   .text-caption.text-blue-grey-darken-1 { color: #546E7A; font-size: 11px !important; }
 
   .section-container { margin-bottom: 1.75rem; }

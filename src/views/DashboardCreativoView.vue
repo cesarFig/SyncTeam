@@ -50,7 +50,7 @@
     </v-row>
 
     <v-dialog v-model="showTicketFullDialog" max-width="800">
-      <TicketFull v-if="selectedTicketFull" :ticket="selectedTicketFull" @close-modal="closeTicketFull" />
+      <TicketFull v-if="selectedTicketFull" :ticket="selectedTicketFull" @close-modal="closeTicketFull" @attachment-uploaded="handleAttachmentUploaded" />
     </v-dialog>
 
   </v-container>
@@ -76,7 +76,53 @@ const selectedTicketFull = ref(null);
 const closeTicketFull = () => {
   showTicketFullDialog.value = false;
   selectedTicketFull.value = null;
-}
+};
+
+const handleAttachmentUploaded = async () => {
+  if (selectedTicketFull.value && selectedTicketFull.value.id) {
+    try {
+      const response = await axios.get(`/api/ticket/${selectedTicketFull.value.id}`);
+      const ticket = response.data;
+      const transformedTicket = {
+        id: ticket.id,
+        title: ticket.titulo,
+        description: ticket.descripcion,
+        taskType: {
+          name: ticket.nombre_categoria || 'Sin categoría',
+          color: ticket.color_rgb || '#757575'
+        },
+        priority: {
+          name: ticket.prioridad || 'Normal',
+          color: getPriorityColor(ticket.nivel_prioridad)
+        },
+        image: ticket.imagen,
+        date: ticket.fecha_creacion,
+        assignee: `${ticket.asignado_nombre || ''} ${ticket.asignado_apellidos || ''}`.trim(),
+        attachments: ticket.attachments || [], // Ensure attachments are updated
+        activityLog: [], // Populate if available
+        currentUser: { name: "Tú", avatar: "" }, // Adjust as needed
+
+        // Raw fields for editing
+        titulo: ticket.titulo,
+        descripcion: ticket.descripcion,
+        imagen: ticket.imagen,
+        prioridad_id: ticket.prioridad_id,
+        categoria_id: ticket.categoria_id,
+        pauta_id: ticket.pauta_id,
+        usuario_id: ticket.usuario_id,
+        hora_inicio: ticket.hora_inicio,
+        hora_final: ticket.hora_final,
+        fecha_vencimiento: ticket.fecha_vencimiento
+      };
+      selectedTicketFull.value = transformedTicket;
+      // Optionally, you might want to refresh other parts of the dashboard
+      // that depend on ticket data, if any.
+    } catch (err) {
+      console.error('Error refreshing full ticket details after upload:', err);
+      error.value = 'No se pudieron actualizar los detalles del ticket después de la subida.';
+    }
+  }
+};
 
 // Function to get priority color (copied from TicketsCreativoView.vue)
 const getPriorityColor = (nivel) => {
@@ -92,12 +138,10 @@ const getPriorityColor = (nivel) => {
 const handleOpenTicketDetails = async (ticketId) => {
   try {
     // Fetch the full ticket details using the ticketId
-    // This endpoint might need to be created or adjusted in your backend
     const response = await axios.get(`/api/ticket/${ticketId}`);
     const ticket = response.data;
 
     // Transform the ticket data to the format expected by TicketFull.vue
-    // This transformation logic is similar to the one in TicketsCreativoView.vue
     const transformedTicket = {
       id: ticket.id,
       title: ticket.titulo,
@@ -113,7 +157,7 @@ const handleOpenTicketDetails = async (ticketId) => {
       image: ticket.imagen,
       date: ticket.fecha_creacion,
       assignee: `${ticket.asignado_nombre || ''} ${ticket.asignado_apellidos || ''}`.trim(),
-      attachments: [], // Populate if available
+      attachments: ticket.attachments || [], // Ensure attachments are populated initially
       activityLog: [], // Populate if available
       currentUser: { name: "Tú", avatar: "" }, // Adjust as needed
 
