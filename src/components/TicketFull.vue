@@ -92,7 +92,7 @@
             <a
               v-for="(file, index) in creativeAttachments"
               :key="index"
-              class="attachment-chip d-flex align-center"
+              class="attachment-chip d-flex align-center creative"
               :href="`http://localhost:3000/uploads/${file.url}`"
               target="_blank"
               rel="noopener"
@@ -423,11 +423,18 @@ export default {
       border-radius: 12px !important; /* Más redondeado */
       height: 26px !important; /* Ligeramente más alto */
   }
+  .attachment-chip.creative {
+      background-color: #E3F2FD !important; /* Light blue background */
+      color: #1565C0 !important; /* Dark blue text */
+  }
   .attachment-chip :deep(.v-icon) {
       color: #8E24AA !important; /* purple-darken-1 */
       font-size: 15px !important;
       margin-right: 5px !important;
       margin-left: -2px !important;
+  }
+  .attachment-chip.creative :deep(.v-icon) {
+      color: #1E88E5 !important; /* Medium blue icon */
   }
   .v-btn--text { color: #475569; font-size: 12px; font-weight: 500; letter-spacing: normal; }
   .v-btn--text .v-icon { color: #64748B; font-size: 18px; }

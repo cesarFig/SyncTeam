@@ -233,14 +233,14 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   grid-auto-rows: 1fr;
-  gap: 6px;
+  gap: 2px;
   flex-grow: 1;
   overflow-y: auto;
 }
 
 .day-cell {
-  width: 100%;
-  aspect-ratio: 1;
+  width: 90%; /* Reduced size for day cells */
+  aspect-ratio: 1; /* Maintains square shape */
   border-radius: 8px;
   background-color: #fff;
   font-weight: 500;
