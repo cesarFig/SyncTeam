@@ -173,7 +173,7 @@ async function registrarArchivo({
 const getColaboradores = async (pautaId) => {
   try {
     const result = await pool.query(
-      `SELECT DISTINCT u.id, u.nombre, u.apellidos
+      `SELECT DISTINCT u.id, u.nombre, u.apellidos, u.avatar
         FROM usuario u
         JOIN asignacion a ON u.id = a.usuario_id
         JOIN ticket t ON a.ticket_id = t.id

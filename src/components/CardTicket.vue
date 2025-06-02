@@ -65,6 +65,10 @@ export default {
       return img ? `http://localhost:3000/uploads/${img}` : '';
     },
     remainingDays() {
+      if (this.estado === 4) {
+        return "<span style='color: green;'>Completado</span>";
+      }
+
       const today = new Date();
       const dueDate = new Date(this.fecha_vencimiento);
       const timeDiff = dueDate - today;

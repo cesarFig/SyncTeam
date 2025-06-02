@@ -13,18 +13,14 @@
 
     <!-- Formulario para editar pauta -->
     <v-dialog v-model="showEditarPauta" max-width="500px">
-      <FormEditarPauta
-        v-if="pautaParaEditar"
-        :pauta-edit="pautaParaEditar"
-        @close="cerrarEditarPauta"
-        @save="handleSaveEditPauta"
-      />
+      <FormEditarPauta v-if="pautaParaEditar" :pauta-edit="pautaParaEditar" @close="cerrarEditarPauta"
+        @save="handleSaveEditPauta" />
     </v-dialog>
 
     <!-- Detalle del ticket -->
     <v-dialog v-model="showTicketFull" max-width="800">
       <TicketFull v-if="selectedTicket" :ticket="selectedTicket" @close-modal="closeTicketFullDialog"
-        @editar-ticket="abrirFormularioEditar" @eliminar-ticket="confirmarEliminacion" 
+        @editar-ticket="abrirFormularioEditar" @eliminar-ticket="confirmarEliminacion"
         @attachment-uploaded="handleAttachmentUploaded" />
     </v-dialog>
 
@@ -63,28 +59,39 @@
           <v-list density="compact" class="pa-0">
             <v-list-item v-for="(colab, i) in colaboradores" :key="i" class="px-1">
               <template v-slot:prepend>
-                <v-avatar color="grey-lighten-1" size="32" class="mr-3">
-                  <v-icon color="white">mdi-account</v-icon>
+                <v-avatar size="32" color="grey-lighten-1">
+                  <v-img v-if="colab.avatar" :src="getAvatarUrl(colab.avatar)" cover />
+                  <span v-else class="white--text text-subtitle-2">
+                    {{ getInitials(colab.nombre + ' ' + colab.apellidos) }}
+                  </span>
                 </v-avatar>
               </template>
-              <v-list-item-title class="text-body-2">{{ colab }}</v-list-item-title>
+              <v-list-item-title class="text-body-2">{{ colab.nombre + ' ' + colab.apellidos }}</v-list-item-title>
             </v-list-item>
           </v-list>
           <p class="text-caption text-grey-darken-1 mt-2 ml-1">
             <v-icon start size="small">mdi-calendar-blank-outline</v-icon>
-            8 Abril 2025
+            {{ new Date(selectedPauta.fecha_vencimiento).toLocaleDateString('es-ES', {
+              day: '2-digit', month: 'long',
+              year:
+                'numeric'
+            }) }} - {{ new Date(selectedPauta.fecha_vencimiento).toLocaleTimeString('es-ES', {
+              hour:
+                '2-digit', minute:
+                '2-digit'
+            }) }}
           </p>
         </div>
         <div class="mb-5">
           <h4 class="text-subtitle-1 font-weight-medium mb-2">Progreso</h4>
-          <v-progress-linear :model-value="selectedPauta.progreso" color="blue-darken-2" height="8" rounded
+          <v-progress-linear :model-value="progreso" color="blue-darken-2" height="8" rounded
             class="mb-1"></v-progress-linear>
-          <p class="text-caption text-grey-darken-1 text-right">{{ selectedPauta.progreso }}%</p>
+          <p class="text-caption text-grey-darken-1 text-right">{{ progreso }}%</p>
         </div>
         <div class="mb-2 pb-2">
           <p class="text-body-2 d-flex align-center">
             <v-icon start color="grey-darken-1">mdi-clock-time-three-outline</v-icon>
-            <span class="text-grey-darken-1">{{ selectedPauta.diasRestantes }} Día(s) restante(s)</span>
+            <span class="text-grey-darken-1">{{ pautaStatus }}</span>
           </p>
         </div>
       </div>
@@ -180,13 +187,43 @@ export default {
   },
   computed: {
     filteredPautas() { return this.pautas; },
+    progreso() {
+      if (!this.selectedPauta || !this.tickets.length) {
+        return 0;
+      }
+
+      const totalTickets = this.tickets.length;
+      const completedTickets = this.tickets.filter(ticket => ticket.estado === 4).length;
+
+      return Math.round((completedTickets / totalTickets) * 100);
+    },
+    pautaStatus() {
+      if (!this.selectedPauta) return '';
+
+      const today = new Date().toISOString().split('T')[0];
+      const pautaDate = this.selectedPauta.fecha_vencimiento.split(' ')[0]; // Extract date part from 'YYYY-MM-DD HH:mm:ss'
+
+      if (this.tickets.length === 0 && this.selectedPauta.diasRestantes !== 0) {
+        return `${this.selectedPauta.diasRestantes} Día(s) restante(s)`;
+      } else if (this.tickets.length === 0 && this.selectedPauta.diasRestantes === 0) {
+        return `Hoy`;
+      } else if (this.tickets.every(ticket => ticket.estado === 4)) {
+        return 'Pauta completada';
+      } else if (pautaDate === today || this.selectedPauta.diasRestantes === 0) {
+        return 'Hoy';
+      } else if (pautaDate < today) {
+        return 'Pauta retrasada';
+      } else {
+        return `${this.selectedPauta.diasRestantes} Día(s) restante(s)`;
+      }
+    }
   },
   methods: {
     closeTicketFullDialog() {
       this.selectedTicket = null;
       this.showTicketFull = false;
     },
-    
+
     async handleAttachmentUploaded() {
       if (this.selectedTicket && this.selectedTicket.id) {
         try {
@@ -229,7 +266,7 @@ export default {
             fecha_vencimiento: rawTicket.fecha_vencimiento
           };
           this.selectedTicket = transformedTicket;
-          
+
           // Optionally, refresh the main tickets list for the current pauta
           if (this.selectedPauta && this.selectedPauta.id) {
             await this.fetchTickets(this.selectedPauta.id);
@@ -285,7 +322,12 @@ export default {
     async fetchColaboradores(pautaId) {
       try {
         const response = await axios.get(`/api/pautas/${pautaId}/colaboradores`);
-        return response.data.map(c => `${c.nombre} ${c.apellidos}`);
+        return response.data.map(c => ({
+          id: c.id,
+          nombre: c.nombre,
+          apellidos: c.apellidos,
+          avatar: c.avatar
+        }));
       } catch (error) {
         console.error('Error fetching colaboradores:', error);
         return [];
@@ -310,15 +352,22 @@ export default {
       this.showEditarPauta = false;
     },
     async selectPauta(pauta) {
+      if (!pauta) {
+        console.warn('Attempted to select a null or undefined pauta');
+        return;
+      }
       this.selectedPauta = {
         ...pauta,
         diasRestantes: pauta.dias_restantes,
         cliente: pauta.cliente
       };
-      await this.fetchTickets(pauta.id);
-      this.colaboradores = await this.fetchColaboradores(pauta.id);
-      // update URL when changing pauta
-      this.$router.replace({ query: { id: pauta.id } });
+      try {
+        await this.fetchTickets(pauta.id);
+        this.colaboradores = await this.fetchColaboradores(pauta.id);
+        this.$router.replace({ query: { id: pauta.id } });
+      } catch (error) {
+        console.error('Error selecting pauta:', error);
+      }
     },
     handleSavePauta(newPautaData) {
       const newPauta = {
@@ -358,7 +407,7 @@ export default {
         if (imgValue.startsWith('http://') || imgValue.startsWith('https://')) {
           imgValue = `link:${imgValue}`;
         }
-        
+
         const transformedTicket = {
           id: fullTicketData.id,
           title: fullTicketData.titulo,
@@ -472,6 +521,14 @@ export default {
       axios.put(`/api/pautas/tickets/${ticket.id}`, { estado: ticket.estado, usuario: id })
         .then(() => console.log('Ticket state updated successfully'))
         .catch((error) => console.error('Error updating ticket state:', error));
+    },
+    getInitials(nombreCompleto) {
+      if (!nombreCompleto) return '';
+      const partes = nombreCompleto.trim().split(' ');
+      return partes.map(p => p[0]?.toUpperCase()).join('').slice(0, 2);
+    },
+    getAvatarUrl(nombreArchivo) {
+      return `http://localhost:3000/uploads/${nombreArchivo}`;
     }
   },
   mounted() {
@@ -479,8 +536,14 @@ export default {
       const pautaId = this.route.query.id;
       if (pautaId) {
         const pauta = this.pautas.find(p => p.id === parseInt(pautaId));
-        if (pauta) this.selectPauta(pauta);
+        if (pauta) {
+          this.selectPauta(pauta);
+        } else {
+          console.warn('Pauta not found for ID:', pautaId);
+        }
       }
+    }).catch(error => {
+      console.error('Error during mounted lifecycle:', error);
     });
   }
 };
