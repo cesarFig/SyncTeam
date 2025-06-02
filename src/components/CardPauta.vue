@@ -1,8 +1,9 @@
 <template>
-  <div class="card">
-    <div class="prioridad" :style="{ backgroundColor: prioridad_color }"></div>
+  <div class="card card-prioridad-overlay">
     <div class="image-container">
+      <div class="prioridad-overlay" :style="{ backgroundColor: prioridad_color }"></div> 
       <img :src="image" alt="Task Image" class="task-image" />
+      
     </div>
       
     <div class="content">
@@ -68,12 +69,16 @@ export default {
 
 .image-container {
   width: 100%;
+  position: relative;
+  
 }
 
 .task-image {
   width: 100%; /* Changed from 300px to 100% */
   height: 120px; /* You might want to adjust this or use aspect-ratio */
   object-fit: cover;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
 }
 
 .content {
@@ -156,11 +161,16 @@ export default {
   margin-right: -8px;
 }
 
-.prioridad {
-  margin: 8px;
-  width: 25%;
-  height: 8px;
-  border-radius: 15px;
+.prioridad-overlay {
+  position: relative;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 26px;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  z-index: 2;
+  opacity: 1;
 }
 
 .alert {
