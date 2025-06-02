@@ -67,6 +67,27 @@ export default {
       this.showConfirmPassword = !this.showConfirmPassword;
     },
     async registrarUsuario() {
+      // Validaciones de campos obligatorios sin solo espacios en blanco
+      if (!this.nombre || this.nombre.trim() === "") {
+        alert("El nombre es obligatorio y no puede ser solo espacios en blanco.");
+        return;
+      }
+      if (!this.apellido || this.apellido.trim() === "") {
+        alert("El apellido es obligatorio y no puede ser solo espacios en blanco.");
+        return;
+      }
+      if (!this.correo || this.correo.trim() === "") {
+        alert("El correo es obligatorio y no puede ser solo espacios en blanco.");
+        return;
+      }
+      if (!this.password || this.password.trim() === "") {
+        alert("La contraseña es obligatoria y no puede ser solo espacios en blanco.");
+        return;
+      }
+      if (!this.confirmPassword || this.confirmPassword.trim() === "") {
+        alert("La confirmación de contraseña es obligatoria y no puede ser solo espacios en blanco.");
+        return;
+      }
       if (this.password !== this.confirmPassword) {
         alert("Las contraseñas no coinciden");
         return;
@@ -83,13 +104,14 @@ export default {
         console.log(usuario);
         await axios.post('http://localhost:3000/api/usuarios', usuario);
         alert('Usuario registrado correctamente');
+        this.$router.push('/equipo'); // Redirigir a la vista de equipo
       } catch (error) {
         console.error('Error al registrar usuario:', error);
         alert('Error al registrar usuario. Intenta nuevamente.');
       }
     },
     cerrar() {
-      alert("Cerrando formulario...");
+      this.$router.push('/equipo');
     },
     async obtenerRoles() {
       try {
