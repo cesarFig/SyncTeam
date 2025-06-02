@@ -450,6 +450,24 @@ export default {
     // --- End of Attachment Handling ---
 
     async editTicket() {
+      // Validaciones de campos obligatorios y sin solo espacios en blanco
+      if (!this.ticket.name || !this.ticket.name.trim()) {
+        alert('El nombre del ticket no puede estar vacío.');
+        return;
+      }
+      if (!this.ticket.descripcion || !this.ticket.descripcion.trim()) {
+        alert('La descripción no puede estar vacía.');
+        return;
+      }
+      if (!this.ticket.fechaEntrega) {
+        alert('La fecha de entrega es obligatoria.');
+        return;
+      }
+      if (!this.ticket.horaInicial || !this.ticket.horaFinal) {
+        alert('La hora inicial y final son obligatorias.');
+        return;
+      }
+
       try {
         let imagenFinalParaGuardar = this.ticketEdit.imagen; // Default to original image
 

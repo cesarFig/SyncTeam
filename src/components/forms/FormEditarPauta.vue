@@ -206,6 +206,27 @@ export default {
   },
   methods: {
     async updatePauta() {
+      // Validaciones de campos obligatorios y sin solo espacios en blanco
+      if (!this.form.name || !this.form.name.trim()) {
+        alert('El título no puede estar vacío.');
+        return;
+      }
+      if (!this.form.cliente || !this.form.cliente.trim()) {
+        alert('El cliente no puede estar vacío.');
+        return;
+      }
+      if (!this.form.fechaEntrega) {
+        alert('La fecha de entrega es obligatoria.');
+        return;
+      }
+      if (!this.form.horaInicial || !this.form.horaFinal) {
+        alert('La hora inicial y final son obligatorias.');
+        return;
+      }
+      if (!this.form.descripcion || !this.form.descripcion.trim()) {
+        alert('La descripción no puede estar vacía.');
+        return;
+      }
       try {
         let imagenFinal = ''; 
         if (this.imageInputType==='upload' && this.uploadedImageFile) {
