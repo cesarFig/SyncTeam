@@ -23,37 +23,24 @@
     </div>
 
     <!-- Calendario -->
-    <vue-cal
-      ref="vuecal"
-      locale="es"
-      style="height: 75vh;"
-      :time="true"
-      :events="events"
-      :on-event-click="onEventClick"
-      :default-view="activeView"
-      :active-view="activeView"
-      :week-start="1"
-      :disable-views="disabledViews"
-      :time-from="8 * 60"
-      :time-to="20 * 60"
-      :hide-title-bar="true"
-      :hide-view-selector="true"
-      :cell-height="80"
-      class="custom-cal"
-      @view-change="updateCurrentDate"
-    >
+    <vue-cal ref="vuecal" locale="es" style="height: 75vh;" :time="true" :events="events" :on-event-click="onEventClick"
+      :default-view="activeView" :active-view="activeView" :week-start="1" :disable-views="disabledViews"
+      :time-from="8 * 60" :time-to="20 * 60" :hide-title-bar="true" :hide-view-selector="true" :cell-height="80"
+      class="custom-cal" @view-change="updateCurrentDate">
       <template #event="{ event }">
         <div class="pretty-event" :style="event.class">
           <div class="event-title" :title="event.title">{{ event.title }}</div>
           <div class="event-time">{{ event.end.formatTime('HH:mm') }}</div>
         </div>
       </template>
-      <template #no-event><div></div></template>
+      <template #no-event>
+        <div></div>
+      </template>
     </vue-cal>
     <!-- Modal de Detalles -->
-<v-dialog v-model="showModal" max-width="700">
-  <TicketDetailModal :ticket="selectedTicket" @close-modal="showModal = false" />
-</v-dialog>
+    <v-dialog v-model="showModal" max-width="700">
+      <TicketDetailModal :ticket="selectedTicket" @close-modal="showModal = false" />
+    </v-dialog>
 
   </div>
 </template>
@@ -66,12 +53,14 @@ import TicketDetailModal from '@/components/TicketFull.vue'; // Ajusta el path s
 
 export default {
   name: 'CalendarioCreativo',
-  components: { VueCal,TicketDetailModal },
+  components: { VueCal, TicketDetailModal },
   data() {
     return {
       activeView: 'week',
       currentDate: new Date(),
       events: [],
+      showModal: false,
+      selectedTicket: null
     };
   },
   computed: {
@@ -101,23 +90,65 @@ export default {
     goToToday() { this.$refs.vuecal?.switchToToday(); this.updateCurrentDate(); },
     updateCurrentDate() { if (this.$refs.vuecal) this.currentDate = new Date(this.$refs.vuecal.view.startDate); },
     onEventClick(event) {
-  const ticketId = event.id;
-  const ticketOriginal = this.events.find(t => t.id === ticketId);
-
-  if (ticketOriginal) {
-    this.selectedTicket = {
-      id: ticketOriginal.id,
-      titulo: ticketOriginal.title,
-      color: ticketOriginal.class?.backgroundColor || "#999",
-      fecha: ticketOriginal.start,
-      descripcion: "Aquí iría la descripción si la necesitas", // Puedes mejorar esto si lo tienes
-      image: ticketOriginal.image || '', // Opcional si manejas imágenes
-      assignee: "Asignado a alguien", // Opcional si tienes el nombre
-    };
-    this.showModal = true;
-  }
-}
-,
+      const ticketId = event.id;
+      this.showModal = false;
+      this.selectedTicket = null;
+      fetch(`http://localhost:3000/api/ticket/${ticketId}`)
+        .then(res => res.json())
+        .then(fullTicketData => {
+          let imgValue = fullTicketData.imagen || '';
+          // Lógica igual a CalendarioAdmin:
+          if (imgValue.startsWith('http://') || imgValue.startsWith('https://')) {
+            imgValue = `link:${imgValue}`;
+          }
+          const transformedTicket = {
+            id: fullTicketData.id,
+            title: fullTicketData.titulo,
+            description: fullTicketData.descripcion,
+            taskType: {
+              name: fullTicketData.nombre_categoria || 'Sin categoría',
+              color: fullTicketData.color_rgb || '#757575'
+            },
+            priority: {
+              name: fullTicketData.prioridad || 'Normal',
+              color: this.getPriorityColor?.(fullTicketData.nivel_prioridad) || '#BDBDBD'
+            },
+            image: imgValue,
+            date: fullTicketData.fecha_creacion,
+            assignee: `${fullTicketData.asignado_nombre || ''} ${fullTicketData.asignado_apellidos || ''}`.trim(),
+            attachments: fullTicketData.attachments || [],
+            activityLog: [],
+            currentUser: { name: 'Tú', avatar: '' },
+            titulo: fullTicketData.titulo,
+            descripcion: fullTicketData.descripcion,
+            imagen: fullTicketData.imagen,
+            prioridad_id: fullTicketData.prioridad_id,
+            categoria_id: fullTicketData.categoria_id,
+            pauta_id: fullTicketData.pauta_id,
+            usuario_id: fullTicketData.usuario_id,
+            hora_inicio: fullTicketData.hora_inicio,
+            hora_final: fullTicketData.hora_final,
+            fecha_vencimiento: fullTicketData.fecha_vencimiento
+          };
+          this.$nextTick(() => {
+            this.selectedTicket = transformedTicket;
+            this.showModal = true;
+          });
+        })
+        .catch(() => {
+          const ticketOriginal = this.events.find(t => t.id === ticketId);
+          if (ticketOriginal) {
+            this.selectedTicket = {
+              id: ticketOriginal.id,
+              title: ticketOriginal.title,
+              image: ticketOriginal.image || '',
+              date: ticketOriginal.start,
+              description: 'No se pudo cargar la información completa',
+            };
+            this.showModal = true;
+          }
+        });
+    },
     getStyleFromColor(color) {
       const isLight = hex => {
         const c = hex.replace('#', '');
@@ -151,14 +182,16 @@ export default {
   background: #f7f8fc;
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
+
 .custom-controls {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
 }
+
 .title {
   color: #333;
   font-size: 1.1rem;
@@ -188,6 +221,7 @@ export default {
   transition: transform 0.2s ease;
   cursor: pointer;
 }
+
 .pretty-event:hover {
   transform: scale(1.02);
 }
