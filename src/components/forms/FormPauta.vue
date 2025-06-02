@@ -180,6 +180,32 @@ export default {
   },
   methods: {
     async savePauta() {
+      // Validaciones de campos obligatorios
+      if (!this.pauta.name.trim()) {
+        this.$emit && this.$emit('error', 'El título no puede estar vacío.');
+        alert('El título no puede estar vacío.');
+        return;
+      }
+      if (!this.pauta.cliente.trim()) {
+        this.$emit && this.$emit('error', 'El cliente no puede estar vacío.');
+        alert('El cliente no puede estar vacío.');
+        return;
+      }
+      if (!this.pauta.fechaEntrega) {
+        this.$emit && this.$emit('error', 'La fecha de entrega es obligatoria.');
+        alert('La fecha de entrega es obligatoria.');
+        return;
+      }
+      if (!this.pauta.horaInicial || !this.pauta.horaFinal) {
+        this.$emit && this.$emit('error', 'La hora inicial y final son obligatorias.');
+        alert('La hora inicial y final son obligatorias.');
+        return;
+      }
+      if (!this.pauta.descripcion.trim()) {
+        this.$emit && this.$emit('error', 'La descripción no puede estar vacía.');
+        alert('La descripción no puede estar vacía.');
+        return;
+      }
       try {
         // handle image: upload or link
         let imagenFinal = '';
@@ -204,6 +230,7 @@ export default {
 
         console.log('Pauta guardada:', response.data);
         this.dialog = false;
+        this.$emit && this.$emit('close-dialog'); // Emitir evento para que el padre cierre el diálogo correctamente
       } catch (error) {
         console.error('Error al guardar la pauta:', error);
       }

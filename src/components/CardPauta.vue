@@ -77,7 +77,9 @@ export default {
 }
 
 .content {
-  padding: 12px;
+  padding-left: 17px;
+  padding-right: 17px;
+  padding-bottom: 15px;
 }
 
 .title {

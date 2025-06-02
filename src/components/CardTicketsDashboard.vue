@@ -1,7 +1,7 @@
 <template>
   <v-card class="ticket-dashboard-card pa-4" elevation="2">
     <!-- Título -->
-    <h3 class="text-h6 font-weight-bold mb-4">Tickets próximos</h3>
+    <h3 class="text-h6 font-weight-bold mb-4">Tickets recientes</h3>
 
     <!-- Tarjetas en dos columnas -->
     <v-row dense no-gutters class="ticket-row">

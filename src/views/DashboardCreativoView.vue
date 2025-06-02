@@ -42,8 +42,9 @@
             :horasRestantes="ticketData.horasRestantes" :imagenPrincipal="ticketData.imagenPrincipal"
             :rolAsignado="ticketData.rolAsignado" :descripcion="ticketData.descripcion"
             @open-ticket-details="handleOpenTicketDetails" class="flex-grow-1" /> <!-- Added flex-grow-1 -->
-          <div v-else class="ticket-activo-null flex-grow-1"> <!-- Added flex-grow-1 -->
-            <p class="placeholder-text">No hay tickets activos próximos.</p>
+          <div v-else class="ticket-activo-null flex-grow-1 d-flex flex-column align-center justify-center">
+            <img src="https://icons.veryicon.com/png/o/education-technology/big-data-ico-02/new-task.png" alt="Sin tickets activos" style="width:90px;height:90px;opacity:0.6;" />
+            <p class="placeholder-text mt-3">No hay tickets activos.</p>
           </div>
         </div>
       </v-col>
