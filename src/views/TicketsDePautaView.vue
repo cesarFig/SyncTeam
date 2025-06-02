@@ -293,6 +293,14 @@ export default {
       window.location.reload();
     },
     openTicketFull(rawTicket) {
+      // Ensure TicketFull receives raw format: prefix full URLs with 'link:' so TicketFull strips correctly
+      let imgValue = rawTicket.imagen || '';
+      if (imgValue.startsWith('http://') || imgValue.startsWith('https://')) {
+        imgValue = `link:${imgValue}`;
+      }
+      // Debug: print image string sent to TicketFull
+      console.log('openTicketFull - raw image:', rawTicket.imagen);
+      console.log('openTicketFull - imgValue after adjustment:', imgValue);
       const transformedTicket = {
         id: rawTicket.id,
         title: rawTicket.titulo,
@@ -305,7 +313,7 @@ export default {
           name: rawTicket.prioridad || 'Normal',
           color: this.getPriorityColor(rawTicket.nivel_prioridad)
         },
-        image: rawTicket.imagen,
+        image: imgValue,
         date: rawTicket.fecha_creacion,
         assignee: `${rawTicket.asignado_nombre || ''} ${rawTicket.asignado_apellidos || ''}`.trim(),
         attachments: rawTicket.attachments || [],// puedes rellenar esto después si necesitas
