@@ -166,7 +166,7 @@ export default {
   top: 0;
   left: 0;
   width: 100%;
-  height: 26px;
+  height: 18px;
   border-top-left-radius: 12px;
   border-top-right-radius: 12px;
   z-index: 2;

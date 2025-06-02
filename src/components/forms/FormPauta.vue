@@ -116,11 +116,6 @@
         </v-card-text>
 
         <v-card-actions class="pa-4">
-          <div class="file-upload-container d-flex align-center">
-            <span class="file-upload-text">Agregar Archivo</span>
-            <v-icon class="file-upload-icon ml-2 cursor-pointer" @click="openFileUpload">mdi-paperclip</v-icon>
-            <input type="file" ref="fileInput" style="display: none" multiple @change="handleFileUpload">
-          </div>
           <div class="ml-auto">
             <v-btn text class="mr-2 cancel-button" @click="dialog = false">Cancelar</v-btn>
             <v-btn color="purple" class="save-button rounded-lg" @click="savePauta">Guardar</v-btn>
@@ -326,22 +321,5 @@ export default {
 
 .rounded-input .v-input__outline {
   border-radius: 50px !important;
-}
-
-.file-upload-container {
-  flex-grow: 1;
-}
-
-.file-upload-text {
-  color: #333;
-  font-weight: 500;
-}
-
-.file-upload-icon {
-  color: #333;
-}
-
-.file-upload-icon:hover {
-  color: #9C27B0;
 }
 </style>
