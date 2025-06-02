@@ -41,7 +41,4 @@ export default {
 .v-main {
   transition: margin 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
 }
-
-.app-main-content {
-}
 </style>

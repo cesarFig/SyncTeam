@@ -456,7 +456,7 @@ export default {
 
 .ticket-columns-container {
   display: flex;
-  gap: 16px;
+  gap: 10px;
   height: 100%;
   align-content: center;
   overflow-x: auto;
@@ -465,7 +465,7 @@ export default {
 }
 
 .ticket-column {
-  flex: 0 0 220px;
+  flex: 0 0 270px;
   height: 100%;
   background-color: #f5f5f5;
   border-radius: 8px;

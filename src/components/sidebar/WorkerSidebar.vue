@@ -78,8 +78,8 @@
 
 <script setup>
 import { useLayoutStore } from '@/stores/layout'
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 
 const usuario = JSON.parse(localStorage.getItem("usuario")) || {};
 const userInitials = `${usuario.nombre?.charAt(0) || ''}${usuario.apellidos?.charAt(0) || ''}`.toUpperCase();
@@ -97,6 +97,7 @@ function generateColorFromString(input) {
 const store = useLayoutStore()
 const activeItem = ref("Home")
 const router = useRouter()
+const route = useRoute();
 
 const menuItems = ref([
   { title: "Home", icon: "mdi-home", route: "/dashboard-creativo" },
@@ -106,6 +107,20 @@ const menuItems = ref([
   { title: "Estadísticas", icon: "mdi-chart-bar", route: "/estadisticas-creativo" },
   { title: "Ajustes", icon: "mdi-cog", route: "/ajustes" },
 ])
+
+const getActiveTitleByRoute = (path) => {
+  const found = menuItems.value.find(item => item.route === path);
+  return found ? found.title : "";
+};
+
+activeItem.value = getActiveTitleByRoute(route.path);
+
+watch(
+  () => route.path,
+  (newPath) => {
+    activeItem.value = getActiveTitleByRoute(newPath);
+  }
+);
 
 const navigateTo = (route) => {
   activeItem.value = menuItems.value.find(item => item.route === route)?.title || "";
