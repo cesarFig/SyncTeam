@@ -210,6 +210,7 @@ export default {
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
     const currentTime = `${hours}:${minutes}`;
+    const defaultHoraFinal = '23:59'; // Set default horaFinal to 11:59 PM
 
     return {
       dialog: true,
@@ -220,7 +221,7 @@ export default {
         imagen: '', // Will store URL if 'link', or be set by upload if 'upload'
         pauta: '', // This seems unused, pautaSeleccionada is used
         horaInicial: currentTime, // Set current time as default
-        horaFinal: '',
+        horaFinal: defaultHoraFinal, // Default horaFinal set to 11:59 PM
         fechaEntrega: new Date(),
         prioridad: null,
         archivos: [],
@@ -392,12 +393,18 @@ export default {
 
     async addTicket() {
       try {
+        // Validate required fields
+        if (!this.ticket.name || !this.ticket.descripcion || !this.ticket.fechaEntrega || !this.ticket.horaFinal || !this.ticket.prioridad || !this.categoriaSeleccionada || !this.pautaSeleccionada) {
+            alert('Por favor, complete todos los campos obligatorios antes de guardar.');
+            return;
+        }
+
         let imagenFinalParaGuardar = '';
 
         if (this.imageInputType === 'upload' && this.uploadedImageFile) {
           imagenFinalParaGuardar = await this.uploadPortadaImage();
         } else if (this.imageInputType === 'link' && this.ticket.imagen && this.isHttpUrl(this.ticket.imagen)) {
-          imagenFinalParaGuardar = `link:${this.ticket.imagen}`; // This is the URL, prefixed
+          imagenFinalParaGuardar = `link:${this.ticket.imagen}`;
         }
 
         const now = new Date();
@@ -405,7 +412,7 @@ export default {
         const response = await axios.post('http://localhost:3000/api/addTicket', {
           titulo: this.ticket.name,
           descripcion: this.ticket.descripcion,
-          imagen: imagenFinalParaGuardar || 'link:https://www.thewall360.com/uploadImages/ExtImages/images1/def-638240706028967470.jpg', // Updated default image
+          imagen: imagenFinalParaGuardar || 'link:https://www.thewall360.com/uploadImages/ExtImages/images1/def-638240706028967470.jpg',
           fecha_creacion: now.toISOString(),
           fecha_vencimiento: this.ticket.fechaEntrega ? new Date(this.ticket.fechaEntrega).toISOString() : null,
           hora_inicio: this.ticket.horaInicial,
