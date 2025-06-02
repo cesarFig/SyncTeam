@@ -27,7 +27,7 @@
 
       <div class="footer-info">
         <div class="time-remaining">
-          <span class="clock-icon">⏳</span> <span>{{ remainingDays }} Días</span> </div>
+          <span class="clock-icon">⏳</span> <span v-html="remainingDays"></span> </div>
         <div class="user-list">
           <span class="user-icon">👤</span>
         </div>
@@ -65,10 +65,18 @@ export default {
       return img ? `http://localhost:3000/uploads/${img}` : '';
     },
     remainingDays() {
-      const today = new Date(); // Fecha actual
+      const today = new Date();
       const dueDate = new Date(this.fecha_vencimiento);
       const timeDiff = dueDate - today;
-      return Math.ceil(timeDiff / (1000 * 60 * 60 * 24)); // Convertir a días
+      const daysRemaining = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+
+      if (daysRemaining === 0) {
+        return "<span style='color: blue;'>Hoy</span>";
+      } else if (daysRemaining < 0) {
+        return "<span style='color: red;'>Ticket retrasado</span>";
+      }
+
+      return `${daysRemaining} Días`;
     },
     progreso() {
       switch (this.estado) {
