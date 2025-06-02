@@ -24,6 +24,7 @@
 
     <!-- Calendario -->
     <vue-cal
+      :key="events.length"
       ref="vuecal"
       locale="es"
       style="height: 75vh;"
@@ -43,7 +44,7 @@
       @view-change="updateCurrentDate"
     >
       <template #event="{ event }">
-        <div class="pretty-event" :style="event.class">
+        <div class="pretty-event" :style="event.style">
           <div class="event-title" :title="event.title">{{ event.title }}</div>
           <div class="event-time">{{ event.end.formatTime('HH:mm') }}</div>
         </div>
@@ -72,6 +73,8 @@ export default {
       activeView: 'week',
       currentDate: new Date(),
       events: [],
+      showModal: false,
+      selectedTicket: null,
     };
   },
   computed: {
@@ -90,7 +93,14 @@ export default {
       }
     }
   },
-  mounted() { this.fetchTickets(); },
+  created() {
+    console.log('CalendarioAdminView.created');
+    this.fetchTickets();
+  },
+  mounted() {
+    console.log('CalendarioAdminView.mounted');
+    this.fetchTickets();
+  },
   methods: {
     formatDate(d) {
       return d.toLocaleDateString('es', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -102,22 +112,62 @@ export default {
     updateCurrentDate() { if (this.$refs.vuecal) this.currentDate = new Date(this.$refs.vuecal.view.startDate); },
     onEventClick(event) {
   const ticketId = event.id;
-  const ticketOriginal = this.events.find(t => t.id === ticketId);
-
-  if (ticketOriginal) {
-    this.selectedTicket = {
-      id: ticketOriginal.id,
-      titulo: ticketOriginal.title,
-      color: ticketOriginal.class?.backgroundColor || "#999",
-      fecha: ticketOriginal.start,
-      descripcion: "Aquí iría la descripción si la necesitas", // Puedes mejorar esto si lo tienes
-      image: ticketOriginal.image || '', // Opcional si manejas imágenes
-      assignee: "Asignado a alguien", // Opcional si tienes el nombre
-    };
-    this.showModal = true;
-  }
-}
-,
+  // Obtener todos los datos completos del ticket desde el backend
+  fetch(`http://localhost:3000/api/ticket/${ticketId}`)
+    .then(res => res.json())
+    .then(fullTicketData => {
+      let imgValue = fullTicketData.imagen || '';
+      if (imgValue.startsWith('http://') || imgValue.startsWith('https://')) {
+        imgValue = `link:${imgValue}`;
+      }
+      const transformedTicket = {
+        id: fullTicketData.id,
+        title: fullTicketData.titulo,
+        description: fullTicketData.descripcion,
+        taskType: {
+          name: fullTicketData.nombre_categoria || 'Sin categoría',
+          color: fullTicketData.color_rgb || '#757575'
+        },
+        priority: {
+          name: fullTicketData.prioridad || 'Normal',
+          color: this.getPriorityColor?.(fullTicketData.nivel_prioridad) || '#BDBDBD'
+        },
+        image: imgValue,
+        date: fullTicketData.fecha_creacion,
+        assignee: `${fullTicketData.asignado_nombre || ''} ${fullTicketData.asignado_apellidos || ''}`.trim(),
+        attachments: fullTicketData.attachments || [],
+        activityLog: [], // Si necesitas logs, puedes agregarlos aquí
+        currentUser: { name: 'Tú', avatar: '' },
+        // Campos crudos para edición
+        titulo: fullTicketData.titulo,
+        descripcion: fullTicketData.descripcion,
+        imagen: fullTicketData.imagen,
+        prioridad_id: fullTicketData.prioridad_id,
+        categoria_id: fullTicketData.categoria_id,
+        pauta_id: fullTicketData.pauta_id,
+        usuario_id: fullTicketData.usuario_id,
+        hora_inicio: fullTicketData.hora_inicio,
+        hora_final: fullTicketData.hora_final,
+        fecha_vencimiento: fullTicketData.fecha_vencimiento
+      };
+      this.selectedTicket = transformedTicket;
+      this.showModal = true;
+    })
+    .catch(() => {
+      // Fallback: mostrar lo mínimo si falla la petición
+      const ticketOriginal = this.events.find(t => t.id === ticketId);
+      if (ticketOriginal) {
+        this.selectedTicket = {
+          id: ticketOriginal.id,
+          title: ticketOriginal.title,
+          image: ticketOriginal.image || '',
+          date: ticketOriginal.start,
+          description: 'No se pudo cargar la información completa',
+        };
+        this.showModal = true;
+      }
+    });
+},
     getStyleFromColor(color) {
       const isLight = hex => {
         const c = hex.replace('#', '');
@@ -127,19 +177,60 @@ export default {
       return { backgroundColor: color, borderLeft: `4px solid ${color}`, color: isLight(color) ? '#000' : '#fff' };
     },
     async fetchTickets() {
+      console.log('CalendarioAdminView.fetchTickets called');
       try {
-        const u = JSON.parse(localStorage.getItem('usuario')); if (!u?.id) throw 'Usuario no encontrado';
-        const res = await fetch('http://localhost:3000/api/usuarios/getTickets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: u.id }) });
+        console.log('Fetch allTickets...');
+        const res = await fetch('http://localhost:3000/api/allTickets');
         const data = await res.json();
+        console.log(`Tickets recibidos: ${data.length}`);
         this.events = data.map(t => {
-          const [fecha] = t.fecha_vencimiento.split('T');
-          const [y, mo, d] = fecha.split('-').map(Number);
-          const [he] = t.hora_final.split(':').map(Number);
-          const start = new Date(y, mo - 1, d, he, 0);
-          const end = new Date(y, mo - 1, d, he + 1, 0);
-          return { id: t.id, title: t.titulo, start, end, class: this.getStyleFromColor(t.color_rgb) };
+  // --- Manejo robusto de fecha y hora ---
+  let y, mo, d, hi, mi, hf, mf;
+  // Fecha: usar fecha_vencimiento como base
+  if (t.fecha_vencimiento && /^\d{4}-\d{2}-\d{2}/.test(t.fecha_vencimiento)) {
+    const [fecha, hora] = t.fecha_vencimiento.split('T');
+    [y, mo, d] = fecha.split('-').map(Number);
+    if (hora && /^\d{2}:\d{2}/.test(hora)) {
+      [hf, mf] = hora.split(':').map(Number);
+      if (isNaN(hf)) hf = 10;
+      if (isNaN(mf)) mf = 0;
+    } else {
+      hf = 10; mf = 0;
+    }
+  } else {
+    // Si no hay fecha_vencimiento, usar hoy 10:00
+    const now = new Date();
+    y = now.getFullYear();
+    mo = now.getMonth() + 1;
+    d = now.getDate();
+    hf = 10; mf = 0;
+  }
+  // Hora de inicio: siempre 1 hora antes de la hora de vencimiento
+  hi = hf > 0 ? hf - 1 : 0;
+  mi = mf;
+  let start = new Date(y, mo - 1, d, hi, mi);
+  let end = new Date(y, mo - 1, d, hf, mf);
+  // Si por algún motivo sigue sin ser válido, forzar 9:00-10:00 hoy
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+    const now = new Date();
+    start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0);
+    end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0);
+  }
+  const color = t.color_rgb || '#1976D2';
+  return {
+    id: t.id,
+    title: t.titulo,
+    start,
+    end,
+    style: this.getStyleFromColor(color),
+    image: t.imagen || ''
+  };
+});
+        this.$nextTick(() => {
+          if (this.$refs.vuecal) {
+            this.$refs.vuecal.switchView(this.activeView);
+          }
         });
-        this.$nextTick(() => this.$refs.vuecal?.switchView(this.activeView));
       } catch (err) { console.error('Error al cargar tickets:', err); }
     }
   }

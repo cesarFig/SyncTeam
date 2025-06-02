@@ -963,13 +963,17 @@ async function obtenerEstadisticasTicketsCreativo(creativoId) {
   }
 }
 
-
-
+// Función para obtener todos los tickets
+async function getAllTickets() {
+  const result = await pool.query('SELECT * FROM ticket');
+  return result.rows;
+}
 
 module.exports = {
   logAction, getPautas, getTicketsByPauta, getColaboradores, updateTicketEstado, getUsuarioPorCorreo, getRoles,
   insertUsuario, insertPauta, updatePauta, getCategorias, getPrioridades, insertTicket, getUsuarios, getTicketsUser, getTickets, getTicket, getComentariosByTicketId, crearComentario
   , obtenerUsuario, asignacion, crearNotificacionesComentario, getNotificacionesPorUsuario, marcarNotificacionLeida, eliminarNotificacion,
   editarTicket, actualizarAsignacion, eliminarTicket, registrarArchivo, eliminarArchivoPorId, crearNotificacionesEstado, actualizarAvatarUsuario, eliminarAvatarUsuario,
-  actualizarNotificaciones, obtenerProximoTicketDashboardPorUsuario, crearNotificacionAsignacion, getTicketById,obtenerResumenDashboard, obtenerEstadisticasTicketsCreativo
+  actualizarNotificaciones, obtenerProximoTicketDashboardPorUsuario, crearNotificacionAsignacion, getTicketById,obtenerResumenDashboard, obtenerEstadisticasTicketsCreativo,
+  getAllTickets,
 };

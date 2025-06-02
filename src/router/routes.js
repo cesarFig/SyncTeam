@@ -53,13 +53,13 @@ const routes = [
   },
   {
     path: '/calendario-admin',
-    name: 'CalendarioCreativoView',
-    component: () => import('../views/CalendarioCreativoView.vue')
+    name: 'CalendarioAdminView',
+    component: () => import('../views/CalendarioAdminView.vue')
   },
   {
     path: '/calendario-creativo',
-    name: 'CalendarioAdminView',
-    component: () => import('../views/CalendarioAdminView.vue')
+    name: 'CalendarioCreativoView',
+    component: () => import('../views/CalendarioCreativoView.vue')
   },
   {
     path: '/ajustes',
